@@ -1,0 +1,15 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1280,height:900}, colorScheme:'dark'});
+const errs=[];p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error'&&!/TUNNEL/.test(m.text()))errs.push(m.text())});
+await p.route('**/config.json', r => r.fulfill({body: JSON.stringify({githubRepo:'phenixgg/nms-save-tracker'}), contentType:'application/json'}));
+await p.goto('http://127.0.0.1:47831/');await p.waitForTimeout(2200);
+await p.screenshot({path:'../shots/r_recipes.png'});
+await p.click('#t-inventory'); await p.waitForTimeout(400); await p.click('[data-ivt="exo"]'); await p.waitForTimeout(300); await p.screenshot({path:'../shots/r_inv_exo.png'});
+await p.click('[data-ivt="corv"]'); await p.waitForTimeout(300); await p.screenshot({path:'../shots/r_inv_corv.png'});
+await p.click('#t-galaxy'); await p.waitForTimeout(400); await p.screenshot({path:'../shots/r_galaxy.png'});
+await p.click('#menubtn'); await p.click('[data-dsec="files"]'); await p.waitForTimeout(400); await (await p.$('#drawer')).screenshot({path:'../shots/r_files.png'});
+await p.click('[data-pick="game"]'); await p.waitForTimeout(400); console.log('game path now:', await p.textContent('[data-pval="game"]'), '|', await p.textContent('[data-pstat="game"]'));
+await p.click('[data-dsec="bug"]'); await p.fill('#bug-what','Test bug from the new build'); await p.fill('#bug-how','Clicked around');
+console.log('gh visible', await p.isVisible('#bug-gh')); await p.click('#bug-gh'); await p.waitForTimeout(400); console.log(await p.textContent('#bug-status'));
+await (await p.$('#drawer')).screenshot({path:'../shots/r_bug.png'});
+console.log('errors',errs);await b.close();})();

@@ -1,0 +1,7 @@
+# per-user data, never commit
+data/
+source/out/
+source/tools/lastreport.txt
+source/tools/lastopen.txt
+*.log
+node_modules/

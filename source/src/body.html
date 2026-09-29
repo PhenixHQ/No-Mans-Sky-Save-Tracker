@@ -1,0 +1,1850 @@
+
+<div class="wrap">
+  <header class="top">
+    <div class="toprow">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><circle cx="16" cy="16" r="7.5" fill="var(--accent)"/><circle cx="13.5" cy="13.5" r="2.4" fill="#fff" opacity=".35"/><ellipse cx="16" cy="16" rx="13.5" ry="4.6" fill="none" stroke="var(--teal)" stroke-width="2" transform="rotate(-22 16 16)"/></svg></span>
+        <div class="bt"><h1>NMS Save Tracker</h1><div class="tagline">Your No Man's Sky save at a glance <span class="dotsep">·</span> <span class="eyebrow">Cosmos 7.x · game data 7.00</span></div></div>
+      </div>
+      <div class="row" style="gap:8px; flex-wrap:nowrap">
+      <button type="button" class="menubtn syncpill" id="syncpill" hidden title="Sync from your No Man's Sky save">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 5.5A5.5 5.5 0 0 0 3.2 4M3 10.5A5.5 5.5 0 0 0 12.8 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M3 1.5V4.5H6M13 14.5V11.5H10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="mtxt" id="syncpilltxt">Sync</span>
+      </button>
+      <button type="button" class="menubtn" id="menubtn" aria-haspopup="dialog" aria-controls="drawer" aria-expanded="false" aria-label="Settings and help">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="mtxt">Settings &amp; help</span>
+      </button>
+      </div>
+    </div>
+
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-recipes" data-tab="recipes" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 14h9"/></svg>Recipes</button>
+    <button role="tab" id="t-planner" data-tab="planner" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>What can I make?</button>
+    <button role="tab" id="t-inventory" data-tab="inventory" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Inventory</button>
+    <button role="tab" id="t-resources" data-tab="resources" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Where to find</button>
+    <button role="tab" id="t-portals" data-tab="portals" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="6" ry="8.5"/><ellipse cx="12" cy="12" rx="2.5" ry="4.5"/></svg>Portals</button>
+    <button role="tab" id="t-galaxy" data-tab="galaxy" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 12c4-1 7 1 7 4M12 12c1 4-1 7-4 7M12 12c-4 1-7-1-7-4M12 12c-1-4 1-7 4-7"/></svg>My galaxy</button>
+    <button role="tab" id="t-quests" data-tab="quests" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2 4 2 4H6"/></svg>Quests</button>
+    <button role="tab" id="t-pinned" data-tab="pinned" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>Pinned<span class="n" id="pincount">0</span></button>
+    <label class="navsel"><span class="lbl">Section</span>
+      <select id="navselect" aria-label="Go to section">
+        <option value="recipes">Recipes</option><option value="planner">What can I make?</option><option value="inventory">Inventory</option><option value="resources">Where to find</option>
+        <option value="portals">Portals</option><option value="galaxy">My galaxy</option><option value="quests">Quests</option><option value="pinned">Pinned</option>
+      </select>
+    </label>
+  </nav>
+
+  <main class="scroller" id="scroller">
+  <!-- RECIPES -->
+  <section class="panel" id="p-recipes" role="tabpanel" aria-labelledby="t-recipes">
+    <div class="controls">
+      <div class="row">
+        <div class="seg big" role="group" aria-label="Recipe type">
+          <button type="button" data-rtype="refine" aria-pressed="true">Refiner</button>
+          <button type="button" data-rtype="craft" aria-pressed="false">Crafting</button>
+          <button type="button" data-rtype="cook" aria-pressed="false">Cooking</button>
+        </div>
+        <label class="search" for="q">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="q" type="search" placeholder="Search an item, e.g. Chromatic Metal, Warp Cell" autocomplete="off">
+          <button class="clear" id="qclear" type="button" hidden>Clear</button>
+        </label>
+        <div class="seg" role="group" aria-label="Match item in">
+          <button type="button" data-mode="any" aria-pressed="true">Any</button>
+          <button type="button" data-mode="in" aria-pressed="false">Uses it</button>
+          <button type="button" data-mode="out" aria-pressed="false">Makes it</button>
+        </div>
+      </div>
+      <div class="row" id="rfilters"></div>
+    </div>
+    <div id="itemcard"></div>
+    <div class="list" id="rlist" aria-live="polite"></div>
+    <button class="btn more" id="rmore" type="button" hidden>Show more</button>
+  </section>
+
+  <!-- PLANNER -->
+  <section class="panel" id="p-planner" role="tabpanel" aria-labelledby="t-planner" hidden>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2>What's in your storage?</h2>
+        <div class="seg" role="group" aria-label="Where the planner counts items from">
+          <button type="button" data-psrc="sync" aria-pressed="false">From my save</button>
+          <button type="button" data-psrc="list" aria-pressed="true">My own list</button>
+        </div>
+      </div>
+      <div id="plsync" hidden>
+        <p class="muted small" style="margin:0">Counts everything in the inventories you tick, straight from your last sync. It updates by itself when auto-sync picks up a new save.</p>
+        <div class="row" id="plgroups"></div>
+        <div class="small muted" id="plsum"></div>
+      </div>
+      <div id="pllist">
+      <p class="muted small" style="margin:0">Add what you're carrying. The planner shows every refiner, crafting and cooking recipe you can run right now, and how many times.</p>
+      <div class="row">
+        <input class="txt" id="invname" list="itemnames" placeholder="Item name" style="flex:1 1 220px" autocomplete="off">
+        <input class="txt" id="invqty" type="number" min="1" value="100" style="width:110px" aria-label="Quantity">
+        <button class="btn primary" id="invadd" type="button">Add</button>
+        <button class="btn ghost" id="invclear" type="button">Clear all</button>
+      </div>
+      <datalist id="itemnames"></datalist>
+      <div class="note" id="invexample" hidden>These are example items so you can see how it works. Clear them and add your own.</div>
+      <div class="inv" id="invlist"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Planner results">
+        <button type="button" data-ptype="refine" aria-pressed="true">Refine <span id="pc-refine"></span></button>
+        <button type="button" data-ptype="craft" aria-pressed="false">Craft <span id="pc-craft"></span></button>
+        <button type="button" data-ptype="cook" aria-pressed="false">Cook <span id="pc-cook"></span></button>
+      </div>
+      <label class="toggle" for="pbase"><input type="checkbox" id="pbase"> Hide base building parts</label>
+    </div>
+    <div class="list" id="plist"></div>
+    <button class="btn more" id="pmore" type="button" hidden>Show more</button>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="panel" id="p-inventory" role="tabpanel" aria-labelledby="t-inventory" hidden>
+    <div class="row">
+      <p class="lede small" style="flex:1 1 380px">What you're carrying and storing, read from your save. <span id="invsynced"></span></p>
+      <button class="btn" type="button" id="invsync" hidden>Sync now</button>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <label class="search" for="ivq">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="ivq" type="search" placeholder="Find an item, e.g. Sodium" autocomplete="off">
+        </label>
+        <div class="seg" role="group" aria-label="Inventory layout"><button type="button" data-ivv="grid" aria-pressed="true">Game view</button><button type="button" data-ivv="list" aria-pressed="false">List</button></div>
+        <select id="ivsort" aria-label="Sort"><option value="slot">Slot order</option><option value="name">Name A–Z</option><option value="amt">Amount</option><option value="value">Total value</option></select>
+      </div>
+    </div>
+    <div class="nmsframe" id="ivframe">
+      <div class="gtop">
+        <div class="gtabs" role="group" aria-label="Which inventory" id="ivtabs"></div>
+        <div class="gcur" id="ivcur"></div>
+      </div>
+      <div class="kv gsum" id="ivsum"></div>
+      <div id="ivbody" class="ivbody"></div>
+    </div>
+  </section>
+
+  <!-- RESOURCES -->
+  <section class="panel" id="p-resources" role="tabpanel" aria-labelledby="t-resources" hidden>
+    <div class="grid2">
+      <div class="card">
+        <h2>Metals by star colour</h2>
+        <p class="muted small" style="margin:0">The star's colour decides which stellar metal its planets carry. "Activated" versions appear on extreme-weather planets and sell for more.</p>
+        <div class="tbl"><table class="t">
+          <thead><tr><th>Star</th><th>Metal</th><th>Activated</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot" style="background:#E8C54A"></span>Yellow</td><td>Copper</td><td>Activated Copper</td></tr>
+            <tr><td><span class="dot" style="background:#D9523C"></span>Red</td><td>Cadmium</td><td>Activated Cadmium</td></tr>
+            <tr><td><span class="dot" style="background:#4FB069"></span>Green</td><td>Emeril</td><td>Activated Emeril</td></tr>
+            <tr><td><span class="dot" style="background:#4A8BE0"></span>Blue</td><td>Indium</td><td>Activated Indium</td></tr>
+            <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Quartzite</td><td>Activated Quartzite</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h2>By planet type</h2>
+        <p class="muted small" style="margin:0">The plant and mineral each biome is known for. Use the search below for the game's own description of any resource.</p>
+        <div class="tbl"><table class="t">
+          <thead><tr><th>Biome</th><th>Plant</th><th>Mineral</th></tr></thead>
+          <tbody>
+            <tr><td>Lush (Paradise, Verdant…)</td><td>Star Bulb</td><td>Paraffinium</td></tr>
+            <tr><td>Frozen</td><td>Frost Crystal</td><td>Dioxite</td></tr>
+            <tr><td>Scorched / hot</td><td>Solanium</td><td>Phosphorus</td></tr>
+            <tr><td>Toxic</td><td>Fungal Mould</td><td>Ammonia</td></tr>
+            <tr><td>Radioactive</td><td>Gamma Root</td><td>Uranium</td></tr>
+            <tr><td>Barren / desert</td><td>Cactus Flesh</td><td>Pyrite</td></tr>
+            <tr><td>Dead / airless</td><td>—</td><td>Rusted Metal</td></tr>
+            <tr><td>Gas giant <span class="tag purple">purple</span></td><td>—</td><td>Activated Quartzite, Crystallised Helium</td></tr>
+            <tr><td>Waterworld <span class="tag purple">purple</span></td><td>—</td><td>Lithium (deep water)</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Found almost everywhere</h2>
+      <div class="kv">
+        <span><b>Plants</b>Carbon</span><span><b>Red plants</b>Oxygen</span><span><b>Yellow plants</b>Sodium</span>
+        <span><b>Rocks</b>Ferrite Dust</span><span><b>Blue crystals</b>Di-hydrogen</span><span><b>Caves</b>Cobalt</span>
+        <span><b>Asteroids</b>Tritium, Silver, Gold, Platinum</span><span><b>Oceans</b>Salt, Chlorine</span>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <div class="seg" role="group" aria-label="Resource list">
+          <button type="button" data-rsrc="raw" aria-pressed="true">Raw materials</button>
+          <button type="button" data-rsrc="fish" aria-pressed="false">Fish</button>
+        </div>
+        <label class="search" for="rq">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="rq" type="search" placeholder="Search a resource or biome" autocomplete="off">
+        </label>
+        <span class="count" id="rcount"></span>
+      </div>
+    </div>
+    <div class="list" id="reslist"></div>
+  </section>
+
+  <!-- PORTALS -->
+  <section class="panel" id="p-portals" role="tabpanel" aria-labelledby="t-portals" hidden>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2>Portal address</h2>
+        <div class="row">
+          <div class="seg" role="group" aria-label="What a glyph does when a spot is picked">
+            <button type="button" data-gmode="rep" aria-pressed="true">Replace</button>
+            <button type="button" data-gmode="ins" aria-pressed="false">Insert</button>
+          </div>
+          <button class="btn" id="gback" type="button">Undo glyph</button>
+          <button class="btn" id="gclear" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="addrbar" id="addrbar">
+        <div class="addr" id="gslots" aria-live="polite"></div>
+        <div class="small muted" id="ghint"></div>
+      </div>
+      <div class="glyphpad" id="gpad"></div>
+      <p class="muted small" style="margin:0">Numbered in the order the portal's own keypad shows them, 1 to 16. On a keyboard, type the hex code (0–9, A–F); Backspace removes, arrow keys move between spots.</p>
+      <div class="row">
+        <input class="txt" id="gpaste" placeholder="Or paste: 23E9FEFF7FFC  or  3-4-15-10-16-15-16-16-8-16-16-13" style="flex:1 1 320px" autocomplete="off">
+        <button class="btn" id="gload" type="button">Load</button>
+      </div>
+      <div class="codes" id="gcodes"></div>
+      <div class="row">
+        <span class="lbl">Same system, other planet</span>
+        <div class="seg" id="gplanet" role="group" aria-label="Planet number"></div>
+      </div>
+      <div class="row">
+        <input class="txt" id="gname" placeholder="Name this address" style="flex:1 1 220px" autocomplete="off">
+        <button class="btn primary" id="gsave" type="button">Save address</button>
+      </div>
+      <p class="muted small" style="margin:0">The first glyph is the planet number inside the system. The other eleven are the system's location, so every planet in a system shares them. Waterworlds often have no portal, and dialing one drops you on the seafloor.</p>
+    </div>
+    <div class="card">
+      <h2>Saved addresses</h2>
+      <div class="saved" id="gsaved"></div>
+    </div>
+  </section>
+
+  <!-- GALAXY -->
+  <section class="panel" id="p-galaxy" role="tabpanel" aria-labelledby="t-galaxy" hidden>
+    <div class="row">
+      <p class="lede small" style="flex:1 1 400px">A map of the systems you've explored, built from your save, with the galactic core at the centre. Drag to pan, scroll or pinch to zoom, click a system for details. <span id="gsnap"></span></p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Colour systems by">
+          <button type="button" data-gcol="type" aria-pressed="true">Colour by type</button>
+          <button type="button" data-gcol="disc" aria-pressed="false">Who discovered it</button>
+        </div>
+        <label class="toggle" for="gpath"><input type="checkbox" id="gpath"> Show travel path</label>
+      </div>
+    </div>
+    <div class="mapbar">
+      <div class="row">
+        <label class="lbl" for="ggal">Galaxy</label>
+        <select id="ggal" aria-label="Galaxy to show"></select>
+        <span class="lbl">View</span>
+        <div class="seg" role="group" aria-label="Camera angle">
+          <button type="button" data-cam="top" aria-pressed="true">Top down</button>
+          <button type="button" data-cam="iso" aria-pressed="false">Angled</button>
+          <button type="button" data-cam="side" aria-pressed="false">Side</button>
+          <button type="button" data-cam="front" aria-pressed="false">Front</button>
+        </div>
+        <label class="rng" for="grot"><span class="lbl">Turn</span><input type="range" id="grot" min="-180" max="180" step="5"></label>
+        <label class="rng" for="gtilt"><span class="lbl">Tilt</span><input type="range" id="gtilt" min="0" max="90" step="5"></label>
+        <label class="lbl" for="ghs">Height</label>
+        <select id="ghs" aria-label="Height stretch" title="The galaxy reaches about 800,000 ly out from the core but is only about 100,000 ly tall, so heights are stretched to make them visible"><option value="auto">Auto stretch</option><option value="1">True scale</option><option value="5">5× taller</option><option value="20">20× taller</option><option value="50">50× taller</option></select>
+      </div>
+    </div>
+    <div class="mapwrap">
+      <canvas id="map" tabindex="0" aria-label="Map of explored systems"></canvas>
+      <div class="mapctl">
+        <button type="button" id="zin" aria-label="Zoom in">+</button>
+        <button type="button" id="zout" aria-label="Zoom out">−</button>
+        <button type="button" id="zfit" aria-label="Fit all">⤢</button>
+        <button type="button" id="zme" aria-label="Go to current system">◎</button>
+      </div>
+      <div class="legend" id="glegend"></div>
+      <div class="maptip" id="maptip" hidden></div>
+    </div>
+    <div class="card" id="gsystem" hidden></div>
+    <div class="grid2">
+      <div class="card info" id="ginfo"></div>
+      <div class="card">
+        <div class="row">
+          <h3 style="flex:1">Named systems & bases</h3>
+          <input class="txt" id="gsearch" type="search" placeholder="Filter" style="width:150px" autocomplete="off">
+        </div>
+        <div class="syslist" id="glist"></div>
+      </div>
+    </div>
+    <div class="card syncbar" id="syncbar">
+      <div class="row" style="justify-content:space-between; align-items:flex-start">
+        <div style="display:grid; gap:4px; flex:1 1 280px">
+          <h3>Your save</h3>
+          <div class="small muted" id="syncstatus"></div>
+        </div>
+        <div class="row" id="syncctl">
+          <label class="toggle" for="autosync"><input type="checkbox" id="autosync"> Auto-sync while I play</label>
+          <button class="btn primary" type="button" id="syncnow">Sync from save</button>
+        </div>
+      </div>
+      <div class="kv" id="syncstats"></div>
+    </div>
+  </section>
+
+  <!-- QUESTS -->
+  <section class="panel" id="p-quests" role="tabpanel" aria-labelledby="t-quests" hidden>
+    <div class="row">
+      <p class="lede small" style="flex:1 1 380px">Your quest lines and goals, filled in from where you're at. Change the status or notes as you go; it's remembered in this browser.</p>
+      <button class="btn" id="qadd" type="button">Add a goal</button>
+    </div>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Filter quests">
+        <button type="button" data-qf="open" aria-pressed="true">Open</button>
+        <button type="button" data-qf="all" aria-pressed="false">All</button>
+        <button type="button" data-qf="done" aria-pressed="false">Done</button>
+      </div>
+    </div>
+    <div class="quests" id="qlist"></div>
+  </section>
+
+  <!-- PINNED -->
+  <section class="panel" id="p-pinned" role="tabpanel" aria-labelledby="t-pinned" hidden>
+    <p class="lede small">Everything you've starred, in one place.</p>
+    <div class="list" id="pinlist"></div>
+  </section>
+
+  <footer>
+    <div>Recipes and item values come from the game files (version 7.00) via <a href="https://github.com/bradhave94/nms" target="_blank" rel="noopener">bradhave94/nms</a>. Values are base prices; real prices shift with each system's economy.</div>
+    <div>The desktop app keeps your pins, lists, addresses, notes and settings in its data folder, and reads your save to fill in the map and inventories. It never changes your game files. <button type="button" class="linkbtn" id="bugbtn">Report a bug</button></div>
+    <div>NMS Save Tracker is an unofficial fan-made app. It is not affiliated with or endorsed by Hello Games. No Man's Sky is a trademark of Hello Games.</div>
+  </footer>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+  <div class="dhead">
+    <h2 id="drawer-title">Settings &amp; help</h2>
+    <button type="button" class="btn ghost" id="drawerclose" aria-label="Close settings">Close</button>
+  </div>
+  <div class="seg dtabs" role="group" aria-label="Menu section">
+    <button type="button" data-dsec="look" aria-pressed="true">Look</button>
+    <button type="button" data-dsec="disp" aria-pressed="false">Display</button>
+    <button type="button" data-dsec="map" aria-pressed="false">Map colours</button>
+    <button type="button" data-dsec="sync" aria-pressed="false">Sync</button>
+    <button type="button" data-dsec="files" aria-pressed="false">Game files</button>
+    <button type="button" data-dsec="bug" aria-pressed="false">Report a bug</button>
+    <button type="button" data-dsec="help" aria-pressed="false">Help</button>
+  </div>
+
+  <div class="dsec" id="d-look">
+    <div class="field">
+      <span class="lbl">Theme</span>
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" data-set-theme="system" aria-pressed="true">Match device</button>
+        <button type="button" data-set-theme="light" aria-pressed="false">Light</button>
+        <button type="button" data-set-theme="dark" aria-pressed="false">Dark</button>
+      </div>
+      <span class="themenote" id="themenote" hidden>Presets set their own light or dark look. Pick Traveller to choose light or dark yourself.</span>
+    </div>
+    <div class="field">
+      <span class="lbl">Tab bar position</span>
+      <div class="navpick" role="group" aria-label="Tab bar position">
+        <button type="button" data-set-nav="top" aria-pressed="true"><span class="np np-top"></span>Top</button>
+        <button type="button" data-set-nav="bottom" aria-pressed="false"><span class="np np-bottom"></span>Bottom</button>
+        <button type="button" data-set-nav="left" aria-pressed="false"><span class="np np-left"></span>Left</button>
+        <button type="button" data-set-nav="right" aria-pressed="false"><span class="np np-right"></span>Right</button>
+        <button type="button" data-set-nav="dropdown" aria-pressed="false"><span class="np np-drop"></span>Dropdown</button>
+      </div>
+      <p class="muted small" style="margin:0">Left and right switch to the top bar on narrow screens like phones.</p>
+    </div>
+    <div class="field">
+      <span class="lbl">Themes</span>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="field">
+      <span class="lbl">Your presets</span>
+      <div class="presets" id="cpresets"></div>
+      <div class="ceditor" id="ceditor" hidden>
+        <input class="txt" id="ce-name" maxlength="24" placeholder="Preset name" aria-label="Preset name">
+        <label class="crow" for="ce-bg"><input type="color" id="ce-bg"> Background</label>
+        <label class="crow" for="ce-ink"><input type="color" id="ce-ink"> Text</label>
+        <label class="crow" for="ce-accent"><input type="color" id="ce-accent"> Accent <span class="muted small">(pins, highlights)</span></label>
+        <label class="crow" for="ce-teal"><input type="color" id="ce-teal"> Secondary <span class="muted small">(buttons, outputs)</span></label>
+        <p class="muted small" style="margin:0">Cards, lines and muted text are worked out from these four. Changes preview live. If the text colour is too close to the background, the app picks a readable one instead.</p>
+        <div class="row">
+          <button type="button" class="btn primary" id="ce-save">Save preset</button>
+          <button type="button" class="btn" id="ce-cancel">Cancel</button>
+          <button type="button" class="btn ghost" id="ce-del">Empty this slot</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl">Fine-tune colours</span>
+      <label class="crow" for="c-accent"><input type="color" id="c-accent"> Accent <span class="muted small">(pins, highlights, arrows)</span></label>
+      <label class="crow" for="c-teal"><input type="color" id="c-teal"> Secondary <span class="muted small">(outputs, buttons, links)</span></label>
+    </div>
+    <div class="field">
+      <span class="lbl">Text size</span>
+      <div class="seg" role="group" aria-label="Text size">
+        <button type="button" data-set-size="14" aria-pressed="false">Small</button>
+        <button type="button" data-set-size="15" aria-pressed="true">Normal</button>
+        <button type="button" data-set-size="17" aria-pressed="false">Large</button>
+      </div>
+    </div>
+    <div class="row"><button type="button" class="btn" id="resetlook">Reset look to default</button><button type="button" class="btn" id="mkshortcut" hidden>Add desktop shortcut</button></div>
+  </div>
+
+  <div class="dsec" id="d-disp" hidden>
+    <p class="muted small" style="margin:0">Choose how things that can be written more than one way are shown across the app.</p>
+    <div class="field">
+      <span class="lbl">Portal glyphs show</span>
+      <div class="row">
+        <label class="toggle" for="dg-icon"><input type="checkbox" id="dg-icon" data-disp="gIcon"> Icons</label>
+        <label class="toggle" for="dg-num"><input type="checkbox" id="dg-num" data-disp="gNum"> Numbers (1–16)</label>
+        <label class="toggle" for="dg-name"><input type="checkbox" id="dg-name" data-disp="gName"> Names</label>
+        <label class="toggle" for="dg-hex"><input type="checkbox" id="dg-hex" data-disp="gHex"> Hex code (0–F)</label>
+      </div>
+      <div class="gpreview" id="gpreview"></div>
+      <p class="muted small" style="margin:0">Used everywhere glyphs appear: the address bar, keypad, saved addresses and the system view. The icons are drawn for this app to match each glyph's name, so they look close to the game's but not identical.</p>
+    </div>
+    <div class="field">
+      <span class="lbl">Big numbers (units, totals)</span>
+      <div class="seg" role="group" aria-label="Big numbers">
+        <button type="button" data-dbig="full" aria-pressed="true">1,373,509,761</button>
+        <button type="button" data-dbig="short" aria-pressed="false">1.37B</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl">Where a system is</span>
+      <div class="seg" role="group" aria-label="System location">
+        <button type="button" data-dloc="both" aria-pressed="true">Distance and coordinates</button>
+        <button type="button" data-dloc="ly" aria-pressed="false">Distance in ly</button>
+        <button type="button" data-dloc="game" aria-pressed="false">Game coordinates</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl">Inventory layout</span>
+      <div class="seg" role="group" aria-label="Inventory layout">
+        <button type="button" data-dinv="grid" aria-pressed="true">Grid, like in the game</button>
+        <button type="button" data-dinv="list" aria-pressed="false">List</button>
+      </div>
+      <label class="toggle" for="dg-names"><input type="checkbox" id="dg-names" data-disp="gridNames"> Show item names under the tiles</label>
+    </div>
+  </div>
+
+  <div class="dsec" id="d-map" hidden>
+    <p class="muted small" style="margin:0">Pick what colour each kind of dot uses on the galaxy map. Changes show straight away.</p>
+    <div class="field"><span class="lbl">Colour by type</span><div id="mapcols-type"></div></div>
+    <div class="field"><span class="lbl">Who discovered it</span><div id="mapcols-disc"></div></div>
+    <div class="field"><span class="lbl">Other</span><div id="mapcols-other"></div></div>
+    <div class="row"><button type="button" class="btn" id="resetmap">Reset map colours</button></div>
+  </div>
+
+  <div class="dsec" id="d-sync" hidden>
+    <p class="muted small" style="margin:0" id="syncnote">Sync reads your newest No Man's Sky save. It only reads the file; it never changes it.</p>
+    <label class="toggle" for="autosync2"><input type="checkbox" id="autosync2"> Auto-sync while I play</label>
+    <div class="field">
+      <span class="lbl">Check for a new save every</span>
+      <div class="seg" role="group" aria-label="Auto-sync interval" id="syncevery">
+        <button type="button" data-every="5" aria-pressed="false">5 s</button>
+        <button type="button" data-every="10" aria-pressed="false">10 s</button>
+        <button type="button" data-every="20" aria-pressed="true">20 s</button>
+        <button type="button" data-every="30" aria-pressed="false">30 s</button>
+        <button type="button" data-every="60" aria-pressed="false">1 min</button>
+      </div>
+      <p class="muted small" style="margin:0">Each check only looks at the save's timestamp, so short intervals are cheap. The real delay is the game: it writes a new save when you land, exit your ship, warp or save manually, so the map can't update until then.</p>
+    </div>
+  </div>
+
+  <div class="dsec" id="d-files" hidden>
+    <p class="muted small" style="margin:0">Where the app looks for No Man's Sky. It finds both by itself; pick a folder by hand if yours is somewhere unusual.</p>
+    <div class="field pathbox" data-pbox="saves">
+      <span class="lbl">Save folder</span>
+      <div class="pathval" data-pval="saves">Checking…</div>
+      <div class="small" data-pstat="saves"></div>
+      <div class="row">
+        <button type="button" class="btn" data-pick="saves">Change…</button>
+        <button type="button" class="btn ghost" data-pauto="saves">Use auto-detect</button>
+      </div>
+      <div class="row"><input class="txt" data-pin="saves" placeholder="Or paste a folder path" style="flex:1 1 200px" autocomplete="off"><button type="button" class="btn" data-pset="saves">Use this</button></div>
+    </div>
+    <div class="field pathbox" data-pbox="game">
+      <span class="lbl">Game folder</span>
+      <div class="pathval" data-pval="game">Checking…</div>
+      <div class="small" data-pstat="game"></div>
+      <div class="row">
+        <button type="button" class="btn" data-pick="game">Change…</button>
+        <button type="button" class="btn ghost" data-pauto="game">Use auto-detect</button>
+      </div>
+      <div class="row"><input class="txt" data-pin="game" placeholder="Or paste a folder path" style="flex:1 1 200px" autocomplete="off"><button type="button" class="btn" data-pset="game">Use this</button></div>
+      <p class="muted small" style="margin:0">The app only reads from this folder. A later update will use it to show the game's own icons, pulled from your install.</p>
+    </div>
+  </div>
+
+  <div class="dsec" id="d-bug" hidden>
+    <p class="muted small" style="margin:0">Something broke or looks wrong? Describe it below. A short technical log from this app is attached automatically: the app version, errors it hit, which tabs and features were used, and a few settings. It never includes your save, system or planet names, coordinates, inventory, notes, account or PC details.</p>
+    <label class="lbl" for="bug-what">What happened?</label>
+    <textarea id="bug-what" rows="3" placeholder="e.g. The map went blank after I switched to Side view"></textarea>
+    <label class="lbl" for="bug-how">How did it happen? What were you doing just before?</label>
+    <textarea id="bug-how" rows="3" placeholder="e.g. Opened My galaxy, picked Side, then zoomed out"></textarea>
+    <details><summary>See exactly what gets attached</summary><pre class="bugpre" id="bug-pre"></pre></details>
+    <div class="row">
+      <button type="button" class="btn primary" id="bug-gh" hidden>Report on GitHub</button>
+      <button type="button" class="btn" id="bug-save" hidden>Save report</button>
+      <button type="button" class="btn" id="bug-copy">Copy report</button>
+      <button type="button" class="btn ghost" id="bug-dl">Download .txt</button>
+      <button type="button" class="btn ghost" id="bug-open" hidden>Open reports folder</button>
+    </div>
+    <p class="small" id="bug-status" style="margin:0"></p>
+    <p class="muted small" style="margin:0">Your description is included as you wrote it, so leave out anything you'd rather not share. <b>Report on GitHub</b> opens the report in your browser for you to check and submit (you'll need a free GitHub account). Otherwise save or copy it and send it to whoever gave you the app.</p>
+  </div>
+
+  <div class="dsec" id="d-help" hidden>
+    <details open><summary>Recipes</summary><p>Pick Refiner, Crafting or Cooking, then search any item. <b>Uses it</b> shows recipes that need the item, <b>Makes it</b> shows recipes that produce it. Searching an exact item name shows an info card. Click any item chip to jump to it. ☆ pins a recipe to the Pinned tab.</p><p>The <b>×</b> number is output value ÷ input value, so above ×1 makes you money. <b>Profit / run</b> is units gained each run. <b>Items in → out</b> ignores value and just counts items.</p></details>
+    <details><summary>What can I make?</summary><p>Add items and amounts from your storage. The list shows every recipe you can run right now and how many times. Edit an amount in place or remove it with ×.</p></details>
+    <details><summary>Where to find</summary><p>Tables for star colours and planet types, plus the game's own description for every raw material. Switch to Fish to search by biome.</p></details>
+    <details><summary>Inventory</summary><p>Your exosuit, starships, corvettes (their own inventories plus the storage units built into them), freighter and base storage containers, read from your save. <b>Everything</b> adds up each item across all of them and shows where it is. Click an item to see its recipes. It refreshes whenever the app syncs.</p><p>In <b>What can I make?</b>, pick <b>From my save</b> to plan with what you actually have, and tick which inventories to count.</p></details>
+    <details><summary>Portals</summary><p>Tap glyphs on the keypad (numbered 1–16 like the portal) or paste a code. Each glyph pops into the address bar, which stays in view while you scroll. Tap any of the 12 spots to pick it: with <b>Replace</b> the next glyph overwrites that spot, with <b>Insert</b> it goes in before it and the rest move along. The × on a spot removes that glyph. Undo steps back through your changes. On a keyboard, type the hex code (0–9, A–F).</p><p>The first glyph is the planet, and the planet buttons swap it to reach other planets in the same system. Save addresses with a name; Copy puts the numbers on your clipboard.</p></details>
+    <details><summary>My galaxy</summary><p>Drag to pan, scroll or pinch to zoom; arrow keys work too. Pick a camera: <b>Top down</b>, <b>Angled</b>, <b>Side</b> or <b>Front</b>, or turn it freely with the sliders, Right-drag or Shift-drag (Q and E turn it with the keyboard). <b>Height</b> stretches the galaxy's thickness so you can see which systems sit above or below the plane. The <b>Galaxy</b> list switches between the galaxies your save has data for.</p><p>Click a system for details, then <b>Open system view</b> for its planets. Switch between colouring by type and by who discovered it.</p></details>
+    <details><summary>Sync</summary><p>In the desktop app, Sync reads your newest save. Turn on auto-sync and pick how often it checks in the Sync section of this menu. The game only writes a new save when you land, get out of your ship, warp or save manually, so changes show up after that.</p></details>
+    <details><summary>Reporting a bug</summary><p>Open <b>Report a bug</b> in this menu, say what happened and how, and save, copy or download the report. The attached log has no save data, names, locations or personal details; you can read all of it before sending.</p></details>
+    <details><summary>Quests</summary><p>Change a quest's status with its dropdown and write your next step in the notes. <b>Add a goal</b> makes your own card; double-click a title to rename it.</p></details>
+    <details><summary>Display</summary><p>Settings → Display picks how portal glyphs show (icons, numbers, names, hex), whether big numbers are written in full or short (1.37B), how a system's location is given, and whether inventories show as a grid like in the game or as a list.</p></details>
+    <details><summary>Item cards</summary><p>Search an item by its exact name to get its card. <b>You own</b> adds it up across all your inventories; click it to see where it's stored. <b>Where to find</b> (or double-click the card) jumps to where it's gathered, or to the recipes that make it.</p></details>
+    <details><summary>Where is my stuff saved?</summary><p id="savedwhere">Pins, storage, saved addresses, notes and these settings are kept in this browser only. They won't follow you to another device, and clearing your browser data removes them.</p></details>
+    <div class="row"><button type="button" class="btn" id="resetall">Reset everything on this page</button></div>
+  </div>
+</aside>
+
+
+<script>
+__SAVESYNC__
+</script>
+<script>
+window.VC_LOG = { t0: Date.now(), ev: [], err: 0, hook: null };
+function vcLog(kind, msg){ var L = window.VC_LOG; L.ev.push([Math.round((Date.now()-L.t0)/1000), kind, String(msg).slice(0,400)]); if(L.ev.length>150) L.ev.shift(); if(L.hook && /error|promise|syncfail/.test(kind)){ try { L.hook(); } catch(e){} } }
+window.addEventListener('error', function(e){ VC_LOG.err++; var f = e.filename ? String(e.filename).split(/[\\/]/).pop() : ''; vcLog('error', (e.message||'Script error') + ((f||e.lineno) ? ' [' + f + ':' + (e.lineno||0) + ':' + (e.colno||0) + ']' : '')); });
+window.addEventListener('unhandledrejection', function(e){ VC_LOG.err++; var r = e.reason; vcLog('promise', r && r.message ? r.message : String(r)); });
+</script>
+<script type="application/json" id="gamedata">__GAME__</script>
+<script type="application/json" id="galaxydata">__GALAXY__</script>
+<script>
+(function(){
+"use strict";
+const G = JSON.parse(document.getElementById('gamedata').textContent);
+let GX = JSON.parse(document.getElementById('galaxydata').textContent);
+const I = G.items;
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtMult = m => m >= 10 ? m.toFixed(0) : m >= 1 ? (+m.toFixed(2)).toString() : m.toFixed(2);
+const NANITE = I.findIndex(x => x.n === 'Nanite Cluster');
+const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if(!byName.has(k)) byName.set(k,i); });
+
+/* ---------- storage (per browser) ---------- */
+const KEY = 'voidigaunt-companion:v1';
+const APPVER = '1.6.0';
+let HELPER = 0;
+const DESK = (function(){
+  if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
+  try { const x = new XMLHttpRequest(); x.open('GET','/api/ping',false); x.setRequestHeader('X-VC','1'); x.send(); if(x.status!==200) return false; try { HELPER = JSON.parse(x.responseText).helper || 0; } catch(e) {} return true; } catch(e){ return false; }
+})();
+function api(path, opts){ opts = opts || {}; opts.headers = Object.assign({'X-VC':'1'}, opts.headers||{}); return fetch(path, opts); }
+let S = {};
+if(DESK){ try { const x = new XMLHttpRequest(); x.open('GET','/api/data',false); x.setRequestHeader('X-VC','1'); x.send(); S = JSON.parse(x.responseText || '{}') || {}; } catch(e) { S = {}; } }
+else { try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { S = {}; } }
+S.pins = S.pins || [];
+S.usage = S.usage || {}; const U = S.usage; U.sessions = (U.sessions||0)+1;
+function uCount(k){ U.c = U.c || {}; U.c[k] = (U.c[k]||0)+1; }
+S.diag = S.diag || {}; if(S.diag.cur && S.diag.cur.length) S.diag.prev = S.diag.cur; S.diag.cur = [];
+S.addr = S.addr || null;
+S.quests = S.quests || null;
+let saveT = null;
+function flush(keep){ saveT = null; return api('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(S), keepalive: !!keep}).catch(()=>{}); }
+function save(){
+  if(DESK){ clearTimeout(saveT); saveT = setTimeout(flush, 300); return; }
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {}
+}
+function tabGet(){ if(DESK) return S.tab; try { return localStorage.getItem(KEY+':tab'); } catch(e) { return null; } }
+function tabSet(t){ if(DESK){ S.tab = t; save(); return; } try { localStorage.setItem(KEY+':tab', t); } catch(e) {} }
+if(DESK){
+  setInterval(() => api('/api/ping').catch(()=>{}), 10000);
+  window.addEventListener('pagehide', () => { if(saveT){ clearTimeout(saveT); flush(true); } });
+}
+if(S.galaxy && S.galaxy.sys) GX = S.galaxy;
+window.VC_LOG.hook = () => { S.diag.cur = window.VC_LOG.ev.filter(e => /error|promise|syncfail/.test(e[1])).slice(-30); save(); };
+vcLog('start', `app ${APPVER}, ${DESK ? 'desktop' : 'web page'}`);
+if(window.VC_LOG.err) window.VC_LOG.hook();
+
+/* ---------- recipe models ---------- */
+function mkRec(type, r, idx){
+  const ins = r[0], out = r[1];
+  const vin = ins.reduce((s,[id,q]) => s + I[id].v*q, 0);
+  const vout = I[out[0]].v * out[1];
+  return { key: type[0]+':'+idx, type, ins, out, op: r[2], vin, vout, mult: vin ? vout/vin : 0, profit: vout-vin,
+    qin: ins.reduce((s,[,q])=>s+q,0), nan: out[0]===NANITE,
+    inN: ins.map(([id]) => I[id].n.toLowerCase()), outN: I[out[0]].n.toLowerCase() };
+}
+const REF = G.refine.map((r,i) => mkRec('refine', r, i));
+const COOK = G.cook.map((r,i) => mkRec('cook', r, i));
+const CRAFT = G.craft.map((c,i) => {
+  const ins = c[2]; const vin = ins.reduce((s,[id,q]) => s + I[id].v*q, 0);
+  return { key:'c:'+i, type:'craft', ins, out:[c[0], c[1]], cat:c[3], vin, vout: I[c[0]].v*c[1],
+    inN: ins.map(([id]) => I[id].n.toLowerCase()), outN: I[c[0]].n.toLowerCase() };
+});
+const ALL = new Map(); [...REF,...COOK,...CRAFT].forEach(r => ALL.set(r.key, r));
+const CRAFT_CATS = [...new Set(CRAFT.map(r=>r.cat))].sort();
+
+/* ---------- shared row renderer ---------- */
+let hlq = '';
+function hl(name){
+  const q = hlq.trim().toLowerCase(); if(!q) return esc(name);
+  const at = name.toLowerCase().indexOf(q); if(at<0) return esc(name);
+  return esc(name.slice(0,at))+'<mark>'+esc(name.slice(at,at+q.length))+'</mark>'+esc(name.slice(at+q.length));
+}
+function chip(id, q, out){
+  const it = I[id];
+  const t = it.p ? '<span class="tag purple" title="Only found in purple star systems">purple</span>' : '';
+  return `<button type="button" class="chip${out?' out':''}" data-item="${esc(it.n)}" title="${esc(it.g)} · ${fmt(it.v)} u each"><span class="q">${fmt(q)}×</span><span>${hl(it.n)}</span></button>${t}`;
+}
+function pinBtn(key){
+  const on = S.pins.includes(key);
+  return `<button type="button" class="pin" data-pin="${key}" aria-pressed="${on}" aria-label="${on?'Unpin':'Pin'} recipe" title="${on?'Unpin':'Pin'}">${on?'★':'☆'}</button>`;
+}
+function row(r, extra){
+  const ins = r.ins.map(([id,q]) => chip(id,q,false)).join('<span class="plus">+</span>');
+  let stats, sub;
+  if(r.type==='craft'){
+    sub = `<span class="tag cat">${esc(r.cat)}</span> <span class="op" style="width:auto">${esc(I[r.out[0]].g)}</span>`;
+    stats = `<span class="profit">${I[r.out[0]].v ? fmt(r.vout)+' u value' : ''}</span><span class="profit">materials ${fmt(r.vin)} u</span>`;
+  } else {
+    sub = `<span class="op">${r.type==='cook'?'Nutrient Processor · ':''}${esc(r.op)}</span>`;
+    const cls = r.nan ? 'flat' : r.mult>1.001 ? 'up' : r.mult<0.999 ? 'down' : 'flat';
+    stats = r.nan ? `<span class="tag nan">nanites</span><span class="profit">${fmt(r.out[1])} nanites</span>`
+      : `<span class="mult ${cls}" title="Output value ÷ input value">×${fmtMult(r.mult)}</span><span class="profit">${r.profit>=0?'+':'−'}${fmt(Math.abs(r.profit))} u / run</span>`;
+    stats += `<span class="profit qty">${fmt(r.qin)} in → ${fmt(r.out[1])} out</span>`;
+  }
+  if(extra) stats += extra;
+  return `<div class="rec"><div class="flow">${ins}<span class="arrow" aria-label="makes">→</span>${chip(r.out[0], r.out[1], true)}${sub}</div><div class="stats">${stats}</div>${pinBtn(r.key)}</div>`;
+}
+
+/* ---------- ICONS (original line drawings, no game artwork) ---------- */
+const GLYPH_SVG = [
+  // 0 Sunset: sun setting on a horizon
+  '<path d="M3 16h18M6.5 16a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5V8.5M5.8 9.4l1.4 1.4M18.2 9.4l-1.4 1.4M8 19.5h8"/>',
+  // 1 Bird
+  '<path d="M3 11c3-3 6-3 9 1 3-4 6-4 9-1"/><path d="M12 12l-1.2 3M12 12l1.2 3"/>',
+  // 2 Face
+  '<circle cx="12" cy="12" r="8"/><path d="M9 10v1M15 10v1M8.8 14.6c1.8 1.8 4.6 1.8 6.4 0"/>',
+  // 3 Diplo: long-necked dinosaur
+  '<path d="M4 17c0-3.5 3-5 7-5h3c2 0 3-1.5 3-4V6.5c0-1 .8-1.5 1.6-1.5H20"/><path d="M4 17c-1 0-1.6-.6-1.6-1.4M7 16.5V20M10.5 16.5V20M14 15.5V20"/><path d="M11 12c3 0 4.5 1.5 4.5 3.5"/>',
+  // 4 Eclipse: circle with a crescent
+  '<circle cx="10" cy="12" r="6.5"/><path d="M15.5 5.2a7.5 7.5 0 0 1 0 13.6 6 6 0 0 0 0-13.6z"/>',
+  // 5 Balloon
+  '<path d="M12 3.5c3.3 0 5.5 2.6 5.5 5.6 0 3.6-3 6.4-5.5 6.9-2.5-.5-5.5-3.3-5.5-6.9 0-3 2.2-5.6 5.5-5.6z"/><path d="M11 16.5h2M12 16.5c0 2-1.5 2.5-1.5 4"/>',
+  // 6 Boat
+  '<path d="M3.5 15.5h17l-2.5 4h-12z"/><path d="M12 4v11.5M12 5l5.5 8.5H12M12 7l-4.5 6.5H12"/>',
+  // 7 Bug: beetle
+  '<ellipse cx="12" cy="13.5" rx="4" ry="5.5"/><circle cx="12" cy="6.5" r="1.8"/><path d="M12 8v11M8 11l-3.5-1.5M8 14H4M8.3 17l-3.3 2M16 11l3.5-1.5M16 14h4M15.7 17l3.3 2M11 5l-1.5-2M13 5l1.5-2"/>',
+  // 8 Dragonfly
+  '<path d="M12 5v15"/><circle cx="12" cy="5" r="1.4"/><path d="M12 8.5c-2.5-2-6.5-2.5-8-1.2 1 1.8 5 2.2 8 1.2zM12 8.5c2.5-2 6.5-2.5 8-1.2-1 1.8-5 2.2-8 1.2zM12 11c-2.2-.8-5.7-.5-6.8.8 1.3 1.3 4.8 1 6.8-.8zM12 11c2.2-.8 5.7-.5 6.8.8-1.3 1.3-4.8 1-6.8-.8z"/>',
+  // 9 Galaxy: spiral
+  '<path d="M12 12c0-1 1.5-1.2 2-.3.8 1.4-.6 3-2.2 2.9-2.3-.1-3.4-2.7-2.3-4.6 1.4-2.4 5-2.6 6.8-.6 2.2 2.4 1.3 6.4-1.5 7.8-3.4 1.7-7.6-.2-8.6-3.8-1.1-4 1.9-8.2 6.1-8.4"/>',
+  // 10 Voxel: hexagon cube
+  '<path d="M12 3.5l7.5 4.3v8.4L12 20.5l-7.5-4.3V7.8z"/><path d="M4.5 7.8L12 12l7.5-4.2M12 12v8.5"/>',
+  // 11 Fish
+  '<path d="M3.5 12c3-4.5 9-5.5 13 0-4 5.5-10 4.5-13 0z"/><path d="M16.5 12l4-3.5v7z"/><circle cx="8" cy="11.2" r=".6" fill="currentColor"/>',
+  // 12 Tent
+  '<path d="M2.5 19.5h19M4.5 19.5L12 7.5l7.5 12M12 7.5V3.5l3 1.2-3 1.2M12 12.5l-2.5 7M12 12.5l2.5 7"/>',
+  // 13 Rocket
+  '<path d="M12 3c2.6 2 3.8 5.2 3.3 10H8.7C8.2 8.2 9.4 5 12 3z"/><circle cx="12" cy="8.5" r="1.4"/><path d="M8.7 13l-2.5 3.2 2.8-.2M15.3 13l2.5 3.2-2.8-.2M10.3 15.8L12 20l1.7-4.2"/>',
+  // 14 Tree: Y shape
+  '<path d="M12 20.5V12M12 12L6.5 5.5M12 12l5.5-6.5M12 15.5l-2.5-2"/><path d="M8 20.5h8"/>',
+  // 15 Atlas: nested triangles
+  '<path d="M12 3.5l8.5 15h-17z"/><path d="M8.5 11.5h7L12 17.5z"/>'
+];
+function glyphSvg(v, cls){ return `<svg class="${cls||'gsv'}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${GLYPH_SVG[v]||''}</svg>`; }
+// Item category pictograms, drawn for this app.
+const KIND_SVG = {
+  p:'<circle cx="12" cy="12" r="3"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9L18 18M6 18l2.1-2.1M15.9 8.1L18 6"/>',
+  t:'<path d="M4 8l8-4 8 4v8.5l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8.5"/>',
+  c:'<path d="M7 4h10l3.5 5L12 20.5 3.5 9z"/><path d="M3.5 9h17M9.5 9L12 20.5 14.5 9M9.5 9L12 4l2.5 5"/>',
+  v:'<path d="M3 15l9-9 9 9-4 .5-5-4-5 4z"/><path d="M12 11.5V19"/>',
+  b:'<path d="M4 11l8-6.5 8 6.5v9H4z"/><path d="M10 20v-5h4v5"/>',
+  x:'<rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/><path d="M9.5 3.5v3M14.5 3.5v3M9.5 17.5v3M14.5 17.5v3M3.5 9.5h3M3.5 14.5h3M17.5 9.5h3M17.5 14.5h3"/><rect x="9.5" y="9.5" width="5" height="5"/>',
+  k:'<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 12h6M12 9v6"/>',
+  u:'<rect x="4.5" y="4.5" width="15" height="15" rx="2"/><path d="M12 16.5V8M8.5 11.5L12 8l3.5 3.5"/>',
+  f:'<path d="M4 12h16c0 4.5-3.5 7.5-8 7.5S4 16.5 4 12z"/><path d="M9 9c0-1.5 1-1.5 1-3M13 9c0-1.5 1-1.5 1-3"/>',
+  h:'<path d="M3.5 12c3-4.5 9-5.5 13 0-4 5.5-10 4.5-13 0z"/><path d="M16.5 12l4-3.5v7z"/>',
+  s:'<path d="M12 3.5l3 9 5.5 3.5-8.5-1.5-8.5 1.5L9 12.5z"/><path d="M10 17.5L12 20.5l2-3"/>',
+  o:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.5"/>',
+  m:'<path d="M3.5 6.5l5-2 7 2.5 5-2v13l-5 2-7-2.5-5 2z"/><path d="M8.5 4.5v13M15.5 7v13"/>',
+  e:'<path d="M12 3.5c3.5 0 6 5.2 6 9.5a6 6 0 0 1-12 0c0-4.3 2.5-9.5 6-9.5z"/>',
+  r:'<path d="M5 15l3-8 5-3 5 5 1 7-6 4.5z"/><path d="M8 7l5 5 6-3M13 12l-1 8.5"/>',
+  q:'<circle cx="12" cy="12" r="8"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6M12 17v.1"/>'
+};
+const IC = G.ic || {};
+function itemIconHTML(id, size){
+  const h = IC[id]; const kind = h ? h[0] : /^PROC_/.test(id) ? 'c' : 'q'; const col = h && h[1] ? '#'+h[1] : '';
+  const sym = h && h[2];
+  const style = col ? ` style="--ic:${col}"` : '';
+  if(sym) return `<span class="ico sym ${size||''}${sym.length>=3?' long':''}"${style}><span>${esc(sym)}</span></span>`;
+  return `<span class="ico k-${kind} ${size||''}"${style}><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${KIND_SVG[kind]||KIND_SVG.q}</svg></span>`;
+}
+
+/* ---------- DISPLAY SETTINGS (how multi-format things are shown) ---------- */
+S.settings = S.settings || {};
+const DSP = S.settings.disp = Object.assign({ gIcon:1, gNum:1, gName:1, gHex:0, big:'full', loc:'both', invView:'grid', gridNames:0 }, S.settings.disp || {});
+function fmtBig(n){ if(DSP.big!=='short' || Math.abs(n) < 10000) return fmt(n); const a = Math.abs(n); const [d,s] = a>=1e9 ? [1e9,'B'] : a>=1e6 ? [1e6,'M'] : [1e3,'k']; return (n<0?'−':'') + (a/d).toFixed(a/d>=100?0:a/d>=10?1:2).replace(/\.?0+$/,'') + s; }
+// One glyph written out the ways the person has chosen.
+function glyphParts(v){ const out = []; if(DSP.gIcon) out.push(glyphSvg(v,'gsv')); if(DSP.gNum) out.push(`<b>${v+1}</b>`); if(DSP.gHex) out.push(`<code>${v.toString(16).toUpperCase()}</code>`); if(DSP.gName) out.push(`<i>${esc(GLYPHS[v][0])}</i>`); return out.join(''); }
+// A whole 12-glyph address as a compact strip (saved addresses, system view).
+function addrStrip(arr){
+  const icons = DSP.gIcon ? `<span class="gstrip">${arr.map(v => `<span title="${v+1} · ${esc(GLYPHS[v][0])}">${glyphSvg(v,'gsv')}</span>`).join('')}</span>` : '';
+  const lines = [];
+  if(DSP.gNum) lines.push(`<span class="cd">${toNums(arr)}</span>`);
+  if(DSP.gHex) lines.push(`<span class="cd hex">${toHex(arr)}</span>`);
+  if(DSP.gName) lines.push(`<span class="small muted">${arr.map(v=>GLYPHS[v][0]).join(' · ')}</span>`);
+  if(!icons && !lines.length) lines.push(`<span class="cd">${toNums(arr)}</span>`);
+  return icons + lines.join('');
+}
+
+/* ---------- tabs ---------- */
+const TABS = ['recipes','planner','inventory','resources','portals','galaxy','quests','pinned'];
+let current = 'recipes';
+function showTab(t){
+  current = t;
+  TABS.forEach(n => { $('#p-'+n).hidden = n!==t; $('#t-'+n).setAttribute('aria-selected', String(n===t)); });
+  tabSet(t);
+  const ns = document.getElementById('navselect'); if(ns) ns.value = t;
+  $('#scroller').scrollTop = 0;
+  if(t==='galaxy') mapResize();
+  if(t==='pinned') renderPinned();
+  if(t==='planner') renderPlanner();
+  if(t==='inventory') renderInventory();
+  if(t==='portals') renderAddr();
+  U.tabs = U.tabs || {}; U.tabs[t] = (U.tabs[t]||0)+1; vcLog('tab', t);
+}
+$$('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+/* ---------- RECIPES ---------- */
+const R = { type:'refine', q:'', mode:'any', shown:60, slots:0, sort:'mult', money:false, cat:'', csort:'value' };
+function renderFilters(){
+  const f = $('#rfilters');
+  if(R.type==='refine' || R.type==='cook'){
+    f.innerHTML = (R.type==='refine' ? `<span class="lbl">Refiner</span><div class="seg" role="group" aria-label="Refiner size">
+      ${[[0,'All'],[1,'Portable · 1'],[2,'Medium · 2'],[3,'Large · 3']].map(([v,l]) => `<button type="button" data-slots="${v}" aria-pressed="${R.slots===v}">${l}</button>`).join('')}</div>` : '') +
+      `<label class="lbl" for="rsort">Sort</label><select id="rsort">
+        <option value="mult">Best value multiplier (×)</option><option value="profit">Highest profit per run</option>
+        <option value="qty">Most items out per item in</option><option value="name">Output name A–Z</option></select>
+      <label class="toggle" for="rmoney"><input type="checkbox" id="rmoney" ${R.money?'checked':''}> Money-makers only</label><span class="count" id="rcount2"></span>`;
+    $('#rsort').value = R.sort;
+    $('#rsort').addEventListener('change', e => { R.sort = e.target.value; R.shown=60; renderRecipes(); });
+    $('#rmoney').addEventListener('change', e => { R.money = e.target.checked; R.shown=60; renderRecipes(); });
+  } else {
+    f.innerHTML = `<label class="lbl" for="rcat">Category</label><select id="rcat"><option value="">All categories</option>${CRAFT_CATS.map(c=>`<option>${esc(c)}</option>`).join('')}</select>
+      <label class="lbl" for="rcsort">Sort</label><select id="rcsort"><option value="value">Most valuable</option><option value="cheap">Cheapest materials</option><option value="name">Name A–Z</option></select>
+      <span class="count" id="rcount2"></span>`;
+    $('#rcat').value = R.cat; $('#rcsort').value = R.csort;
+    $('#rcat').addEventListener('change', e => { R.cat = e.target.value; R.shown=60; renderRecipes(); });
+    $('#rcsort').addEventListener('change', e => { R.csort = e.target.value; R.shown=60; renderRecipes(); });
+  }
+}
+function matchQ(r, q, mode){
+  if(!q) return true;
+  const inHit = r.inN.some(n => n.includes(q)); const outHit = r.outN.includes(q);
+  return mode==='in' ? inHit : mode==='out' ? outHit : (inHit||outHit);
+}
+function recipeRows(){
+  const q = R.q.trim().toLowerCase();
+  if(R.type==='craft'){
+    let out = CRAFT.filter(r => (!R.cat || r.cat===R.cat) && matchQ(r,q,R.mode));
+    out.sort((a,b) => R.csort==='name' ? a.outN.localeCompare(b.outN) : R.csort==='cheap' ? a.vin-b.vin : b.vout-a.vout);
+    return out;
+  }
+  const src = R.type==='refine' ? REF : COOK;
+  let out = src.filter(r => (!R.slots || R.type!=='refine' || r.ins.length===R.slots) && (!R.money || (!r.nan && r.mult>1.001)) && matchQ(r,q,R.mode));
+  out.sort((a,b) => {
+    if(R.sort==='name') return a.outN.localeCompare(b.outN) || b.mult-a.mult;
+    if(R.sort!=='qty' && a.nan!==b.nan) return a.nan?1:-1;
+    if(R.sort==='qty') return (b.out[1]/b.qin - a.out[1]/a.qin) || b.mult-a.mult;
+    return R.sort==='profit' ? b.profit-a.profit : b.mult-a.mult;
+  });
+  return out;
+}
+function itemCard(){
+  const q = R.q.trim().toLowerCase(); const id = byName.get(q);
+  const el = $('#itemcard');
+  if(id===undefined){ el.innerHTML=''; return; }
+  const it = I[id];
+  const made = [REF,COOK,CRAFT].map(src => src.filter(r => r.out[0]===id).length);
+  const used = [REF,COOK,CRAFT].map(src => src.filter(r => r.ins.some(([x])=>x===id)).length);
+  const fish = it.fb ? `<span><b>Biomes</b>${esc(it.fb.join(', '))}</span><span><b>Quality</b>${esc(it.fq||'')}</span><span><b>When</b>${esc(it.ft||'')}${it.fs?' · storms only':''}</span>` : '';
+  const own = ownedOf(id);
+  const ownHTML = GX.inv ? `<button type="button" class="ownbtn" data-own="${esc(it.n)}" title="Show where it's stored">You own <b>${fmt(own.n)}</b>${own.n ? ` · in ${own.k} inventor${own.k===1?'y':'ies'} →` : ''}</button>` : '';
+  el.innerHTML = `<div class="card itemcard" data-findcard="${id}" title="Double-click to see where to find it"><div class="row" style="justify-content:space-between"><div class="row" style="gap:10px">${itemIconHTML(idOf(id),'md')}<h2>${esc(it.n)}</h2>${it.p?'<span class="tag purple">Purple systems only</span>':''}</div><button type="button" class="btn findbtn" data-find="${id}">${it.c==='Raw'||it.fb ? 'Where to find' : 'How to get it'} ↗</button></div>
+    ${ownHTML}<div class="small" id="findnote" hidden></div>
+    <div class="kv"><span><b>Type</b>${esc(it.g)}</span><span><b>Value</b>${fmt(it.v)} u</span>
+    <span><b>Made by</b>${made[0]} refiner · ${made[2]} craft · ${made[1]} cook</span>
+    <span><b>Used in</b>${used[0]} refiner · ${used[2]} craft · ${used[1]} cook</span>${fish}</div>
+    ${it.d ? `<p class="muted small" style="margin:0">${esc(it.d)}</p>` : ''}</div>`;
+}
+function renderRecipes(){
+  hlq = R.q;
+  const rows = recipeRows();
+  const total = R.type==='refine'?REF.length:R.type==='cook'?COOK.length:CRAFT.length;
+  const c = $('#rcount2'); if(c) c.textContent = `${rows.length} of ${total}`;
+  itemCard();
+  const list = $('#rlist');
+  if(!rows.length){ list.innerHTML = `<div class="empty">No ${R.type} recipes match "${esc(R.q)}". Try part of a name, like "chrom" or "cell", or another recipe type.</div>`; $('#rmore').hidden = true; return; }
+  list.innerHTML = rows.slice(0, R.shown).map(r => row(r)).join('');
+  const left = rows.length - R.shown; $('#rmore').hidden = left<=0; $('#rmore').textContent = `Show ${Math.min(left,60)} more`;
+}
+function setQuery(v){ R.q = v; R.shown = 60; $('#q').value = v; $('#qclear').hidden = !v; renderRecipes(); }
+$('#q').addEventListener('input', e => setQuery(e.target.value));
+$('#qclear').addEventListener('click', () => { setQuery(''); $('#q').focus(); });
+$('#rmore').addEventListener('click', () => { R.shown += 60; renderRecipes(); });
+
+/* ---------- item card helpers ---------- */
+const ID_OF = new Map(); Object.entries(G.ix||{}).forEach(([k,i]) => { if(!ID_OF.has(i)) ID_OF.set(i,k); });
+function idOf(i){ return ID_OF.get(i) || ''; }
+function ownedOf(i){ let n = 0, k = 0; const D = GX.inv; if(!D) return {n, k};
+  Object.values(D).forEach(list => (list||[]).forEach(c => { let here = 0; c.it.forEach(([id,a]) => { if((G.ix||{})[id]===i) here += a; }); if(here){ n += here; k++; } })); return {n, k}; }
+function goInv(name){ S.iv.tab = 'all'; ivQ = name; $('#ivq').value = name; showTab('inventory'); uCount('card-owned'); }
+function goFind(i){
+  const it = I[i]; uCount('card-find');
+  if(it.c==='Raw' || it.c==='Fish'){ RS.kind = it.c==='Fish' ? 'fish' : 'raw'; sync('rsrc', RS.kind); RS.q = it.n; $('#rq').value = it.n; showTab('resources'); renderRes(); setTimeout(() => $('#reslist').scrollIntoView({block:'start', behavior:'smooth'}), 30); return; }
+  const counts = { refine: REF.filter(r => r.out[0]===i).length, craft: CRAFT.filter(r => r.out[0]===i).length, cook: COOK.filter(r => r.out[0]===i).length };
+  const t = counts[R.type] ? R.type : ['craft','refine','cook'].find(k => counts[k]);
+  if(!t){ const n = $('#findnote'); if(n){ n.hidden = false; n.innerHTML = '<span class="muted">Nothing in the game data makes this, and it isn\'t gathered. It usually comes from traders, rewards, salvage or exploring.</span>'; } return; }
+  R.type = t; sync('rtype', t); R.mode = 'out'; sync('mode', 'out'); renderFilters(); setQuery(it.n);
+  setTimeout(() => $('#rlist').scrollIntoView({block:'start', behavior:'smooth'}), 30);
+}
+document.addEventListener('dblclick', e => { const c = e.target.closest('[data-findcard]'); if(c && !e.target.closest('button')) goFind(+c.dataset.findcard); });
+
+/* ---------- global clicks ---------- */
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-pin]');
+  if(p){ const k = p.dataset.pin; const i = S.pins.indexOf(k); if(i>=0) S.pins.splice(i,1); else S.pins.push(k); save(); updatePinCount();
+    p.setAttribute('aria-pressed', String(i<0)); p.textContent = i<0?'★':'☆'; if(current==='pinned') renderPinned(); return; }
+  const ow = e.target.closest('[data-own]'); if(ow){ goInv(ow.dataset.own); return; }
+  const fd = e.target.closest('[data-find]'); if(fd){ goFind(+fd.dataset.find); return; }
+  const c = e.target.closest('[data-item]');
+  if(c){ if(current!=='recipes') showTab('recipes'); R.mode='any'; sync('mode', R.mode); setQuery(c.dataset.item); $('#scroller').scrollTo({top:0, behavior:'smooth'}); return; }
+  const rt = e.target.closest('[data-rtype]');
+  if(rt){ R.type = rt.dataset.rtype; R.shown=60; sync('rtype', R.type); renderFilters(); renderRecipes(); return; }
+  const m = e.target.closest('[data-mode]');
+  if(m){ R.mode = m.dataset.mode; R.shown=60; sync('mode', R.mode); renderRecipes(); return; }
+  const s = e.target.closest('[data-slots]');
+  if(s){ R.slots = +s.dataset.slots; R.shown=60; renderFilters(); renderRecipes(); return; }
+});
+function sync(kind, val){ $$(`[data-${kind}]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[kind]===String(val)))); }
+function updatePinCount(){ $('#pincount').textContent = S.pins.length; }
+
+/* ---------- PINNED ---------- */
+function renderPinned(){
+  hlq = '';
+  const rows = S.pins.map(k => ALL.get(k)).filter(Boolean);
+  $('#pinlist').innerHTML = rows.length ? rows.map(r => row(r)).join('') : '<div class="empty">Nothing pinned yet. Tap ☆ on any recipe to keep it here.</div>';
+}
+
+/* ---------- INVENTORY (from save sync) ---------- */
+const IX = G.ix || {}, XI = G.xi || {};
+const UNIQUE = { PROC_FOSS:'Fossil sample', PROC_BIO:'Biological sample', PROC_PLNT:'Plant sample', PROC_TOOL:'Ancient tool', PROC_LUMP:'Mineral lump', PROC_FEAR:'Unsettling sample', PROC_BONE:'Ancient bones' };
+const infoCache = new Map();
+function itemInfo(id){
+  if(infoCache.has(id)) return infoCache.get(id);
+  let f; const i = IX[id];
+  if(i !== undefined) f = { n: I[i].n, v: I[i].v||0, g: I[i].g||'', i };
+  else if(XI[id]) f = { n: XI[id][0], g: XI[id][1], v: XI[id][2]||0, i: null };
+  else if(UNIQUE[id]) f = { n: UNIQUE[id], g: 'Unique item: its in-game name is generated, and the save only stores its type', v: 0, i: null, u: 1 };
+  else if(id !== '?' && /^[\x20-\x7e]+$/.test(id)) f = { n: id, g: 'Not in the game data this app uses (7.00)', v: 0, i: null, unk: 1 };
+  else f = { n: 'Unrecognised item', g: 'Not in the game data this app uses (7.00)', v: 0, i: null, unk: 1 };
+  infoCache.set(id, f); return f;
+}
+const IVG = [['exo','Exosuit'],['ships','Starships'],['corv','Corvettes'],['freighter','Freighter'],['base','Base storage'],['exocraft','Exocraft']];
+const IVLAB = Object.fromEntries(IVG);
+S.iv = S.iv || { tab:'all' };
+let ivQ = '';
+function invData(){ return (GX && GX.inv) || null; }
+function ivHl(name){ const q = ivQ.trim().toLowerCase(); if(!q) return esc(name); const at = name.toLowerCase().indexOf(q); if(at<0) return esc(name); return esc(name.slice(0,at))+'<mark>'+esc(name.slice(at,at+q.length))+'</mark>'+esc(name.slice(at+q.length)); }
+function ivTile(id, a, max, where){
+  const f = itemInfo(id); const pct = max ? Math.min(100, Math.round(a/max*100)) : 0;
+  const nm = f.i!==null ? `<button type="button" class="ivn" data-item="${esc(f.n)}" title="${esc(f.g)} · see recipes">${ivHl(f.n)}</button>` : `<span class="ivn plain" title="${esc(f.g)}">${ivHl(f.n)}${f.u?' <span class="tag cat">unique</span>':''}</span>`;
+  return `<div class="ivt"><div class="ivtop">${itemIconHTML(id,'sm')}${nm}</div><div class="ivq"><b>${fmt(a)}</b>${max?`<span class="muted"> / ${fmt(max)}</span>`:''}${f.v?`<span class="ivv">${fmtBig(f.v*a)} u</span>`:''}</div>${max?`<div class="ivbar"><span style="width:${pct}%"></span></div>`:''}${where?`<div class="ivw">${where}</div>`:''}</div>`;
+}
+function qShort(n){ if(n < 100000) return fmt(n); const [d,s] = n>=1e9 ? [1e9,'B'] : n>=1e6 ? [1e6,'M'] : [1e3,'k']; return (n/d).toFixed(n/d>=100?0:1).replace(/\.0$/,'') + s; }
+function gridCell(id, a, max, where, dim){
+  const f = itemInfo(id); const h = IC[id]; const col = h && h[1] ? '#'+h[1] : '#4A6A74';
+  const sym = h && h[2]; const kind = h ? h[0] : (/^PROC_/.test(id) ? 'c' : 'q'); const sub = kind==='r';
+  const amt = (sub || !max || max >= 1000) ? fmt(a) : `${fmt(a)} / ${fmt(max)}`;
+  const tip = `${f.n} · ${fmt(a)}${max ? ' / '+fmt(max) : ''}${f.v ? ' · worth '+fmt(f.v*a)+' u' : ''}${where ? ' · ' + where : ''}`;
+  const attr = f.i!==null ? ` data-item="${esc(f.n)}" role="button" tabindex="0"` : '';
+  const centre = sub || sym ? '<span class="orb" aria-hidden="true"></span>' : `<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${KIND_SVG[kind]||KIND_SVG.q}</svg>`;
+  return `<div class="gc${dim?' dim':''}${f.i!==null?' link':''}" style="--ic:${col}" title="${esc(tip)}" aria-label="${esc(f.n)}, ${esc(amt)}"${attr}>${sym ? `<span class="gpill">${esc(sym)}</span>` : ''}${centre}<span class="gq">${amt}</span>${DSP.gridNames ? `<span class="gnm">${esc(f.n)}</span>` : ''}</div>`;
+}
+const EMPTY_CELL = '<div class="gc empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 5H5v3M16 5h3v3M8 19H5v-3M16 19h3v-3"/></svg></div>';
+function containerGrid(c){
+  const q = ivQ.trim().toLowerCase();
+  if(!c.w || !c.vs){ return `<div class="igrid auto${DSP.gridNames?' names':''}">${c.it.map(([id,a,max]) => gridCell(id,a,max,'',q && !itemInfo(id).n.toLowerCase().includes(q))).join('')}</div>`; }
+  const valid = new Set(c.vs), at = new Map(), extra = [];
+  c.it.forEach(t => { const k = (t[5]|0)*c.w + (t[4]|0); if(valid.has(k) && !at.has(k)) at.set(k, t); else extra.push(t); });
+  let html = '';
+  for(let k=0; k<c.w*c.h; k++){
+    if(!valid.has(k)){ html += '<div class="gc off" aria-hidden="true"></div>'; continue; }
+    const t = at.get(k);
+    html += t ? gridCell(t[0], t[1], t[2], '', q && !itemInfo(t[0]).n.toLowerCase().includes(q)) : EMPTY_CELL;
+  }
+  return `<div class="igridwrap"><div class="igrid${DSP.gridNames?' names':''}" style="--cols:${c.w}">${html}</div></div>` + (extra.length ? `<div class="igrid auto${DSP.gridNames?' names':''}">${extra.map(([id,a,max]) => gridCell(id,a,max,'')).join('')}</div>` : '');
+}
+function ivSort(list){
+  const s = $('#ivsort').value; const a = list.slice();
+  if(s==='name') a.sort((p,r) => itemInfo(p[0]).n.localeCompare(itemInfo(r[0]).n));
+  else if(s==='amt') a.sort((p,r) => r[1]-p[1]);
+  else if(s==='value') a.sort((p,r) => itemInfo(r[0]).v*r[1] - itemInfo(p[0]).v*p[1]);
+  return a;
+}
+function ivMatch(id){ const q = ivQ.trim().toLowerCase(); return !q || itemInfo(id).n.toLowerCase().includes(q); }
+function ivWorth(list){ return list.reduce((t,[id,a]) => t + itemInfo(id).v*a, 0); }
+function ivContLabel(grp, c){ return grp==='corv' && c.store ? 'Corvette storage units' : c.n; }
+function renderInventory(){
+  const D = invData();
+  sync('ivv', DSP.invView); $('#ivsort').disabled = DSP.invView==='grid' && S.iv.tab!=='all';
+  const tabs = [['all','Everything']].concat(IVG.filter(([k]) => D && D[k] && D[k].length));
+  if(!tabs.some(t => t[0]===S.iv.tab)) S.iv.tab = 'all';
+  $('#ivtabs').innerHTML = tabs.map(([k,l]) => `<button type="button" data-ivt="${k}" aria-pressed="${S.iv.tab===k}">${l==='Base storage' ? 'Storage' : l}</button>`).join('');
+  const st = GX.stats; $('#ivcur').innerHTML = st ? `<span><i class="cu u"></i><b>Units</b>${fmtBig(st.units||0)}</span><span><i class="cu n"></i><b>Nanites</b>${fmtBig(st.nanites||0)}</span><span><i class="cu q"></i><b>Quicksilver</b>${fmtBig(st.quicksilver||0)}</span>` : '';
+  $('#invsynced').textContent = DESK ? (S.lastSync ? `Last synced ${ago(S.lastSync.at)}.` : 'Not synced yet.') : (D ? `Snapshot from your save on ${GX.snap}.` : '');
+  $('#invsync').hidden = !DESK;
+  if(!D){ $('#ivsum').innerHTML = ''; $('#ivbody').innerHTML = `<div class="empty">${DESK ? 'Press Sync to read your inventories from your save.' : 'Inventories come from your save. The desktop app reads them when you press Sync.'}</div>`; return; }
+  const groups = S.iv.tab==='all' ? IVG.map(g=>g[0]) : [S.iv.tab];
+  const conts = groups.flatMap(g => (D[g]||[]).map(c => ({g, c})));
+  const flat = conts.flatMap(x => x.c.it);
+  const kinds = new Set(flat.map(x=>x[0])).size;
+  $('#ivsum').innerHTML = `<span><b>Stacks</b>${fmt(flat.length)}</span><span><b>Different items</b>${fmt(kinds)}</span><span><b>Worth about</b>${fmtBig(ivWorth(flat))} u</span>${S.iv.tab==='all'?`<span><b>Inventories</b>${conts.length}</span>`:''}`;
+  if(S.iv.tab==='all'){
+    const m = new Map();
+    conts.forEach(({g,c}) => c.it.forEach(([id,a]) => { if(!m.has(id)) m.set(id, {a:0, w:[]}); const e = m.get(id); e.a += a; e.w.push([ivContLabel(g,c), a]); }));
+    let rows = [...m.entries()].filter(([id]) => ivMatch(id)).map(([id,e]) => [id, e.a, 0, e.w]);
+    if($('#ivsort').value==='slot') rows.sort((p,r) => itemInfo(p[0]).n.localeCompare(itemInfo(r[0]).n)); else rows = ivSort(rows);
+    if(DSP.invView==='grid'){ $('#ivbody').innerHTML = rows.length ? `<div class="igrid auto names">${rows.map(([id,a,,w]) => gridCell(id, a, 0, w.map(([n,q]) => `${n} ${fmt(q)}`).join(', '))).join('')}</div>` : `<div class="empty">Nothing called "${esc(ivQ)}" in your inventories.</div>`; return; }
+    $('#ivbody').innerHTML = rows.length ? `<div class="ivgrid">${rows.map(([id,a,,w]) => ivTile(id, a, 0, w.sort((p,r)=>r[1]-p[1]).slice(0,4).map(([n,q]) => `${esc(n)} <b>${fmt(q)}</b>`).join(' · ') + (w.length>4?` · +${w.length-4} more`:''))).join('')}</div>`
+      : `<div class="empty">Nothing called "${esc(ivQ)}" in your inventories.</div>`;
+    return;
+  }
+  const html = conts.map(({g,c}) => {
+    const items = ivSort(c.it.filter(([id]) => ivMatch(id)));
+    if(ivQ && !items.length) return '';
+    const grid = DSP.invView==='grid';
+    const tags = [c.kind && c.kind!=='Corvette' ? `<span class="tag cat">${esc(c.kind)}</span>` : '', c.cls ? `<span class="tag cat">${esc(c.cls)}-class</span>` : '', c.prim ? '<span class="tag nan">Current ship</span>' : '', c.store ? '<span class="tag cat">Built storage</span>' : '', c.un ? '<span class="tag cat">Unnamed</span>' : ''].join('');
+    const used = c.slots ? `${c.it.length} of ${c.slots} slots` : `${c.it.length} stack${c.it.length===1?'':'s'}`;
+    return `<details class="card ivc"${c.it.length || ivQ ? ' open' : ''}><summary><span class="ivh">${esc(ivContLabel(g,c))}</span>${tags}<span class="muted small ivm">${used} · ${fmtBig(ivWorth(c.it))} u</span></summary>
+      ${grid ? containerGrid(c) : items.length ? `<div class="ivgrid">${items.map(([id,a,max]) => ivTile(id,a,max)).join('')}</div>` : '<div class="muted small">Empty.</div>'}</details>`;
+  }).join('');
+  $('#ivbody').innerHTML = html || `<div class="empty">Nothing called "${esc(ivQ)}" here.</div>`;
+}
+$('#ivtabs').addEventListener('click', e => { const b = e.target.closest('[data-ivt]'); if(!b) return; S.iv.tab = b.dataset.ivt; save(); renderInventory(); uCount('inv-'+S.iv.tab); });
+$('#ivq').addEventListener('input', e => { ivQ = e.target.value; renderInventory(); });
+$('#ivsort').addEventListener('change', renderInventory);
+$$('[data-ivv]').forEach(b => b.addEventListener('click', () => { DSP.invView = b.dataset.ivv; save(); renderInventory(); uCount('inv-view-'+DSP.invView); }));
+$('#ivbody').addEventListener('keydown', e => { const c = e.target.closest('.gc[data-item]'); if(c && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); c.click(); } });
+
+/* ---------- PLANNER ---------- */
+const P = { type:'refine', shown:40, hideBase:false };
+const names = $('#itemnames');
+names.innerHTML = [...byName.keys()].sort().map(k => `<option value="${esc(I[byName.get(k)].n)}">`).join('');
+if(!S.inv){ S.inv = [['Carbon',500],['Ferrite Dust',400],['Oxygen',200],['Sodium',150],['Di-hydrogen',250],['Salt',80],['Chromatic Metal',300],['Pure Ferrite',200]].map(([n,q]) => [byName.get(n.toLowerCase()),q]).filter(x=>x[0]!==undefined); S.invExample = true; }
+function renderInv(){
+  $('#invexample').hidden = !S.invExample;
+  $('#invlist').innerHTML = S.inv.length ? S.inv.map(([id,q],i) => `<span class="invi">${esc(I[id].n)}<input type="number" min="0" value="${q}" data-invq="${i}" aria-label="${esc(I[id].n)} quantity"><button type="button" data-invx="${i}" aria-label="Remove ${esc(I[id].n)}">×</button></span>`).join('') : '<span class="muted small">Nothing added yet.</span>';
+}
+S.pl = S.pl || {};
+if(!S.pl.groups) S.pl.groups = { exo:1, ships:1, corv:1, freighter:1, base:1, exocraft:1 };
+function plSrc(){ if(!S.pl.src) return (GX.inv && (S.invExample || !S.inv.length)) ? 'sync' : 'list'; return S.pl.src; }
+function syncStock(){ const m = new Map(), D = GX.inv; if(!D) return m;
+  IVG.forEach(([k]) => { if(!S.pl.groups[k]) return; (D[k]||[]).forEach(c => c.it.forEach(([id,a]) => { const i = IX[id]; if(i!==undefined) m.set(i, (m.get(i)||0)+a); })); });
+  return m; }
+function stock(){ if(plSrc()==='sync') return syncStock(); const m = new Map(); S.inv.forEach(([id,q]) => m.set(id, (m.get(id)||0)+q)); return m; }
+function renderPlSrc(){
+  const src = plSrc(); sync('psrc', src);
+  $('#plsync').hidden = src!=='sync'; $('#pllist').hidden = src!=='list';
+  if(src!=='sync') return;
+  const D = GX.inv;
+  if(!D){ $('#plgroups').innerHTML = ''; $('#plsum').textContent = DESK ? 'Press Sync (top right) to read your inventories first.' : 'Your inventories come from the desktop app\'s Sync. Switch to "My own list" to type items in here.'; return; }
+  $('#plgroups').innerHTML = IVG.filter(([k]) => D[k] && D[k].some(c=>c.it.length)).map(([k,l]) => { const n = D[k].reduce((t,c)=>t+c.it.length,0);
+    return `<label class="toggle" for="plg-${k}"><input type="checkbox" id="plg-${k}" data-plg="${k}" ${S.pl.groups[k]?'checked':''}> ${l} <span class="small">(${n})</span></label>`; }).join('');
+  const m = syncStock(); let tot = 0; m.forEach(v => tot += v);
+  $('#plsum').textContent = `${m.size} different items, ${fmt(tot)} in total${S.lastSync ? ', from your sync ' + ago(S.lastSync.at) : ''}.`;
+}
+$$('[data-psrc]').forEach(b => b.addEventListener('click', () => { S.pl.src = b.dataset.psrc; save(); renderPlanner(); uCount('planner-'+S.pl.src); }));
+$('#plgroups').addEventListener('change', e => { const k = e.target.dataset.plg; if(!k) return; S.pl.groups[k] = e.target.checked ? 1 : 0; save(); renderPlanner(); });
+
+function runs(ins, have){ let n = Infinity; for(const [id,q] of ins){ const h = have.get(id)||0; n = Math.min(n, Math.floor(h/q)); } return n===Infinity?0:n; }
+function renderPlanner(){
+  renderInv(); renderPlSrc();
+  const have = stock();
+  const pack = src => src.map(r => ({r, n: runs(r.ins, have)})).filter(x => x.n>0);
+  const res = { refine: pack(REF), craft: pack(CRAFT).filter(x => !P.hideBase || x.r.cat!=='Base part'), cook: pack(COOK) };
+  ['refine','craft','cook'].forEach(t => $('#pc-'+t).textContent = `(${res[t].length})`);
+  const list = res[P.type];
+  list.sort((a,b) => P.type==='craft' ? b.r.vout-a.r.vout : (b.r.profit*b.n - a.r.profit*a.n));
+  hlq = '';
+  $('#plist').innerHTML = list.length ? list.slice(0,P.shown).map(x => row(x.r, `<span class="profit" style="color:var(--accent)">can run ${fmt(x.n)}×</span>`)).join('')
+    : `<div class="empty">Nothing to ${P.type} with ${plSrc()==='sync' ? 'what\'s in the ticked inventories' : 'what\'s in your list yet. Add more items above'}.</div>`;
+  const left = list.length - P.shown; $('#pmore').hidden = left<=0; $('#pmore').textContent = `Show ${Math.min(left,40)} more`;
+}
+function addInv(){
+  const n = $('#invname').value.trim().toLowerCase(); const id = byName.get(n);
+  const q = Math.max(1, parseInt($('#invqty').value,10)||1);
+  if(id===undefined){ $('#invname').setCustomValidity('Pick an item from the list'); $('#invname').reportValidity(); return; }
+  $('#invname').setCustomValidity('');
+  if(S.invExample){ S.inv = []; S.invExample = false; }
+  const ex = S.inv.find(x => x[0]===id); if(ex) ex[1] += q; else S.inv.push([id,q]);
+  save(); $('#invname').value=''; renderPlanner(); $('#invname').focus();
+}
+$('#invadd').addEventListener('click', addInv);
+$('#invname').addEventListener('keydown', e => { if(e.key==='Enter') addInv(); });
+$('#invname').addEventListener('input', () => $('#invname').setCustomValidity(''));
+$('#invclear').addEventListener('click', () => { S.inv = []; S.invExample = false; save(); renderPlanner(); });
+$('#invlist').addEventListener('change', e => { const i = e.target.dataset.invq; if(i===undefined) return; S.inv[+i][1] = Math.max(0, parseInt(e.target.value,10)||0); S.invExample=false; save(); renderPlanner(); });
+$('#invlist').addEventListener('click', e => { const i = e.target.dataset.invx; if(i===undefined) return; S.inv.splice(+i,1); save(); renderPlanner(); });
+$$('[data-ptype]').forEach(b => b.addEventListener('click', () => { P.type = b.dataset.ptype; P.shown=40; sync('ptype', P.type); renderPlanner(); }));
+$('#pbase').addEventListener('change', e => { P.hideBase = e.target.checked; renderPlanner(); });
+$('#pmore').addEventListener('click', () => { P.shown += 40; renderPlanner(); });
+
+/* ---------- RESOURCES ---------- */
+const RS = { kind:'raw', q:'' };
+const RAW = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Raw').sort((a,b)=>a.it.n.localeCompare(b.it.n));
+const FISH = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Fish').sort((a,b)=>a.it.n.localeCompare(b.it.n));
+function renderRes(){
+  const q = RS.q.trim().toLowerCase();
+  const src = RS.kind==='raw' ? RAW : FISH;
+  const rows = src.filter(({it}) => !q || it.n.toLowerCase().includes(q) || (it.d||'').toLowerCase().includes(q) || (it.g||'').toLowerCase().includes(q) || (it.fb||[]).join(' ').toLowerCase().includes(q));
+  $('#rcount').textContent = `${rows.length} of ${src.length}`;
+  $('#reslist').innerHTML = rows.length ? rows.map(({it}) => RS.kind==='raw'
+    ? `<div class="rec" style="grid-template-columns:1fr auto"><div class="flow"><button type="button" class="chip out" data-item="${esc(it.n)}">${esc(it.n)}</button>${it.p?'<span class="tag purple">purple systems</span>':''}<span class="tag cat">${esc(it.g)}</span><div class="op" style="font-family:var(--body); font-size:13.5px">${esc(it.d||'')}</div></div><div class="stats"><span class="profit">${fmt(it.v)} u</span></div></div>`
+    : `<div class="rec" style="grid-template-columns:1fr auto"><div class="flow"><span class="chip out" style="cursor:default">${esc(it.n)}</span><span class="tag cat">${esc(it.fq||'')}</span>${it.fs?'<span class="tag nan">storms</span>':''}<div class="op">Biomes: ${esc((it.fb||[]).join(', '))} · ${esc(it.ft||'')}</div></div><div class="stats"><span class="profit">${fmt(it.v)} u</span></div></div>`).join('')
+    : '<div class="empty">No matches.</div>';
+}
+$$('[data-rsrc]').forEach(b => b.addEventListener('click', () => { RS.kind = b.dataset.rsrc; sync('rsrc', RS.kind); renderRes(); }));
+$('#rq').addEventListener('input', e => { RS.q = e.target.value; renderRes(); });
+
+/* ---------- PORTALS ---------- */
+const GLYPHS = [['Sunset',''],['Bird',''],['Face',''],['Diplo','long-neck dinosaur'],['Eclipse','circle + crescent'],['Balloon',''],['Boat',''],['Bug',''],['Dragonfly',''],['Galaxy','spiral'],['Voxel','hexagon'],['Fish',''],['Tent',''],['Rocket',''],['Tree','Y shape'],['Atlas','triangles']];
+let addr = [];
+function toHex(a){ return a.map(v=>v.toString(16).toUpperCase()).join(''); }
+function toNums(a){ return a.map(v=>v+1).join('-'); }
+function parseAddr(s){
+  s = s.trim();
+  if(/^[0-9a-fA-F]{12}$/.test(s.replace(/[\s-]/g,'')) && !/\d+-\d+/.test(s) ) return s.replace(/[\s-]/g,'').split('').map(c=>parseInt(c,16));
+  const parts = s.split(/[\s,.-]+/).filter(Boolean).map(Number);
+  if(parts.length===12 && parts.every(n=>n>=1&&n<=16)) return parts.map(n=>n-1);
+  if(/^[0-9a-fA-F]{12}$/.test(s.replace(/[\s-]/g,''))) return s.replace(/[\s-]/g,'').split('').map(c=>parseInt(c,16));
+  return null;
+}
+let gpicked = -1, gcur = null, gmode = 'rep', gonce = null, gpop = -1, gflash = '', gflashT = null; const ghist = [];
+function gsnap(){ ghist.push(addr.slice()); if(ghist.length>60) ghist.shift(); }
+function flashHint(msg){ gflash = msg; clearTimeout(gflashT); gflashT = setTimeout(() => { gflash=''; renderAddr(); }, 2600); renderAddr(); }
+function renderAddr(){
+  const n = addr.length;
+  if(gcur!==null && gcur>=n) gcur = null;
+  const next = gcur===null ? (n<12 ? n : -1) : gcur;
+  const slots = []; for(let i=0;i<12;i++){ const v = addr[i]; const fill = v!==undefined;
+    slots.push(`<div class="slot${fill?' fill':''}${i===0?' p1':''}${i===next?' cur':''}${i===gpop?' pop':''}" data-slot="${i}" role="button" tabindex="0" aria-pressed="${gcur===i}" aria-label="Spot ${i+1}${fill?': '+GLYPHS[v][0]+', number '+(v+1):': empty'}">
+      <div class="sn">${i===0?(fill?'planet '+v:'planet'):i+1}</div><div class="sv">${fill? slotFace(v) : '·'}</div><div class="sl">${fill && DSP.gName ? esc(GLYPHS[v][0]) : ''}</div>${fill?`<button type="button" class="sx" data-slotx="${i}" aria-label="Remove glyph from spot ${i+1}" title="Remove">×</button>`:''}</div>`); }
+  $('#gslots').innerHTML = slots.join(''); gpop = -1;
+  const mode = gonce || gmode;
+  $('#ghint').innerHTML = gflash ? `<span style="color:var(--bad)">${esc(gflash)}</span>`
+    : gcur===null ? (n<12 ? `Next glyph goes in spot ${n+1}. Tap any spot to change it.` : 'All 12 glyphs are in. Tap a spot to change it, or × to remove one.')
+    : mode==='rep' ? `Spot ${gcur+1} picked: the next glyph replaces it. Tap it again to go back to adding at the end.`
+    : `Spot ${gcur+1} picked: the next glyph is inserted there and the rest move along one.`;
+  const done = n===12;
+  $('#gcodes').innerHTML = done ? [DSP.gIcon ? `<div><span>Glyphs</span><span class="gstrip big">${addr.map(v => glyphSvg(v,'gsv')).join('')}</span></div>` : '',
+      (DSP.gNum || !(DSP.gIcon||DSP.gHex||DSP.gName)) ? `<div><span>Keypad 1–16</span>${toNums(addr)}</div>` : '', DSP.gHex ? `<div><span>Hex code</span>${toHex(addr)}</div>` : '',
+      DSP.gName ? `<div><span>Names</span>${addr.map(v=>GLYPHS[v][0]).join(' · ')}</div>` : ''].join('') : `<div class="muted small">${12-n} glyph${12-n===1?'':'s'} to go.</div>`;
+  $('#gplanet').innerHTML = [1,2,3,4,5,6].map(p => `<button type="button" data-gp="${p}" aria-pressed="${done && addr[0]===p}" ${done?'':'disabled'}>${p}</button>`).join('');
+  $('#gback').disabled = !ghist.length;
+}
+function pressGlyph(v){
+  const n = addr.length; const mode = gonce || gmode;
+  if(gcur===null){ if(n>=12){ flashHint('All 12 spots are full. Tap a spot to replace it, or remove one with ×.'); return; } gsnap(); addr.push(v); gpop = n; }
+  else if(mode==='rep'){ gsnap(); addr[gcur] = v; gpop = gcur; gcur = gcur+1 < n ? gcur+1 : null; }
+  else { if(n>=12){ flashHint('Insert needs a free spot. Remove a glyph first, or switch to Replace.'); return; } gsnap(); addr.splice(gcur,0,v); gpop = gcur; gcur = gcur+1 < addr.length ? gcur+1 : null; }
+  gonce = null; renderAddr(); uCount('glyph');
+}
+function removeGlyph(i){ if(i<0 || i>=addr.length) return; gsnap(); addr.splice(i,1); gcur = i<addr.length ? i : null; gonce = gcur===null ? null : 'ins'; renderAddr(); uCount('glyph-remove'); }
+function pickSlot(i){ gonce = null; gcur = (gpicked===i && gcur===i) || i>=addr.length ? null : i; gpicked = gcur===null ? -1 : i; renderAddr(); }
+function slotFace(v){ const p = []; if(DSP.gIcon) p.push(glyphSvg(v,'gsv')); if(DSP.gNum) p.push(`<span class="gnum">${v+1}</span>`); if(DSP.gHex) p.push(`<span class="ghex">${v.toString(16).toUpperCase()}</span>`); if(!p.length) p.push(`<span class="gnum">${v+1}</span>`); return p.join(''); }
+function renderPad(){ $('#gpad').innerHTML = GLYPHS.map(([n,h],i) => `<button type="button" class="gkey" data-g="${i}" aria-label="${n}, number ${i+1}">${DSP.gIcon ? glyphSvg(i,'gkv') : ''}<span class="gn">${DSP.gNum || !(DSP.gIcon||DSP.gHex||DSP.gName) ? i+1 : ''}${DSP.gHex ? `<span class="ghex">${i.toString(16).toUpperCase()}</span>` : ''}</span>${DSP.gName ? `<span class="gl">${n}</span>` : ''}${!DSP.gIcon && h ? `<span class="gh">${h}</span>` : ''}</button>`).join(''); }
+renderPad();
+$('#gpad').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if(b) pressGlyph(+b.dataset.g); });
+$('#gslots').addEventListener('click', e => { const x = e.target.closest('[data-slotx]'); if(x){ e.stopPropagation(); removeGlyph(+x.dataset.slotx); return; } const s = e.target.closest('[data-slot]'); if(s) pickSlot(+s.dataset.slot); });
+$('#gslots').addEventListener('keydown', e => { const s = e.target.closest('[data-slot]'); if(s && (e.key==='Enter' || e.key===' ') && !e.target.closest('[data-slotx]')){ e.preventDefault(); pickSlot(+s.dataset.slot); } });
+$$('[data-gmode]').forEach(b => b.addEventListener('click', () => { gmode = b.dataset.gmode; gonce = null; sync('gmode', gmode); renderAddr(); }));
+$('#gback').addEventListener('click', () => { if(!ghist.length) return; addr = ghist.pop(); gcur = null; gonce = null; renderAddr(); });
+$('#gclear').addEventListener('click', () => { if(!addr.length) return; gsnap(); addr = []; gcur = null; gonce = null; renderAddr(); });
+$('#gload').addEventListener('click', () => { const a = parseAddr($('#gpaste').value); if(!a){ $('#gpaste').setCustomValidity('Use 12 hex characters (23E9FEFF7FFC) or 12 numbers from 1 to 16'); $('#gpaste').reportValidity(); return; } $('#gpaste').setCustomValidity(''); gsnap(); addr = a; gcur = null; renderAddr(); });
+$('#gpaste').addEventListener('input', () => $('#gpaste').setCustomValidity(''));
+$('#gpaste').addEventListener('keydown', e => { if(e.key==='Enter') $('#gload').click(); });
+$('#gplanet').addEventListener('click', e => { const b = e.target.closest('[data-gp]'); if(!b || addr.length<12) return; gsnap(); addr[0] = +b.dataset.gp; gpop = 0; renderAddr(); });
+document.addEventListener('keydown', e => {
+  if(current!=='portals' || e.ctrlKey || e.metaKey || e.altKey || !$('#drawer').hidden) return;
+  const t = e.target; if(t && (t.matches('input, textarea, select') || t.isContentEditable)) return;
+  const k = e.key;
+  if(/^[0-9a-fA-F]$/.test(k)){ e.preventDefault(); pressGlyph(parseInt(k,16)); return; }
+  if(k==='Backspace'){ e.preventDefault(); if(gcur===null){ if(addr.length){ gsnap(); addr.pop(); renderAddr(); } } else if(gcur>0){ gsnap(); addr.splice(gcur-1,1); gcur--; renderAddr(); } return; }
+  if(k==='Delete'){ if(gcur!==null){ e.preventDefault(); removeGlyph(gcur); } return; }
+  if(k==='ArrowLeft'){ e.preventDefault(); gonce=null; gcur = gcur===null ? Math.max(0, addr.length-1) : Math.max(0, gcur-1); if(!addr.length) gcur=null; renderAddr(); return; }
+  if(k==='ArrowRight'){ e.preventDefault(); gonce=null; if(gcur!==null) gcur = gcur+1 < addr.length ? gcur+1 : null; renderAddr(); return; }
+  if(k==='Escape'){ gcur = null; gonce = null; renderAddr(); }
+});
+function portalHex(p, sys){ const h=(v,n)=>(v & ((1<<(n*4))-1)).toString(16).toUpperCase().padStart(n,'0'); return h(p,1)+h(sys.s,3)+h(sys.y,2)+h(sys.z,3)+h(sys.x,3); }
+function defaultAddrs(){
+  const out = [];
+  const bount = GX.sys.find(s => s.n==='Bountria II');
+  if(bount){ [[1,'Emberwatch'],[2,'Cragthorn'],[3,'Galemere'],[4,'Sapphmere']].forEach(([p,n]) => out.push({n:`Bountria II · ${n}`, h: portalHex(p,bount), note: p===4?'Waterworld, no portal (seafloor drop)':''})); }
+  GX.sys.forEach(s => (s.b||[]).forEach(([n,t,p]) => { if(t==='Base' && p>0 && !(s.n==='Bountria II')) out.push({n:`${n}${s.n?' · '+s.n:''}`, h: portalHex(p,s), note:'Your base\'s planet'}); }));
+  return out;
+}
+if(!S.addr){ S.addr = defaultAddrs(); save(); }
+function renderSaved(){
+  $('#gsaved').innerHTML = S.addr.length ? S.addr.map((a,i) => { const arr = a.h.split('').map(c=>parseInt(c,16));
+    return `<div class="srow"><div><div class="nm">${esc(a.n)}</div><div class="gaddr">${addrStrip(arr)}</div>${a.note?`<div class="small muted">${esc(a.note)}</div>`:''}</div>
+    <div class="acts"><button class="btn" type="button" data-gl="${i}">Load</button><button class="btn ghost" type="button" data-gcopy="${i}">Copy</button><button class="btn ghost" type="button" data-gdel="${i}" aria-label="Delete ${esc(a.n)}">✕</button></div></div>`; }).join('')
+    : '<div class="empty">No saved addresses.</div>';
+}
+$('#gsaved').addEventListener('click', e => {
+  const l = e.target.closest('[data-gl]'); if(l){ addr = S.addr[+l.dataset.gl].h.split('').map(c=>parseInt(c,16)); renderAddr(); $('#gslots').scrollIntoView({block:'center', behavior:'smooth'}); return; }
+  const c = e.target.closest('[data-gcopy]'); if(c){ const a = S.addr[+c.dataset.gcopy]; const txt = `${a.n}: ${toNums(a.h.split('').map(x=>parseInt(x,16)))} (${a.h})`;
+    const done = () => { c.textContent='Copied'; setTimeout(()=>c.textContent='Copy',1400); };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => { c.textContent='Select text'; }); return; }
+  const d = e.target.closest('[data-gdel]'); if(d){ const i = +d.dataset.gdel;
+    if(d.dataset.confirm){ S.addr.splice(i,1); save(); renderSaved(); } else { d.dataset.confirm='1'; d.textContent='Delete?'; setTimeout(()=>{ if(d.isConnected){ delete d.dataset.confirm; d.textContent='✕'; } },2500); } }
+});
+$('#gsave').addEventListener('click', () => { if(addr.length<12){ $('#gname').setCustomValidity('Finish all 12 glyphs first'); $('#gname').reportValidity(); return; }
+  const n = $('#gname').value.trim() || `Address ${S.addr.length+1}`; $('#gname').setCustomValidity(''); S.addr.unshift({n, h: toHex(addr)}); save(); $('#gname').value=''; renderSaved(); });
+$('#gname').addEventListener('input', () => $('#gname').setCustomValidity(''));
+
+/* ---------- GALAXY MAP ---------- */
+const cv = $('#map'); const ctx = cv.getContext('2d');
+const GALAXIES = "Euclid,Hilbert Dimension,Calypso,Hesperius Dimension,Hyades,Ickjamatew,Budullangr,Kikolgallr,Eltiensleen,Eissentam,Elkupalos,Aptarkaba,Ontiniangp,Odiwagiri,Ogtialabi,Muhacksonto,Hitonskyer,Rerasmutul,Isdoraijung,Doctinawyra,Loychazinq,Zukasizawa,Ekwathore,Yeberhahne,Twerbetek,Sivarates,Eajerandal,Aldukesci,Wotyarogii,Sudzerbal,Maupenzhay,Sugueziume,Brogoweldian,Ehbogdenbu,Ijsenufryos,Nipikulha,Autsurabin,Lusontrygiamh,Rewmanawa,Ethiophodhe,Urastrykle,Xobeurindj,Oniijialdu,Wucetosucc,Ebyeloof,Odyavanta,Milekistri,Waferganh,Agnusopwit,Teyaypilny,Zalienkosm,Ladgudiraf,Mushonponte,Amsentisz,Fladiselm,Laanawemb,Ilkerloor,Davanossi,Ploehrliou,Corpinyaya,Leckandmeram,Quulngais,Nokokipsechl,Rinblodesa,Loydporpen,Ibtrevskip,Elkowaldb,Heholhofsko,Yebrilowisod,Husalvangewi,Ovna'uesed,Bahibusey,Nuybeliaure,Doshawchuc,Ruckinarkh,Thorettac,Nuponoparau,Moglaschil,Uiweupose,Nasmilete,Ekdaluskin,Hakapanasy,Dimonimba,Cajaccari,Olonerovo,Umlanswick,Henayliszm,Utzenmate,Umirpaiya,Paholiang,Iaereznika,Yudukagath,Boealalosnj,Yaevarcko,Coellosipp,Wayndohalou,Smoduraykl,Apmaneessu,Hicanpaav,Akvasanta,Tuychelisaor,Rivskimbe,Daksanquix,Kissonlin,Aediabiel,Ulosaginyik,Roclaytonycar,Kichiaroa,Irceauffey,Nudquathsenfe,Getaizakaal,Hansolmien,Bloytisagra,Ladsenlay,Luyugoslasr,Ubredhatk,Cidoniana,Jasinessa,Torweierf,Saffneckm,Thnistner,Dotusingg,Luleukous,Jelmandan,Otimanaso,Enjaxusanto,Sezviktorew,Zikehpm,Bephembah,Broomerrai,Meximicka,Venessika,Gaiteseling,Zosakasiro,Drajayanes,Ooibekuar,Urckiansi,Dozivadido,Emiekereks,Meykinunukur,Kimycuristh,Roansfien,Isgarmeso,Daitibeli,Gucuttarik,Enlaythie,Drewweste,Akbulkabi,Homskiw,Zavainlani,Jewijkmas,Itlhotagra,Podalicess,Hiviusauer,Halsebenk,Puikitoac,Gaybakuaria,Grbodubhe,Rycempler,Indjalala,Fontenikk,Pasycihelwhee,Ikbaksmit,Telicianses,Oyleyzhan,Uagerosat,Impoxectin,Twoodmand,Hilfsesorbs,Ezdaranit,Wiensanshe,Ewheelonc,Litzmantufa,Emarmatosi,Mufimbomacvi,Wongquarum,Hapirajua,Igbinduina,Wepaitvas,Sthatigudi,Yekathsebehn,Ebedeagurst,Nolisonia,Ulexovitab,Iodhinxois,Irroswitzs,Bifredait,Beiraghedwe,Yeonatlak,Cugnatachh,Nozoryenki,Ebralduri,Evcickcandj,Ziybosswin,Heperclait,Sugiuniam,Aaseertush,Uglyestemaa,Horeroedsh,Drundemiso,Ityanianat,Purneyrine,Dokiessmat,Nupiacheh,Dihewsonj,Rudrailhik,Tweretnort,Snatreetze,Iwundaracos,Digarlewena,Erquagsta,Logovoloin,Boyaghosganh,Kuolungau,Pehneldept,Yevettiiqidcon,Sahliacabru,Noggalterpor,Chmageaki,Veticueca,Vittesbursul,Nootanore,Innebdjerah,Kisvarcini,Cuzcogipper,Pamanhermonsu,Brotoghek,Mibittara,Huruahili,Raldwicarn,Ezdartlic,Badesclema,Isenkeyan,Iadoitesu,Yagrovoisi,Ewcomechio,Inunnunnoda,Dischiutun,Yuwarugha,Ialmendra,Reponudrle,Rinjanagrbo,Zeziceloh,Oeileutasc,Zicniijinis,Dugnowarilda,Neuxoisan,Ilmenhorn,Rukwatsuku,Nepitzaspru,Chcehoemig,Haffneyrin,Uliciawai,Tuhgrespod,Iousongola,Odyalutai".split(',');
+const galName = g => GALAXIES[g] || `Galaxy ${g+1}`;
+let ALLSY = GX.sys; let cur = GX.cur; if(cur.g === undefined) cur.g = 0;
+let galView = cur.g || 0;
+let SY = [];
+function filterGal(){ SY = ALLSY.filter(s => (s.g||0) === galView); calcAutoHS(); HS = MV.hs==='auto' ? autoHS : MV.hs; }
+const LY = 400;
+const dist = s => Math.round(Math.sqrt(s.x*s.x + s.y*s.y + s.z*s.z) * LY);
+const isCur = s => s.x===cur.x && s.y===cur.y && s.z===cur.z && s.s===cur.s && (s.g||0)===(cur.g||0);
+S.mapv = S.mapv || {};
+const MV = S.mapv; if(typeof MV.yaw !== 'number') MV.yaw = 0; if(typeof MV.pitch !== 'number') MV.pitch = 90; if(!['auto',1,5,20,50].includes(MV.hs)) MV.hs = 'auto';
+let HS = 1, autoHS = 30, maxY = 1;
+filterGal();
+function calcAutoHS(){ let h = 50, v = 1; SY.forEach(s => { h = Math.max(h, Math.abs(s.x), Math.abs(s.z)); v = Math.max(v, Math.abs(s.y)); }); maxY = v; autoHS = Math.round(Math.max(1, Math.min(300, h/v*0.3))); }
+// Auto stretch follows the zoom: zoomed out it stretches a lot, zoomed in to a few systems it stretches less.
+function autoFromView(){ if(MV.hs!=='auto' || !W) return; const half = W/2/view.scale; const h = Math.round(Math.max(1, Math.min(300, half/Math.max(maxY,1)*0.35))); if(h!==HS){ HS = h; } }
+const fmtLy = ly => { const a = Math.abs(ly); return a>=10000 ? fmt(a/1000)+'k' : a>=1000 ? (a/1000).toFixed(1).replace(/\.0$/,'')+'k' : fmt(a); };
+let view = { fx:0, fy:0, fz:0, scale:1 }; let W=0, H=0, dpr=1; let sel = SY.find(isCur) || null; let showPath=false;
+let cY=1, sY=0, cP=0, sP=1;
+function camUpdate(){ HS = MV.hs==='auto' ? autoHS : MV.hs; const t = MV.yaw*Math.PI/180, p = MV.pitch*Math.PI/180; cY=Math.cos(t); sY=Math.sin(t); cP=Math.cos(p); sP=Math.sin(p); }
+camUpdate();
+// world (x, y up, z) -> [screen-x units, screen-y units, depth]
+function proj(x,y,z){ const x1 = x*cY - z*sY, z1 = x*sY + z*cY; return [x1, z1*sP - y*cP*HS, z1*cP + y*sP]; }
+function toScreen(x,y,z){ const a = proj(x-view.fx, y-view.fy, z-view.fz); return [W/2 + a[0]*view.scale, H/2 + a[1]*view.scale, a[2]]; }
+const sp = s => toScreen(s.x, s.y, s.z);
+// screen pixels -> world offset (moves along the camera's right and screen-down directions)
+function panVec(dx, dy){ const k = 1/view.scale; return [(dx*cY + dy*sY*sP)*k, (-dy*cP/HS)*k, (-dx*sY + dy*cY*sP)*k]; }
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function mapResize(){ const r = cv.getBoundingClientRect(); if(!r.width) return; dpr = window.devicePixelRatio||1; W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr; if(!mapResize.done){ fitAll(); mapResize.done=true; } draw(); }
+function fitAll(){ view.fx=0; view.fy=0; view.fz=0; let mx=30, my=30; SY.forEach(s => { const a = proj(s.x,s.y,s.z); mx=Math.max(mx,Math.abs(a[0])); my=Math.max(my,Math.abs(a[1])); }); view.scale = Math.max(0.02, Math.min(W/(2*mx*1.1), H/(2*my*1.18))); }
+function focusOn(s, minScale){ view.fx = s.x; view.fy = s.y; view.fz = s.z; if(minScale) view.scale = Math.max(view.scale, minScale); }
+function kind(s){ if(isCur(s)) return 'cur'; if(s.b) return 'base'; if(s.t) return 'tele'; return 'vis'; }
+const MAPDEF = { cur:'#F0A640', base:'#5FC0C5', tele:'#B99AF0', vis:'#7FA3AE', you:'#6BD19A', other:'#E07A9A', none:'#5E7880', path:'#F0A640', core:'#FFFFFF' };
+const COL = { cur:MAPDEF.cur, base:MAPDEF.base, tele:MAPDEF.tele, vis:MAPDEF.vis, path:MAPDEF.path, core:MAPDEF.core };
+const DCOL = { you:MAPDEF.you, other:MAPDEF.other, none:MAPDEF.none };
+let colMode = 'type';
+function disc(s){ return s.by==='you' ? 'you' : s.by ? 'other' : 'none'; }
+function dotCol(s){ const k = kind(s); if(k==='cur') return COL.cur; return colMode==='disc' ? DCOL[disc(s)] : COL[k]; }
+function renderLegend(){
+  const items = colMode==='disc'
+    ? [[COL.cur,'You are here'],[DCOL.you,'Discovered by you'],[DCOL.other,'Discovered by another player'],[DCOL.none,'No discovery record'],[COL.core,'Core']]
+    : [[COL.cur,'You are here'],[COL.base,'Bases / stations'],[COL.tele,'Teleporter stops'],[COL.vis,'Visited'],[COL.core,'Core']];
+  const mine = SY.filter(s=>s.v && s.by==='you').length, others = SY.filter(s=>s.v && s.by && s.by!=='you').length;
+  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '');
+}
+const CAMS = { top:[0,90], iso:[-35,32], side:[0,0], front:[90,0] };
+const CAMNAME = { top:'Top-down view', iso:'Angled view', side:'Side view', front:'Front view' };
+function camKey(){ for(const k in CAMS){ const [y,p] = CAMS[k]; if(Math.abs(((MV.yaw-y+540)%360)-180)<0.5 && Math.abs(MV.pitch-p)<0.5) return k; } return null; }
+function syncCamUI(){ const k = camKey(); $$('[data-cam]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam===k))); $('#grot').value = Math.round(MV.yaw); $('#gtilt').value = Math.round(MV.pitch); $('#ghs').value = String(MV.hs); }
+let camAnim = null;
+function setCam(k){
+  const [ty,tp] = CAMS[k]; const y0 = MV.yaw, p0 = MV.pitch; let dy = ((ty - y0 + 540) % 360) - 180; const t0 = performance.now();
+  cancelAnimationFrame(camAnim);
+  const step = now => { const t = Math.min(1, (now-t0)/380), e = t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    MV.yaw = y0 + dy*e; MV.pitch = p0 + (tp-p0)*e; camUpdate(); draw();
+    if(t<1) camAnim = requestAnimationFrame(step); else { MV.yaw = ((ty+540)%360)-180; MV.pitch = tp; camUpdate(); syncCamUI(); draw(); save(); } };
+  camAnim = requestAnimationFrame(step); uCount('map-view-'+k);
+}
+function draw(){
+  if(!W) return;
+  autoFromView();
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = css('--map-bg'); ctx.fillRect(0,0,W,H);
+  const grid = css('--map-grid');
+  ctx.lineWidth = 1; ctx.font = '600 11px "IBM Plex Mono", monospace';
+  const [ox,oz] = toScreen(0,0,0);
+  const ppl = view.scale/LY; const want = 130/ppl; const mag = Math.pow(10, Math.floor(Math.log10(want))); const step = [1,2,5,10].map(m=>m*mag).find(v => v>=want) || 10*mag;
+  const flat = MV.pitch > 88;
+  // distance rings on the galactic plane
+  if(MV.pitch >= 8){
+    const maxR = (Math.hypot(W,H) + Math.hypot(ox-W/2, oz-H/2)) / ppl / Math.max(sP, 0.15);
+    ctx.strokeStyle = grid; ctx.fillStyle = '#5E7880';
+    for(let r=step, n=0; r<=Math.min(maxR, 900000) && n<40; r+=step, n++){
+      const rv = r/LY; ctx.beginPath();
+      for(let a=0; a<=64; a++){ const t = a/64*Math.PI*2; const [x,y] = toScreen(Math.cos(t)*rv, 0, Math.sin(t)*rv); a ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+      ctx.stroke();
+      const [lx,ly] = toScreen(0,0,-rv); ctx.fillText((r>=1000? fmt(r/1000)+'k':fmt(r))+' ly', lx+4, ly-4);
+    }
+  } else {
+    ctx.strokeStyle = grid; ctx.beginPath(); ctx.moveTo(0,oz); ctx.lineTo(W,oz); ctx.stroke();
+    ctx.fillStyle = '#5E7880'; ctx.fillText('galactic plane', W-150, oz-5);
+  }
+  // height scale through the core when looking from the side
+  if(!flat){
+    ctx.strokeStyle = grid; ctx.fillStyle = '#6E8F99';
+    const ruler = MV.pitch <= 20;
+    const [tx0,ty] = toScreen(0,128,0), [bx0,by] = toScreen(0,-128,0);
+    const tx = ruler ? 40 : tx0, bx = ruler ? 40 : bx0;
+    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(bx,by); ctx.stroke();
+    const vpl = view.scale*HS*cP/LY; // screen px per ly, vertically
+    if(vpl > 0.00002){ const wantH = 55/vpl, magH = Math.pow(10, Math.floor(Math.log10(wantH))); const stepH = [1,2,5,10].map(m=>m*magH).find(v => v>=wantH) || 10*magH;
+      for(let ly=-stepH*Math.floor(51200/stepH); ly<=51200; ly+=stepH){ if(!ly) continue; const [hx0,hy] = toScreen(0,ly/LY,0); const hx = ruler ? 40 : hx0; if(hy<30||hy>H-10) continue; ctx.beginPath(); ctx.moveTo(hx-4,hy); ctx.lineTo(hx+4,hy); ctx.stroke(); ctx.fillText((ly>0?'+':'−')+fmtLy(ly)+' ly', hx+7, hy+4); } }
+  }
+  // core
+  const g = ctx.createRadialGradient(ox,oz,0,ox,oz,26); g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ox,oz,26,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=COL.core; ctx.beginPath(); ctx.arc(ox,oz,3.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#DDE8EA'; ctx.fillText('Galactic core', ox-38, oz+30);
+  // stalks down to the plane, so height reads at an angle
+  if(!flat){
+    ctx.strokeStyle = 'rgba(160,190,200,.28)'; ctx.lineWidth = 1; ctx.beginPath();
+    SY.forEach(s => { if(!s.y) return; const [x,y] = sp(s); const [px,py] = toScreen(s.x,0,s.z); if((x<-10&&px<-10)||(x>W+10&&px>W+10)) return; ctx.moveTo(x,y); ctx.lineTo(px,py); });
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(160,190,200,.35)';
+    SY.forEach(s => { if(!s.y) return; const [px,py] = toScreen(s.x,0,s.z); ctx.fillRect(px-1.5,py-0.5,3,1); });
+  }
+  if(showPath && GX.path && GX.path.length>1){
+    ctx.strokeStyle=COL.path; ctx.globalAlpha=.5; ctx.lineWidth=1.2; ctx.beginPath(); let pen=false;
+    GX.path.forEach(i => { const s = ALLSY[i]; if(!s || (s.g||0)!==galView){ pen=false; return; } const [x,y]=sp(s); pen ? ctx.lineTo(x,y) : ctx.moveTo(x,y); pen=true; });
+    ctx.stroke(); ctx.globalAlpha=1;
+  }
+  ['vis','tele','base','cur'].forEach(k => {
+    const list = SY.filter(s => kind(s)===k).map(s => [s, sp(s)]);
+    if(!flat) list.sort((a,b) => a[1][2]-b[1][2]);
+    list.forEach(([s,[x,y]]) => { if(x<-10||y<-10||x>W+10||y>H+10) return;
+      const r = k==='vis'? (s.n?3:2.2) : k==='cur'? 5 : 4; ctx.fillStyle = dotCol(s); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      if(k==='cur'){ ctx.strokeStyle=COL.cur; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.stroke(); } });
+  });
+  // labels: priority order, skip any that would overlap one already placed
+  ctx.font='600 11.5px "IBM Plex Sans", sans-serif';
+  const rank = s => s===sel?0 : isCur(s)?1 : s.b?2 : s.t?3 : 4;
+  const cands = SY.filter(s => s===sel || isCur(s) || s.b || s.t || ((s.n||s.dn) && view.scale>1.5)).sort((a,b)=>rank(a)-rank(b));
+  const placed = [];
+  cands.forEach(s => { const [x,y]=sp(s); if(x<-20||y<-20||x>W+20||y>H+20) return;
+    let lab = sysTitle(s); if(lab.length>28) lab = lab.slice(0,27)+'…';
+    const w = ctx.measureText(lab).width, box = [x+7, y-18, x+7+w, y-4];
+    if(placed.some(p => !(box[2]<p[0]||box[0]>p[2]||box[3]<p[1]||box[1]>p[3]))) return;
+    placed.push(box); const k = kind(s);
+    ctx.fillStyle = s===sel?'#FFFFFF': k==='cur'?'#F6C27A': k==='base'?'#9FE0E3': k==='tele'?'#D5C4F5':'#C9D6D9'; ctx.fillText(lab, x+7, y-6); });
+  if(sel && (sel.g||0)===galView){ const [x,y]=sp(sel); ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.stroke(); }
+  // corner label: galaxy + camera
+  ctx.font='600 11px "IBM Plex Mono", monospace'; ctx.fillStyle='#95A7AE';
+  const ck = camKey(); ctx.fillText(`${galName(galView).toUpperCase()} · ${(ck ? CAMNAME[ck] : 'Custom view').toUpperCase()}${flat ? '' : ' · HEIGHT ' + (HS===1 ? 'TRUE SCALE' : HS+'×') + (MV.hs==='auto' ? ' (AUTO)' : '')}`, 12, 20);
+}
+function sysTitle(s){ return s.n || s.dn || (s.b && s.b[0][0]) || (s.t && s.t[0][0]) || 'Unnamed system'; }
+function sysHead(s){ if(s.n || s.dn) return esc(s.n || s.dn); return `${esc((s.b && s.b[0][0]) || (s.t && s.t[0][0]) || 'Star system')} <span class="tag cat">Unnamed</span>`; }
+const BIO = {
+  'Lush':['#6FBF5A','Star Bulb, Paraffinium'], 'Toxic':['#B8C84A','Fungal Mould, Ammonia'], 'Scorched':['#E08A3C','Solanium, Phosphorus'],
+  'Radioactive':['#C6E04A','Gamma Root, Uranium'], 'Frozen':['#A8D8F0','Frost Crystal, Dioxite'], 'Barren':['#C9A36B','Cactus Flesh, Pyrite'],
+  'Dead':['#8A8F93','Rusted Metal'], 'Exotic':['#D86BD0','Varies; exotic trophies'], 'Red chromatic':['#D9523C','Base-biome resources, recoloured'],
+  'Green chromatic':['#4FB069','Base-biome resources, recoloured'], 'Blue chromatic':['#4A8BE0','Base-biome resources, recoloured'],
+  'Swamp':['#6E8E5A','Sometimes Faecium or Mordite'], 'Lava':['#E0553C','Volcanic; check the scan'], 'Waterworld':['#3C7FE0','Lithium (deep water)'],
+  'Gas giant':['#D9B26B','Activated Quartzite, Crystallised Helium']
+};
+S.pnotes = S.pnotes || {};
+const PRESET = { '-4,-2,-9,1001': {
+  1:'Scan: High Temperature. Solanium, Activated Quartzite, Phosphorus, Silver. High Sentinel activity. Portal: 2-4-15-10-16-15-16-16-8-16-16-13.',
+  2:'Scan: Rocky. Cactus Flesh, Activated Quartzite, Pyrite, Salt. Dissonance. Portal + base here; Korvax monolith with Discordant Interface.',
+  3:'Scan: Waterworld. Activated Quartzite, Lithium, Magnetised Ferrite. Coastal storms, low Sentinels, no flora, high fauna. Has a portal.',
+  4:'Scan: Drowning Planet. Ancient Bones, Quartzite, Lithium, Magnetised Ferrite. Coastal storms, sparse Sentinels. No portal (seafloor drop).'
+}};
+Object.entries(PRESET).forEach(([k,v]) => Object.entries(v).forEach(([p,t]) => { const key = k+','+p; if(S.pnotes[key]===undefined) S.pnotes[key] = t; }));
+const skey = s => `${s.x},${s.y},${s.z},${s.s}`;
+let selPlanet = null, showSystem = false;
+function byLabel(by){ return by==='you' ? 'you' : by ? by : 'no record'; }
+function renderInfo(){
+  const el = $('#ginfo');
+  if(!sel){ el.innerHTML = '<h3>Pick a system</h3><p class="muted small" style="margin:0">Click a dot on the map or a name in the list.</p>'; $('#gsystem').hidden = true; return; }
+  const s = sel;
+  const bases = (s.b||[]).map(([n,t,p]) => `<li>${esc(n)} <span class="small muted">${esc(t)}${p?' · planet '+p:''}</span></li>`).join('');
+  const tele = (s.t||[]).filter(([n]) => !(s.b||[]).some(b=>b[0]===n)).map(([n,t,p]) => `<li>${esc(n)} <span class="small muted">${esc(t==='Spacestation'?'Space station':t==='ExternalBase'?'Other player\'s base':t)}</span></li>`).join('');
+  const np = s.P ? Object.keys(s.P).filter(p=>p!=='0').length : 0;
+  const nameNote = s.n ? '' : s.dn ? '<p class="muted small" style="margin:0">Name taken from this system\'s space station.</p>' : `<p class="muted small" style="margin:0">${(s.b||s.t) ? 'Shown by the name of your base or teleporter here. ' : ''}The game makes up system names as you arrive and doesn't store them in your save.</p>`;
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${sysHead(s)}</h2>${isCur(s)?'<span class="tag nan">You are here</span>':''}</div>${nameNote}
+    <div class="kv">${DSP.loc!=='game' ? `<span><b>To core</b>≈ ${fmt(dist(s))} ly</span>` : ''}<span><b>Discovered by</b>${esc(byLabel(s.by))}</span>${DSP.loc!=='ly' ? `<span><b>Coords</b>X ${s.x} · Y ${s.y} · Z ${s.z}</span><span><b>System</b>#${s.s}</span>` : ''}${DSP.loc!=='game' ? `<span><b>Height</b>${s.y ? '≈ '+fmt(Math.abs(s.y)*LY)+' ly '+(s.y>0?'above':'below')+' the plane' : 'on the plane'}</span>` : ''}</div>
+    ${bases?`<div><div class="lbl" style="margin-bottom:4px">Your bases</div><ul style="margin:0; padding-left:18px">${bases}</ul></div>`:''}
+    ${tele?`<div><div class="lbl" style="margin-bottom:4px">Teleporter stops</div><ul style="margin:0; padding-left:18px">${tele}</ul></div>`:''}
+    <div class="row"><button class="btn primary" type="button" id="gsysbtn" aria-pressed="${showSystem}">${showSystem?'Hide system view':'Open system view'}${np?` (${np} planet${np>1?'s':''})`:''}</button>
+    <button class="btn" type="button" id="gsend">Planet 1 address → Portals</button></div>`;
+  $('#gsend').addEventListener('click', () => { addr = portalHex(1,s).split('').map(c=>parseInt(c,16)); renderAddr(); showTab('portals'); });
+  $('#gsysbtn').addEventListener('click', () => { showSystem = !showSystem; renderInfo(); if(showSystem) $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
+  renderSystem();
+}
+function discLine(label, d){
+  if(!d) return `<span><b>${label}</b>0</span>`;
+  return `<span><b>${label}</b>${d[0]}${d[1]&&d[1]<d[0]?` (${d[1]} by you)`:d[1]===d[0]?' · all by you':''}</span>`;
+}
+function renderSystem(){
+  const box = $('#gsystem'); const s = sel;
+  if(!showSystem || !s){ box.hidden = true; return; }
+  box.hidden = false;
+  const P = s.P || {};
+  const idxs = Object.keys(P).map(Number).filter(p=>p>0);
+  (s.b||[]).forEach(b => { if(b[2]>0 && !idxs.includes(b[2])) idxs.push(b[2]); });
+  const maxP = Math.max(0, ...idxs);
+  if(!maxP){ box.innerHTML = `<h2>${sysHead(s)} · system view</h2><p class="muted" style="margin:0">No planet data in your save for this system. You passed through without landing or scanning planets.</p>`; return; }
+  if(selPlanet===null || selPlanet>maxP || !(P[selPlanet] || (s.b||[]).some(b=>b[2]===selPlanet))) selPlanet = idxs.sort((a,b)=>a-b)[0];
+  const Wd = Math.max(560, 150 + maxP*110), cy = 90;
+  let svg = `<svg viewBox="0 0 ${Wd} 180" width="100%" style="max-width:${Wd}px; display:block" role="img" aria-label="Planets in ${esc(sysTitle(s))}">
+    <defs><radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFF6D8"/><stop offset=".55" stop-color="#F0A640"/><stop offset="1" stop-color="#F0A640" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="40" cy="${cy}" r="46" fill="url(#sun)"/>`;
+  for(let p=1; p<=maxP; p++){
+    const x = 140 + (p-1)*110, pl = P[p]; const hasBase = (s.b||[]).some(b=>b[2]===p);
+    svg += `<ellipse cx="40" cy="${cy}" rx="${x-40}" ry="16" fill="none" stroke="var(--line)" stroke-dasharray="3 5" opacity=".6"/>`;
+    if(!pl && !hasBase){ svg += `<g><circle cx="${x}" cy="${cy}" r="18" fill="none" stroke="var(--muted)" stroke-dasharray="4 4"/><text x="${x}" y="${cy+44}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif">Planet ${p} · not scanned</text></g>`; continue; }
+    const col = pl && pl.bio && BIO[pl.bio] ? BIO[pl.bio][0] : '#7FA3AE';
+    const r = pl && pl.bio==='Gas giant' ? 30 : 22; const on = p===selPlanet;
+    svg += `<g data-pl="${p}" style="cursor:pointer" tabindex="0" role="button" aria-label="Planet ${p}${pl&&pl.n?' '+esc(pl.n):''}">
+      ${on?`<circle cx="${x}" cy="${cy}" r="${r+7}" fill="none" stroke="var(--accent)" stroke-width="2"/>`:''}
+      <circle cx="${x}" cy="${cy}" r="${r}" fill="${col}"/><circle cx="${x-r/3}" cy="${cy-r/3}" r="${r/3}" fill="#fff" opacity=".18"/>
+      ${hasBase?`<circle cx="${x+r*0.75}" cy="${cy-r*0.75}" r="6" fill="var(--teal)" stroke="var(--surface)" stroke-width="2"/>`:''}
+      <text x="${x}" y="${cy+r+22}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" font-family="IBM Plex Sans, sans-serif">${esc((pl&&pl.n)||('Planet '+p)).slice(0,18)}</text>
+      <text x="${x}" y="${cy+r+38}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${esc((pl&&pl.bio)||'')}</text></g>`;
+  }
+  svg += '</svg>';
+  const p = selPlanet, pl = P[p] || {};
+  const bio = pl.bio && BIO[pl.bio];
+  const bases = (s.b||[]).filter(b=>b[2]===p).map(b=>esc(b[0])).join(', ');
+  const named = ['fa','fl','mi'].flatMap(c => (pl[c]&&pl[c][2]||[]).map(([n,by]) => `<li>${esc(n)} <span class="small muted">${c==='fa'?'creature':c==='fl'?'plant':'mineral'} · ${esc(byLabel(by))}</span></li>`)).join('');
+  const nkey = skey(s)+','+p;
+  box.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${sysHead(s)} · system view</h2><span class="muted small">Only planets your save has data for are drawn in colour.</span></div>
+    <div class="tbl">${svg}</div>
+    <div class="grid2">
+      <div style="display:grid; gap:8px">
+        <h3>${esc(pl.n || ('Planet '+p))}${pl.n ? '' : ' <span class="tag cat">Unnamed</span>'} ${bio?`<span class="dot" style="background:${bio[0]}; margin-left:6px"></span>`:''}</h3>
+        <div class="kv"><span><b>Planet</b>${p}</span><span><b>Biome</b>${esc(pl.bio||'unknown')}</span><span><b>Discovered by</b>${esc(byLabel(pl.by))}</span>${bases?`<span><b>Your bases</b>${bases}</span>`:''}</div>
+        <div class="kv"><span><b>Typical resources</b>${esc(bio?bio[1]:'Scan to see')}</span></div>
+        <div class="kv">${discLine('Creatures',pl.fa)}${discLine('Plants',pl.fl)}${discLine('Minerals',pl.mi)}<span><b>Waypoints</b>${pl.wp||0}</span></div>
+        <div class="codes"><div><span>Portal</span></div><div class="gaddr">${addrStrip(portalHex(p,s).split('').map(c=>parseInt(c,16)))}</div></div>
+        ${named?`<div><div class="lbl" style="margin-bottom:4px">Named discoveries</div><ul style="margin:0; padding-left:18px">${named}</ul></div>`:''}
+      </div>
+      <div style="display:grid; gap:6px; align-content:start">
+        <label class="lbl" for="pnote">Your notes for this planet (resources, weather, what's here)</label>
+        <textarea id="pnote" rows="5" placeholder="e.g. Activated Indium, storms at night, good base spot by the lake">${esc(S.pnotes[nkey]||'')}</textarea>
+        <p class="muted small" style="margin:0">Typical resources come from the biome. Your save doesn't store a planet's exact scan, so add what you see in-game here.</p>
+      </div>
+    </div>`;
+  let t; $('#pnote').addEventListener('input', e => { S.pnotes[nkey] = e.target.value; clearTimeout(t); t = setTimeout(save, 400); });
+}
+$('#gsystem').addEventListener('click', e => { const g = e.target.closest('[data-pl]'); if(!g) return; selPlanet = +g.dataset.pl; renderSystem(); });
+$('#gsystem').addEventListener('keydown', e => { const g = e.target.closest('[data-pl]'); if(!g || (e.key!=='Enter' && e.key!==' ')) return; e.preventDefault(); selPlanet = +g.dataset.pl; renderSystem(); });
+$$('[data-gcol]').forEach(bn => bn.addEventListener('click', () => { colMode = bn.dataset.gcol; sync('gcol', colMode); renderLegend(); draw(); }));
+function renderList(){
+  const q = $('#gsearch').value.trim().toLowerCase();
+  const rows = SY.filter(s => s.n || s.dn || s.b || isCur(s)).filter(s => !q || sysTitle(s).toLowerCase().includes(q) || (s.b||[]).some(b=>b[0].toLowerCase().includes(q)))
+    .sort((a,b) => (isCur(b)-isCur(a)) || (!!b.b - !!a.b) || dist(a)-dist(b));
+  $('#glist').innerHTML = rows.map(s => `<button type="button" data-sys="${SY.indexOf(s)}"><span>${sysHead(s)}${s.b?` <span class="tag cat">${s.b.length} base${s.b.length>1?'s':''}</span>`:''}</span><span class="d">${fmt(dist(s))} ly</span></button>`).join('') || '<div class="empty">No matches.</div>';
+}
+$('#glist').addEventListener('click', e => { const b = e.target.closest('[data-sys]'); if(!b) return; sel = SY[+b.dataset.sys]; selPlanet = null; focusOn(sel, 3); draw(); renderInfo(); });
+$('#gsearch').addEventListener('input', renderList);
+$('#gpath').addEventListener('change', e => { showPath = e.target.checked; draw(); });
+function zoom(f, px, py){
+  px = px===undefined? W/2:px; py = py===undefined? H/2:py;
+  const s1 = view.scale, s2 = Math.min(60, Math.max(0.02, s1*f));
+  const d = panVec(px-W/2, py-H/2), m = 1 - s1/s2;
+  view.fx += d[0]*m; view.fy += d[1]*m; view.fz += d[2]*m; view.scale = s2; draw();
+}
+$('#zin').addEventListener('click', () => zoom(1.6)); $('#zout').addEventListener('click', () => zoom(1/1.6));
+$('#zfit').addEventListener('click', () => { fitAll(); draw(); });
+$('#zme').addEventListener('click', () => {
+  if((cur.g||0)!==galView){ galView = cur.g||0; filterGal(); renderGalSelect(); renderList(); renderLegend(); snapText(); }
+  const c = SY.find(isCur); if(c){ focusOn(c, 6); sel = c; } draw(); renderInfo(); });
+cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoom(e.deltaY<0?1.2:1/1.2, e.clientX-r.left, e.clientY-r.top); }, {passive:false});
+cv.addEventListener('contextmenu', e => e.preventDefault());
+const ptrs = new Map(); let drag=null, moved=false, pinch=null, rot=null;
+cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=false;
+  if(ptrs.size===1){ if(e.button===2 || e.shiftKey){ rot = {x:e.clientX, y:e.clientY, yaw:MV.yaw, pitch:MV.pitch}; drag=null; } else drag={x:e.clientX,y:e.clientY,f:[view.fx,view.fy,view.fz]}; }
+  else if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y), s:view.scale}; drag=null; rot=null; } });
+cv.addEventListener('pointermove', e => { if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch && ptrs.size===2){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); const r=cv.getBoundingClientRect(); const f=(pinch.s*d/pinch.d)/view.scale; zoom(f,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top); moved=true; return; }
+  if(rot){ const dx=e.clientX-rot.x, dy=e.clientY-rot.y; if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+    MV.yaw = ((rot.yaw + dx*0.4 + 540) % 360) - 180; MV.pitch = Math.max(0, Math.min(90, rot.pitch + dy*0.3)); camUpdate(); syncCamUI(); draw(); return; }
+  if(drag){ const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>3) moved=true; const d = panVec(-dx,-dy); view.fx = drag.f[0]+d[0]; view.fy = drag.f[1]+d[1]; view.fz = drag.f[2]+d[2]; draw(); } });
+function endPtr(e){ ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null;
+  if(ptrs.size===0){
+    if(rot){ rot=null; save(); }
+    if(!moved && drag){ const r = cv.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top; let best=null, bd=14;
+      SY.forEach(s => { const [sx,sy]=sp(s); const d=Math.hypot(sx-x,sy-y); if(d<bd){ bd=d; best=s; } }); if(best){ sel=best; selPlanet=null; hideTip(); renderInfo(); draw(); $('#ginfo').scrollIntoView({block:'nearest', behavior:'smooth'}); } }
+    drag=null; } }
+function hideTip(){ $('#maptip').hidden = true; tipSys = null; }
+let tipSys = null;
+function nearestAt(x, y, r){ let best=null, bd=r; SY.forEach(s => { const [sx,sy]=sp(s); const d=Math.hypot(sx-x,sy-y); if(d<bd){ bd=d; best=s; } }); return best; }
+function tipHTML(s){
+  const P = s.P || {}; const pl = Object.keys(P).filter(k => k!=='0').map(k => P[k]);
+  const bios = [...new Set(pl.map(p => p.bio).filter(Boolean))];
+  const bases = (s.b||[]).length, tele = (s.t||[]).filter(([n]) => !(s.b||[]).some(b => b[0]===n)).length;
+  const loc = [DSP.loc!=='game' ? `≈ ${fmt(dist(s))} ly to the core` : '', DSP.loc!=='game' ? (s.y ? `${fmt(Math.abs(s.y)*LY)} ly ${s.y>0?'above':'below'} the plane` : 'on the plane') : '', DSP.loc!=='ly' ? `X ${s.x} · Y ${s.y} · Z ${s.z}` : ''].filter(Boolean);
+  return `<div class="tt">${sysHead(s)}${isCur(s) ? ' <span class="tag nan">You are here</span>' : ''}</div>
+    <div><b>Discovered by</b> ${esc(byLabel(s.by))}</div>
+    <div><b>Planets</b> ${pl.length ? `${pl.length} with data${bios.length ? ' · ' + esc(bios.join(', ')) : ''}` : 'no planet data'}</div>
+    ${bases || tele ? `<div><b>Here</b> ${[bases ? `${bases} base${bases>1?'s':''}` : '', tele ? `${tele} teleporter stop${tele>1?'s':''}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
+    ${loc.map(l => `<div class="muted">${l}</div>`).join('')}
+    <div class="tclick">Click to view more</div>`;
+}
+cv.addEventListener('pointermove', e => {
+  if(ptrs.size) { hideTip(); return; }
+  const r = cv.getBoundingClientRect(); const x = e.clientX-r.left, y = e.clientY-r.top;
+  const s = nearestAt(x, y, 12); const tip = $('#maptip');
+  if(!s){ if(tipSys){ hideTip(); cv.style.cursor=''; } return; }
+  cv.style.cursor = 'pointer';
+  if(s!==tipSys){ tipSys = s; tip.innerHTML = tipHTML(s); tip.hidden = false; }
+  const tw = tip.offsetWidth, th = tip.offsetHeight; let tx = x+16, ty = y+14;
+  if(tx+tw > W-8) tx = x-16-tw; if(ty+th > H-8) ty = Math.max(8, y-14-th);
+  tip.style.left = tx+'px'; tip.style.top = ty+'px';
+});
+cv.addEventListener('pointerleave', () => { hideTip(); cv.style.cursor=''; });
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('keydown', e => { const k=e.key; let d=null;
+  if(k==='+'||k==='=') zoom(1.4); else if(k==='-') zoom(1/1.4);
+  else if(k==='ArrowLeft') d=panVec(-40,0); else if(k==='ArrowRight') d=panVec(40,0); else if(k==='ArrowUp') d=panVec(0,-40); else if(k==='ArrowDown') d=panVec(0,40);
+  else if(k==='q'||k==='e'){ MV.yaw = ((MV.yaw + (k==='q'?-10:10) + 540) % 360) - 180; camUpdate(); syncCamUI(); save(); }
+  else return;
+  if(d){ view.fx+=d[0]; view.fy+=d[1]; view.fz+=d[2]; } e.preventDefault(); draw(); });
+window.addEventListener('resize', () => { if(current==='galaxy') mapResize(); });
+$$('[data-cam]').forEach(b => b.addEventListener('click', () => setCam(b.dataset.cam)));
+$('#grot').addEventListener('input', e => { MV.yaw = +e.target.value; camUpdate(); syncCamUI(); draw(); });
+$('#gtilt').addEventListener('input', e => { MV.pitch = +e.target.value; camUpdate(); syncCamUI(); draw(); });
+$('#grot').addEventListener('change', save); $('#gtilt').addEventListener('change', save);
+$('#ghs').addEventListener('change', e => { MV.hs = e.target.value==='auto' ? 'auto' : (+e.target.value || 'auto'); camUpdate(); save(); draw(); uCount('map-height'); });
+syncCamUI();
+function galCounts(){ const c = new Map(); ALLSY.forEach(s => { const g = s.g||0; c.set(g, (c.get(g)||0)+1); }); if(!c.has(cur.g||0)) c.set(cur.g||0, 0); return c; }
+function renderGalSelect(){
+  const c = galCounts(); const gs = [...c.keys()].sort((a,b)=>a-b);
+  $('#ggal').innerHTML = gs.map(g => `<option value="${g}">${esc(galName(g))} (${g+1}) · ${c.get(g)} system${c.get(g)===1?'':'s'}${g===(cur.g||0)?' · you are here':''}</option>`).join('');
+  $('#ggal').value = String(galView);
+  $('#ggal').title = gs.length>1 ? `Your save has data in ${gs.length} galaxies` : 'Only galaxies your save has data for are listed';
+}
+$('#ggal').addEventListener('change', e => { galView = +e.target.value; filterGal(); camUpdate(); sel = SY.find(isCur) || SY.find(s=>s.b) || SY[0] || null; selPlanet = null; showSystem = false; fitAll(); renderList(); renderInfo(); renderLegend(); snapText(); draw(); uCount('galaxy-switch'); });
+function snapText(){ const n = SY.filter(s=>s.v).length; $('#gsnap').textContent = DESK ? `${n} visited system${n===1?'':'s'} in ${galName(galView)}.` : `Snapshot from your save on ${GX.snap}: ${n} visited systems in ${galName(galView)}.`; }
+renderGalSelect(); snapText();
+function setGalaxy(g){
+  const prevG = cur.g||0;
+  GX = g; ALLSY = g.sys; cur = g.cur; if(cur.g===undefined) cur.g = 0;
+  if((cur.g||0)!==prevG) galView = cur.g||0;
+  filterGal(); camUpdate();
+  if(sel) sel = SY.find(s => s.x===sel.x && s.y===sel.y && s.z===sel.z && s.s===sel.s) || null;
+  if(!sel) sel = SY.find(isCur) || null;
+  renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); draw();
+  if(current==='inventory') renderInventory();
+  if(current==='planner') renderPlanner();
+}
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw); } catch(e) {}
+
+/* ---------- QUESTS ---------- */
+const QDEFAULT = [
+  {id:'core', t:'Reach the galactic core', d:'Travel to the centre of Euclid to move on to the next galaxy.', n:'About 4,000 ly left from Bountria II: two jumps with the Voidigaunt.', s:'doing'},
+  {id:'stellar', t:'In Stellar Multitudes', d:'The purple-system storyline from Worlds Part II. Finishing it opens up all purple systems.', n:'Mephenna is tethered. Next: seek out Yabli-α.', s:'doing'},
+  {id:'autophage', t:'They Who Returned (Autophage)', d:'Autophage story and standing. Rewards include Voltaic Staff parts.', n:'Mostly done. Keep raising Autophage standing for the Voltaic Staff head.', s:'doing'},
+  {id:'base', t:'Expanding the Base', d:'Hire base specialists at your base terminals to unlock blueprint trees.', n:'Overseer and Vy\'keen Armourer hired. Next: the Farmer, for plant blueprints and a Living Glass farm.', s:'doing'},
+  {id:'freighter', t:'Freighter Command', d:'Freighter questline started from the Navigator on your freighter bridge.', n:'Talk to the Navigator to continue.', s:'doing'},
+  {id:'sentinel', t:'Repair Sentinel ships', d:'Crashed Interceptors need a Harmonic Brain. Convert Hyaline Brains at a monolith in a Gek or Vy\'keen system.', n:'8 Hyaline Brains in hand. Convert them one at a time, stashing each Harmonic Brain in your trade rocket.', s:'doing'},
+  {id:'atlantid', t:'Atlantid multi-tool', d:'Korvax monoliths with a Discordant Interface give an Atlantid multi-tool (Runic Lens + cloaking) for Atlantideum.', n:'Found one on Cragthorn. The tool costs 504 nanites.', s:'doing'},
+  {id:'summon', t:'Exocraft Summoning Unit', d:'Summon exocraft anywhere, not just at a Geobay.', n:'Gather Activated Quartzite and Crystallised Helium (gas giants in purple systems have both).', s:'todo'},
+  {id:'dread', t:'S-class dreadnought freighter', d:'Upgrade from the A-class MS-5 Angotenr.', n:'Watch space battles and freighter offers for an S-class dreadnought.', s:'todo'},
+  {id:'qs', t:'Quicksilver Companion ships', d:'Unclaimed expedition ships at the Space Anomaly (about 1,400 nanites each).', n:'Golden Vector, Starborn Runner, Iron Vulture and more, when nanites allow.', s:'todo'},
+  {id:'artemis', t:'The Artemis Path', d:'The main story. Unlocks the Space Anomaly systems and the Atlas Path.', n:'Done: you chose to refuse the Atlas.', s:'done'},
+  {id:'atlas', t:'The Atlas Path', d:'Gather Atlas Seeds and visit Atlas Interfaces.', n:'Done: you birthed a new star.', s:'done'},
+  {id:'starbirth', t:'Starbirth (Living Ship)', d:'Hatch and grow a Living Ship from a Void Egg.', n:'Done: The Only Sebedya.', s:'done'},
+  {id:'station', t:'Claim a space station', d:'Run salvage contracts at a Deep Space Outpost until the station offers you director status.', n:'Done: Bountria Prism, alliance Bountria Federation [BTRF].', s:'done'},
+];
+if(!S.quests){ S.quests = QDEFAULT; save(); }
+let QF = 'open';
+const SLAB = {todo:'Not started', doing:'In progress', done:'Done'};
+function renderQuests(){
+  const qs = S.quests.filter(q => QF==='all' || (QF==='done' ? q.s==='done' : q.s!=='done'));
+  $('#qlist').innerHTML = qs.length ? qs.map(q => { const i = S.quests.indexOf(q); return `<article class="qcard" data-s="${q.s}">
+    <div class="qhead"><h3>${esc(q.t)}</h3><select data-qs="${i}" aria-label="Status for ${esc(q.t)}">${Object.entries(SLAB).map(([k,v])=>`<option value="${k}" ${q.s===k?'selected':''}>${v}</option>`).join('')}</select></div>
+    ${q.d?`<p class="muted">${esc(q.d)}</p>`:''}
+    <label class="lbl" for="qn-${i}">Next step / notes</label>
+    <textarea id="qn-${i}" data-qn="${i}" rows="2">${esc(q.n||'')}</textarea>
+    ${q.custom?`<div><button class="btn ghost" type="button" data-qdel="${i}">Remove goal</button></div>`:''}
+  </article>`; }).join('') : '<div class="empty">Nothing here.</div>';
+}
+$('#qlist').addEventListener('change', e => { const s = e.target.dataset.qs; if(s!==undefined){ S.quests[+s].s = e.target.value; save(); renderQuests(); } });
+let qTimer; $('#qlist').addEventListener('input', e => { const n = e.target.dataset.qn; if(n===undefined) return; S.quests[+n].n = e.target.value; clearTimeout(qTimer); qTimer = setTimeout(save, 500); });
+$('#qlist').addEventListener('click', e => { const d = e.target.closest('[data-qdel]'); if(!d) return;
+  if(d.dataset.confirm){ S.quests.splice(+d.dataset.qdel,1); save(); renderQuests(); } else { d.dataset.confirm='1'; d.textContent='Click again to remove'; } });
+$('#qadd').addEventListener('click', () => { S.quests.unshift({id:'c'+Date.now(), t:'New goal', d:'', n:'', s:'todo', custom:true}); save(); QF='open'; sync('qf','open'); renderQuests();
+  const first = $('#qlist textarea'); if(first) first.focus(); });
+$$('[data-qf]').forEach(b => b.addEventListener('click', () => { QF = b.dataset.qf; sync('qf', QF); renderQuests(); }));
+// let custom goal titles be edited: double-click title
+$('#qlist').addEventListener('dblclick', e => { const h = e.target.closest('.qcard h3'); if(!h) return; const card = h.closest('.qcard'); const i = +card.querySelector('[data-qs]').dataset.qs;
+  const inp = document.createElement('input'); inp.className='txt'; inp.value = S.quests[i].t; inp.setAttribute('aria-label','Goal title'); h.replaceWith(inp); inp.focus();
+  const done = () => { S.quests[i].t = inp.value.trim() || S.quests[i].t; save(); renderQuests(); }; inp.addEventListener('blur', done); inp.addEventListener('keydown', ev => { if(ev.key==='Enter') inp.blur(); }); });
+
+/* ---------- SETTINGS & HELP ---------- */
+S.settings = S.settings || {};
+const ST = S.settings;
+// Each preset is built from four colours. No two presets share the same background + accent pair.
+const PRESETS = [
+  {n:'Traveller', d:'Slate and amber · light or dark', p:null},
+  {n:'Atlas', d:'Black and blood red', p:{bg:'#0B0606', ink:'#F4E7E5', accent:'#D4161F', teal:'#E9B8B4'}},
+  {n:'Void', d:'Black and violet', p:{bg:'#07050C', ink:'#EEE7FB', accent:'#A855F7', teal:'#C4B5FD'}},
+  {n:'Sentinel', d:'Black and orange', p:{bg:'#0A0705', ink:'#F6ECDF', accent:'#FF8C1A', teal:'#FFC27A'}},
+  {n:'Atlantid', d:'Deep purple and orange', p:{bg:'#1B1030', ink:'#F2EAF8', accent:'#FF7A1A', teal:'#C49BFF'}},
+  {n:'Korvax', d:'Navy and sky blue', p:{bg:'#07182B', ink:'#E3F1F9', accent:'#38BDF8', teal:'#BAE6FD'}},
+  {n:'Gek', d:'Moss green and gold', p:{bg:'#121A0B', ink:'#F1F2DC', accent:'#E8B923', teal:'#9CC65A'}},
+  {n:"Vy'keen", d:'Oxblood and brass', p:{bg:'#260D0B', ink:'#F5E6DC', accent:'#D4A33B', teal:'#E58B64'}},
+  {n:'Living Ship', d:'Deep teal and coral pink', p:{bg:'#052426', ink:'#E4F5F2', accent:'#FF6F91', teal:'#3DDBC4'}},
+  {n:'Anomaly', d:'Indigo and mint', p:{bg:'#15123D', ink:'#EEEAFB', accent:'#5EEAD4', teal:'#A5B4FC'}}
+];
+const PKEYS = ['bg','surface','surface-2','ink','muted','line','accent','accent-soft','teal','teal-soft','map-bg','map-grid','good','good-soft','bad','bad-soft','purple','purple-soft'];
+const root = document.documentElement;
+const hexRgb = h => { h = String(h).replace('#',''); if(h.length===3) h = h.split('').map(c=>c+c).join(''); const n = parseInt(h,16)||0; return [n>>16&255, n>>8&255, n&255]; };
+const rgbHex = a => '#'+a.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+const mix = (a,b,t) => { const x = hexRgb(a), y = hexRgb(b); return rgbHex(x.map((v,i) => v+(y[i]-v)*t)); };
+const lum = h => { const c = hexRgb(h).map(v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; };
+const contrast = (a,b) => { const x = lum(a), y = lum(b); return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); };
+function derive(c){
+  const dark = lum(c.bg) < 0.2;
+  if(contrast(c.ink, c.bg) < 3) c = Object.assign({}, c, { ink: dark ? '#EEF2F3' : '#15212A' }); // keep text readable
+  const surface = dark ? mix(c.bg, c.ink, 0.055) : mix(c.bg, '#FFFFFF', 0.75);
+  const mapbg = dark ? mix(c.bg, '#000000', 0.35) : mix(c.ink, '#000000', 0.45);
+  return { dark, vals: { bg:c.bg, surface, 'surface-2': mix(c.bg, c.ink, dark?0.1:0.07), ink:c.ink, muted: mix(c.ink, c.bg, 0.4), line: mix(c.bg, c.ink, dark?0.17:0.2),
+    accent:c.accent, 'accent-soft': mix(surface, c.accent, 0.22), teal:c.teal, 'teal-soft': mix(surface, c.teal, 0.18), 'map-bg': mapbg, 'map-grid': mix(mapbg, c.ink, 0.09) } };
+}
+ST.custom = (Array.isArray(ST.custom) ? ST.custom : []).concat([null,null,null,null,null]).slice(0,5);
+const CUST = ST.custom;
+let draft = null, editing = -1;
+function toHexColour(c){ if(/^#[0-9a-f]{6}$/i.test(c)) return c; const d = document.createElement('div'); d.style.color = c; document.body.appendChild(d); const rgb = getComputedStyle(d).color; d.remove(); const n = rgb.match(/\d+/g)||[0,0,0]; return '#'+n.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join(''); }
+function curPreset(){
+  if(draft) return { n:'draft', p:draft };
+  const k = ST.preset || 'Traveller';
+  if(k.startsWith('custom:')){ const c = CUST[+k.slice(7)]; return c ? { n:c.n, p:c } : null; }
+  return PRESETS.find(p => p.n===k && p.p) || null;
+}
+function swatch(c){ return `<span class="swatch" style="background:${c.bg}"><span style="background:${c.accent}"></span><span style="background:${c.teal}"></span></span>`; }
+function renderPresetButtons(){
+  const k = ST.preset || 'Traveller';
+  $('#presets').innerHTML = PRESETS.map((p,i) => { const c = p.p || {bg:'#EDF1F2', accent:'#C9720F', teal:'#1C6F75'};
+    return `<button type="button" class="preset" data-preset="${i}" aria-pressed="${p.n===k || (!p.p && !curPresetKeyValid())}">${swatch(c)}<span class="pt"><span class="pn">${esc(p.n)}</span><span class="pd">${esc(p.d)}</span></span></button>`; }).join('');
+  $('#cpresets').innerHTML = CUST.map((c,i) => c
+    ? `<div class="cslot"><button type="button" class="preset" data-cpre="${i}" aria-pressed="${k==='custom:'+i}">${swatch(c)}<span class="pt"><span class="pn">${esc(c.n||('Preset '+(i+1)))}</span><span class="pd">Your preset ${i+1}</span></span></button><button type="button" class="cedit" data-cedit="${i}" aria-label="Edit ${esc(c.n||('preset '+(i+1)))}" title="Edit">Edit</button></div>`
+    : `<button type="button" class="preset empty" data-cedit="${i}"><span class="swatch empty" aria-hidden="true">+</span><span class="pt"><span class="pn">Empty slot ${i+1}</span><span class="pd">Tap to make your own</span></span></button>`).join('');
+}
+function curPresetKeyValid(){ const k = ST.preset || 'Traveller'; if(k.startsWith('custom:')) return !!CUST[+k.slice(7)]; return PRESETS.some(p => p.n===k && p.p); }
+function applyTheme(){
+  const pr = curPreset(); const t = ST.theme||'system';
+  PKEYS.forEach(k => root.style.removeProperty('--'+k));
+  if(pr){ const d = derive(pr.p); root.setAttribute('data-theme', d.dark ? 'dark' : 'light'); Object.entries(d.vals).forEach(([k,v]) => root.style.setProperty('--'+k, v)); }
+  else if(t==='system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
+  $$('[data-set-theme]').forEach(b => { b.disabled = !!pr; }); $('#themenote').hidden = !pr;
+  sync('set-theme', t);
+  if(!draft) ['accent','teal'].forEach(k => { const v = ST[k]; if(v){ root.style.setProperty('--'+k, v); root.style.setProperty('--'+k+'-soft', `color-mix(in srgb, ${v} 20%, var(--surface))`); } });
+  $('#c-accent').value = ST.accent || toHexColour(css('--accent'));
+  $('#c-teal').value = ST.teal || toHexColour(css('--teal'));
+  renderPresetButtons(); draw();
+}
+const applyColours = applyTheme;
+function applyNav(){ const n = ST.nav||'top'; document.body.classList.remove('nav-top','nav-bottom','nav-left','nav-right','nav-dropdown'); document.body.classList.add('nav-'+n); sync('set-nav', n); if(current==='galaxy') setTimeout(mapResize, 0); }
+function applySize(){ const z = ST.size||15; document.body.style.fontSize = z+'px'; sync('set-size', String(z)); }
+const MAPLABELS = {
+  type:[['cur','You are here'],['base','Bases & stations'],['tele','Teleporter stops'],['vis','Visited systems']],
+  disc:[['you','Discovered by you'],['other','Discovered by someone else'],['none','No discovery record']],
+  other:[['path','Travel path'],['core','Galactic core']]
+};
+function mapVal(k){ return (ST.map && ST.map[k]) || MAPDEF[k]; }
+function renderMapPickers(){ Object.entries(MAPLABELS).forEach(([g,list]) => { $('#mapcols-'+g).innerHTML = list.map(([k,l]) => `<label class="crow" for="m-${k}"><input type="color" id="m-${k}" data-mapcol="${k}" value="${mapVal(k)}"> ${l}</label>`).join(''); }); }
+function applyMap(){ ['cur','base','tele','vis','path','core'].forEach(k => COL[k]=mapVal(k)); ['you','other','none'].forEach(k => DCOL[k]=mapVal(k)); renderLegend(); draw(); renderMapPickers(); }
+$('#presets').addEventListener('click', e => { const bn = e.target.closest('[data-preset]'); if(!bn) return; closeEditor(); ST.preset = PRESETS[+bn.dataset.preset].n; delete ST.accent; delete ST.teal; save(); applyTheme(); uCount('theme'); });
+$('#cpresets').addEventListener('click', e => {
+  const ed = e.target.closest('[data-cedit]'); if(ed){ openEditor(+ed.dataset.cedit); return; }
+  const bn = e.target.closest('[data-cpre]'); if(bn){ closeEditor(); ST.preset = 'custom:'+bn.dataset.cpre; delete ST.accent; delete ST.teal; save(); applyTheme(); uCount('theme-custom'); }
+});
+function openEditor(i){
+  editing = i; const c = CUST[i];
+  draft = c ? { bg:c.bg, ink:c.ink, accent:c.accent, teal:c.teal } : { bg: toHexColour(css('--bg')), ink: toHexColour(css('--ink')), accent: toHexColour(css('--accent')), teal: toHexColour(css('--teal')) };
+  $('#ce-name').value = c ? (c.n||'') : `My preset ${i+1}`;
+  ['bg','ink','accent','teal'].forEach(k => $('#ce-'+k).value = draft[k]);
+  $('#ceditor').hidden = false; $('#ce-del').hidden = !c; applyTheme(); $('#ce-name').focus();
+}
+function closeEditor(){ if(editing<0 && !draft) return; editing = -1; draft = null; $('#ceditor').hidden = true; applyTheme(); }
+$('#ceditor').addEventListener('input', e => { const k = (e.target.id||'').replace('ce-',''); if(draft && ['bg','ink','accent','teal'].includes(k)){ draft[k] = e.target.value; applyTheme(); } });
+$('#ce-save').addEventListener('click', () => { if(editing<0) return; const i = editing;
+  CUST[i] = { n: ($('#ce-name').value.trim() || `My preset ${i+1}`).slice(0,24), bg:draft.bg, ink:draft.ink, accent:draft.accent, teal:draft.teal };
+  ST.preset = 'custom:'+i; delete ST.accent; delete ST.teal; editing = -1; draft = null; $('#ceditor').hidden = true; save(); applyTheme(); uCount('theme-custom-save'); });
+$('#ce-cancel').addEventListener('click', closeEditor);
+$('#ce-del').addEventListener('click', e => { const bn = e.currentTarget; if(editing<0) return;
+  if(!bn.dataset.confirm){ bn.dataset.confirm='1'; bn.textContent='Click again to empty it'; setTimeout(()=>{ delete bn.dataset.confirm; bn.textContent='Empty this slot'; }, 2500); return; }
+  delete bn.dataset.confirm; bn.textContent='Empty this slot';
+  CUST[editing] = null; if(ST.preset==='custom:'+editing) ST.preset = 'Traveller'; editing = -1; draft = null; $('#ceditor').hidden = true; save(); applyTheme(); });
+$('#c-accent').addEventListener('input', e => { ST.accent = e.target.value; applyColours(); });
+$('#c-teal').addEventListener('input', e => { ST.teal = e.target.value; applyColours(); });
+$('#c-accent').addEventListener('change', save); $('#c-teal').addEventListener('change', save);
+$('#drawer').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.mapcol; if(!k) return; ST.map = ST.map||{}; ST.map[k] = e.target.value; if(k in COL) COL[k] = e.target.value; if(k in DCOL) DCOL[k] = e.target.value; renderLegend(); draw(); });
+$('#drawer').addEventListener('change', e => { if(e.target.dataset && e.target.dataset.mapcol) save(); });
+const DSECS = ['look','disp','map','sync','files','bug','help'];
+function showDsec(s){ DSECS.forEach(x => $('#d-'+x).hidden = x!==s); sync('dsec', s); if(s==='bug') renderBugPreview(); if(s==='disp') renderDisp(); if(s==='files') loadPaths(); }
+function renderDisp(){
+  $$('[data-disp]').forEach(i => i.checked = !!DSP[i.dataset.disp]);
+  sync('dbig', DSP.big); sync('dloc', DSP.loc); sync('dinv', DSP.invView);
+  $('#gpreview').innerHTML = [3,4,15].map(v => `<span class="gprev">${slotFace(v)}${DSP.gName ? `<i>${GLYPHS[v][0]}</i>` : ''}</span>`).join('');
+}
+function applyDisp(){
+  renderDisp(); renderPad(); renderAddr(); renderSaved(); renderInfo(); renderSync();
+  if(current==='inventory') renderInventory();
+  const ic = $('#itemcard'); if(ic && ic.firstChild) itemCard();
+  save();
+}
+$('#d-disp').addEventListener('change', e => { const k = e.target.dataset.disp; if(!k) return; DSP[k] = e.target.checked ? 1 : 0; applyDisp(); uCount('disp-'+k+'-'+DSP[k]); });
+$('#d-disp').addEventListener('click', e => {
+  const b = e.target.closest('[data-dbig]'); if(b){ DSP.big = b.dataset.dbig; applyDisp(); return; }
+  const l = e.target.closest('[data-dloc]'); if(l){ DSP.loc = l.dataset.dloc; applyDisp(); return; }
+  const v = e.target.closest('[data-dinv]'); if(v){ DSP.invView = v.dataset.dinv; applyDisp(); }
+});
+$('#drawer').addEventListener('click', e => {
+  const t = e.target.closest('[data-set-theme]'); if(t){ ST.theme = t.dataset.setTheme; save(); applyTheme(); return; }
+  const n = e.target.closest('[data-set-nav]'); if(n){ ST.nav = n.dataset.setNav; save(); applyNav(); uCount('nav-'+ST.nav); return; }
+  const z = e.target.closest('[data-set-size]'); if(z){ ST.size = +z.dataset.setSize; save(); applySize(); return; }
+  const d = e.target.closest('[data-dsec]'); if(d){ showDsec(d.dataset.dsec); }
+});
+$('#resetlook').addEventListener('click', () => { closeEditor(); ['accent','teal','theme','nav','size','preset'].forEach(k => delete ST[k]); save(); applyTheme(); applyNav(); applySize(); });
+$('#resetmap').addEventListener('click', () => { delete ST.map; save(); applyMap(); });
+$('#resetall').addEventListener('click', e => { const bn = e.currentTarget;
+  if(!bn.dataset.confirm){ bn.dataset.confirm = '1'; bn.textContent = 'Click again to clear pins, storage, addresses, notes and settings'; return; }
+  if(DESK){ clearTimeout(saveT); api('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'}).finally(() => location.reload()); return; }
+  try { localStorage.removeItem(KEY); localStorage.removeItem(KEY+':tab'); } catch(err) {}
+  location.reload(); });
+let lastFocus = null;
+function openDrawer(sec){ lastFocus = document.activeElement; $('#drawer').hidden = false; $('#scrim').hidden = false; $('#menubtn').setAttribute('aria-expanded','true'); if(sec) showDsec(sec); $('#drawerclose').focus(); }
+function closeDrawer(){ closeEditor(); $('#drawer').hidden = true; $('#scrim').hidden = true; $('#menubtn').setAttribute('aria-expanded','false'); if(lastFocus && lastFocus.focus) lastFocus.focus(); }
+$('#menubtn').addEventListener('click', () => openDrawer());
+$('#drawerclose').addEventListener('click', closeDrawer);
+$('#scrim').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); });
+$('#navselect').addEventListener('change', e => showTab(e.target.value));
+applyTheme(); applyNav(); applySize(); applyMap();
+
+/* ---------- SYNC FROM SAVE (desktop app) ---------- */
+let MAPPING = null, syncing = false, syncTimer = null;
+const ago = ms => { const s = Math.round((Date.now()-ms)/1000); if(s<60) return 'just now'; const m = Math.round(s/60); if(m<60) return `${m} min ago`; const h = Math.round(m/60); if(h<48) return `${h} hr ago`; return `${Math.round(h/24)} days ago`; };
+function slotName(n){ const m = /^save(\d*)\.hg$/.exec(n); const i = m && m[1] ? +m[1] : 1; const slot = Math.ceil(i/2); return `slot ${slot} ${i%2 ? 'auto-save' : 'manual save'}`; }
+const EVERY = [5,10,20,30,60];
+function syncEvery(){ const v = +ST.syncEvery; return EVERY.includes(v) ? v : 20; }
+function renderSync(msg, bad){
+  const st = $('#syncstatus');
+  if(!DESK){ st.innerHTML = 'This is a snapshot from ' + esc(GX.snap) + '. The desktop app reads your save directly and keeps the map up to date.'; $('#syncctl').hidden = true; $('#syncstats').innerHTML='';
+    $('#syncnote').textContent = 'Sync only works in the desktop app, which can read your saves. This page is a snapshot.'; $('#autosync2').disabled = true; $$('#syncevery button').forEach(b => b.disabled = true); return; }
+  const L = S.lastSync;
+  st.innerHTML = msg ? `<span style="color:${bad?'var(--bad)':'var(--accent)'}">${esc(msg)}</span>` :
+    L ? `Synced ${ago(L.at)} from ${esc(L.name)} (${slotName(L.name)}), saved in-game ${ago(L.mtime)}.${ST.autosync ? ` Checking every ${syncEvery()<60 ? syncEvery()+' s' : 'minute'}.` : ''}` : 'Not synced yet. Press Sync to read your latest save.';
+  const g = GX.stats;
+  $('#syncstats').innerHTML = g ? `<span><b>Units</b>${fmtBig(g.units||0)}</span><span><b>Nanites</b>${fmtBig(g.nanites||0)}</span><span><b>Quicksilver</b>${fmtBig(g.quicksilver||0)}</span>${g.summary?`<span><b>Last seen</b>${esc(g.summary)}</span>`:''}` : '';
+  $('#syncpilltxt').textContent = syncing ? 'Syncing…' : L ? `Synced ${ago(L.at)}` : 'Sync';
+  $('#autosync').checked = !!ST.autosync; $('#autosync2').checked = !!ST.autosync;
+  sync('every', String(syncEvery()));
+}
+async function syncNow(manual){
+  if(!DESK || syncing) return;
+  syncing = true; renderSync('Reading your save…'); const t0 = performance.now();
+  try {
+    const saves = await (await api('/api/saves')).json();
+    const list = Array.isArray(saves) ? saves : [saves];
+    if(!list.length || !list[0]){ throw new Error('No No Man\'s Sky saves found on this PC.'); }
+    list.sort((a,b) => b.mtime - a.mtime);
+    const s = list[0];
+    if(!manual && S.lastSync && S.lastSync.name===s.name && S.lastSync.dir===s.dir && S.lastSync.mtime===s.mtime && S.galaxy && S.galaxy.v===3){ syncing = false; renderSync(); return; }
+    if(!MAPPING){ const m = await (await fetch('mapping.json')).json(); MAPPING = {}; m.Mapping.forEach(e => MAPPING[e.Key] = e.Value); }
+    const r = await api(`/api/save?dir=${encodeURIComponent(s.dir)}&name=${encodeURIComponent(s.name)}`);
+    if(!r.ok) throw new Error('Could not read the save file (helper answered ' + r.status + ').');
+    const g = SaveSync.parse(await r.arrayBuffer(), MAPPING);
+    S.galaxy = g; S.lastSync = { name:s.name, dir:s.dir, mtime:s.mtime, at:Date.now() };
+    U.syncOk = (U.syncOk||0)+1; save();
+    vcLog('sync', `ok in ${Math.round(performance.now()-t0)} ms${manual?' (manual)':' (auto)'}`);
+    setGalaxy(g); syncing = false; renderSync();
+  } catch(err) {
+    U.syncFail = (U.syncFail||0)+1; save();
+    vcLog('syncfail', (err && err.message ? err.message : String(err)) + ` after ${Math.round(performance.now()-t0)} ms`);
+    syncing = false; renderSync('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), true);
+  }
+}
+function schedSync(){ clearTimeout(syncTimer); if(!DESK) return; syncTimer = setTimeout(async () => { if(ST.autosync) { try { await syncNow(false); } catch(e) {} } schedSync(); }, syncEvery()*1000); }
+function setAuto(on){ ST.autosync = on; save(); renderSync(); schedSync(); if(on) syncNow(false); uCount('autosync-'+(on?'on':'off')); }
+if(DESK){
+  $('#syncpill').hidden = false; $('#mkshortcut').hidden = false;
+  $('#savedwhere').textContent = 'Everything is saved on this PC in the app\'s data folder (data\\companion.json), with the previous copy kept as companion.json.bak. It stays put when the app is updated.';
+  $('#syncnow').addEventListener('click', () => syncNow(true));
+  $('#syncpill').addEventListener('click', () => { syncNow(true); });
+  $('#invsync').addEventListener('click', () => syncNow(true));
+  $('#autosync').addEventListener('change', e => setAuto(e.target.checked));
+  $('#autosync2').addEventListener('change', e => setAuto(e.target.checked));
+  $('#syncevery').addEventListener('click', e => { const b = e.target.closest('[data-every]'); if(!b) return; ST.syncEvery = +b.dataset.every; save(); renderSync(); schedSync(); uCount('sync-every-'+ST.syncEvery); });
+  setInterval(() => { renderSync(); if(current==='inventory') $('#invsynced').textContent = S.lastSync ? `Last synced ${ago(S.lastSync.at)}.` : 'Not synced yet.'; }, 30000);
+  $('#mkshortcut').addEventListener('click', async e => { const bn = e.currentTarget; try { const r = await api('/api/shortcut', {method:'POST'}); bn.textContent = r.ok ? 'Shortcut added to desktop' : 'Could not add shortcut'; } catch(err) { bn.textContent = 'Could not add shortcut'; } });
+  schedSync();
+  // A first sync, or a refresh when this app version reads more from the save than the stored copy has.
+  if(!S.lastSync || ST.autosync || !(S.galaxy && S.galaxy.v===3)) setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===3)), 400);
+}
+renderSync();
+
+/* ---------- BUG REPORT ---------- */
+function uaSummary(){ const u = navigator.userAgent; let m; const b = (m = /Edg\/(\d+)/.exec(u)) ? 'Edge '+m[1] : (m = /Firefox\/(\d+)/.exec(u)) ? 'Firefox '+m[1] : (m = /Chrome\/(\d+)/.exec(u)) ? 'Chrome '+m[1] : (m = /Version\/(\d+).*Safari/.exec(u)) ? 'Safari '+m[1] : 'Other browser';
+  const os = /Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad/.test(u)?'iOS':/Mac OS/.test(u)?'macOS':/Linux/.test(u)?'Linux':'other OS'; return b+' on '+os; }
+function sensitiveStrings(){
+  const out = new Set(); const skip = new Set(['you','base','freighter','station','spacestation','planet','system']);
+  const add = v => { if(typeof v!=='string') return; v = v.trim(); if(v.length>=3 && !skip.has(v.toLowerCase())) out.add(v); };
+  (GX.sys||[]).forEach(s => { add(s.n); add(s.dn); add(s.by); (s.b||[]).forEach(b => add(b[0])); (s.t||[]).forEach(t => add(t[0]));
+    if(s.P) Object.values(s.P).forEach(p => { add(p.n); add(p.by); ['fa','fl','mi'].forEach(c => p[c] && (p[c][2]||[]).forEach(([n,by]) => { add(n); add(by); })); }); });
+  if(GX.inv) Object.values(GX.inv).forEach(l => (l||[]).forEach(c => add(c.n)));
+  (S.addr||[]).forEach(a => add(a.n)); (S.quests||[]).forEach(q => { add(q.t); add(q.n); });
+  CUST.forEach(c => c && add(c.n)); if(GX.stats) add(GX.stats.summary);
+  return [...out].sort((a,b) => b.length-a.length);
+}
+function scrub(t, names){
+  t = String(t)
+    .replace(/[A-Za-z]:[\\/][^\s'"<>)]*/g, '<path>').replace(/\\\\[^\s'"<>)]+/g, '<path>').replace(/(?:\/(?:Users|home|mnt|var|tmp|root))\/[^\s'"<>)]*/g, '<path>')
+    .replace(/st_\d+/gi, 'st_<id>').replace(/\b\d{9,}\b/g, '<number>').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '<email>')
+    .replace(/(?:https?|file|blob):\/\/[^\s'"<>)]+/g, u => /\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) ? '<app>' : '<url>');
+  (names||[]).forEach(n => { if(t.indexOf(n) >= 0) t = t.split(n).join('<name>'); });
+  return t;
+}
+function themeLabel(){ const k = ST.preset||'Traveller'; return k.startsWith('custom:') ? `custom preset ${+k.slice(7)+1}` : k + (k==='Traveller' ? ` (${ST.theme||'match device'})` : ''); }
+function diagText(){
+  const names = sensitiveStrings(); const L = window.VC_LOG || {ev:[]};
+  const pad = (s,n) => String(s).padEnd(n);
+  const logLines = ev => ev.map(([t,k,m]) => `  ${pad(t+'s',7)}${pad(k,9)}${scrub(m, names)}`).join('\n') || '  (nothing logged)';
+  const c = U.c || {}; const feats = Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `${k} ${v}`).join(', ') || 'none yet';
+  const tabs = Object.entries(U.tabs||{}).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `${k} ${v}`).join(', ') || 'none yet';
+  const ck = camKey();
+  return [
+    `App ${APPVER}${HELPER ? ' · helper '+HELPER : ''} · ${DESK ? 'desktop app' : 'web page'}`,
+    `${uaSummary()} · window ${innerWidth}×${innerHeight} · text size ${ST.size||15}`,
+    '',
+    'SETTINGS',
+    `Theme: ${themeLabel()} · Tab bar: ${ST.nav||'top'} · Auto-sync: ${DESK ? (ST.autosync ? 'on, every '+syncEvery()+' s' : 'off') : 'n/a'}`,
+    `Map: ${ck ? CAMNAME[ck].toLowerCase() : 'custom view'}, height ${MV.hs==='auto' ? 'auto (currently '+HS+'×)' : MV.hs+'×'}, colour by ${colMode==='disc'?'discoverer':'type'} · Planner counts from: ${plSrc()==='sync'?'save':'own list'}`,
+    `Open tab: ${current}`,
+    '',
+    'USAGE (all sessions on this install)',
+    `Sessions: ${U.sessions||1} · Syncs: ${U.syncOk||0} ok, ${U.syncFail||0} failed · Errors this session: ${L.err||0}`,
+    `Tabs opened: ${tabs}`,
+    `Features used: ${feats}`,
+    '',
+    'LOG THIS SESSION (seconds since the app opened)',
+    logLines((L.ev||[]).slice(-60)),
+    ...(S.diag && S.diag.prev && S.diag.prev.length ? ['', 'ERRORS FROM THE PREVIOUS SESSION', logLines(S.diag.prev)] : [])
+  ].join('\n');
+}
+function reportText(){
+  const what = $('#bug-what').value.trim(), how = $('#bug-how').value.trim();
+  return ['NMS SAVE TRACKER · BUG REPORT', `Made ${new Date().toISOString().slice(0,10)}`, '', 'WHAT HAPPENED', what || '(not filled in)', '', 'HOW IT HAPPENED', how || '(not filled in)', '', diagText(), ''].join('\n');
+}
+function renderBugPreview(){ $('#bug-pre').textContent = diagText(); }
+function bugReady(){ if($('#bug-what').value.trim()) return true; $('#bug-what').setCustomValidity('Say what went wrong first'); $('#bug-what').reportValidity(); return false; }
+$('#bug-what').addEventListener('input', () => $('#bug-what').setCustomValidity(''));
+function bugStatus(msg, bad){ $('#bug-status').innerHTML = `<span style="color:${bad?'var(--bad)':'var(--good)'}">${esc(msg)}</span>`; }
+if(DESK){ $('#bug-save').hidden = false; $('#bug-open').hidden = false; $('#bug-save').classList.toggle('primary', false); } else $('#bug-dl').hidden = true; // the web page can't hand out files; Copy works
+$('#bug-save').addEventListener('click', async () => { if(!bugReady()) return;
+  try { const r = await api('/api/report', {method:'POST', headers:{'Content-Type':'text/plain; charset=utf-8'}, body: reportText()});
+    if(r.status===404) { bugStatus('Saving needs the updated helper. Close the app fully, wait a minute and reopen it. Copy or Download work now.', true); return; }
+    const j = await r.json(); if(!r.ok || !j.file) throw new Error('not saved');
+    bugStatus(`Saved as data\\reports\\${j.file}. Send that file to whoever gave you the app.`); uCount('bug-report'); vcLog('report', 'saved');
+  } catch(err) { bugStatus('Could not save the report. Use Copy or Download instead.', true); } });
+$('#bug-copy').addEventListener('click', () => { if(!bugReady()) return; const txt = reportText();
+  const ok = () => { bugStatus('Copied. Paste it into a message to whoever gave you the app.'); uCount('bug-report'); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, () => bugStatus('Copy was blocked. Use Download instead.', true)); else bugStatus('Copy isn\'t available here. Use Download instead.', true); });
+$('#bug-dl').addEventListener('click', () => { if(!bugReady()) return;
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([reportText()], {type:'text/plain'})); a.download = `bug-report-${new Date().toISOString().slice(0,16).replace(/[-:T]/g,'')}.txt`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); bugStatus('Downloaded. Send the file to whoever gave you the app.'); uCount('bug-report'); }
+  catch(err) { bugStatus('Download was blocked. Use Copy instead.', true); } });
+$('#bug-open').addEventListener('click', async () => { try { const r = await api('/api/openreports', {method:'POST'}); if(!r.ok) throw 0; } catch(e) { bugStatus('Could not open the folder. Reports are in the app\'s data\\reports folder.', true); } });
+$('#bugbtn').addEventListener('click', () => openDrawer('bug'));
+
+/* ---------- GAME + SAVE FOLDERS (desktop app) ---------- */
+function renderPaths(st, err){
+  ['saves','game'].forEach(k => {
+    const s = st && st[k];
+    $(`[data-pval="${k}"]`).textContent = s ? (s.path || 'Not found') : (DESK ? 'Checking…' : 'Only in the desktop app');
+    const el = $(`[data-pstat="${k}"]`);
+    el.innerHTML = err ? `<span style="color:var(--bad)">${esc(err)}</span>` : s ? `<span style="color:${s.ok ? 'var(--good)' : 'var(--bad)'}">${s.ok ? '✓' : '⚠'} ${esc(s.detail)}</span> <span class="muted">${s.source==='auto' ? 'Found automatically.' : 'Picked by hand.'}</span>` : '';
+    $(`[data-pauto="${k}"]`).hidden = !s || s.source==='auto';
+  });
+}
+async function loadPaths(){
+  if(!DESK){ renderPaths(null); $$('#d-files button, #d-files input').forEach(b => b.disabled = true); return; }
+  try { const r = await api('/api/paths'); if(r.status===404){ renderPaths(null, 'Close the app fully and reopen it to turn this on.'); return; } renderPaths(await r.json()); }
+  catch(e){ renderPaths(null, 'Could not reach the helper.'); }
+}
+async function setPath(kind, val){
+  try {
+    const r = await api('/api/paths', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({[kind]: val || null})});
+    const j = await r.json();
+    if(!r.ok){ renderPaths(null, j.error || 'Could not use that folder.'); setTimeout(loadPaths, 2500); return; }
+    renderPaths(j); uCount('paths-'+kind+(val?'-manual':'-auto')); vcLog('paths', `${kind} set ${val?'by hand':'to auto'}`);
+    if(kind==='saves' && j.saves.ok){ S.lastSync = null; save(); syncNow(true); }
+  } catch(e){ renderPaths(null, 'Could not reach the helper.'); }
+}
+$('#d-files').addEventListener('click', async e => {
+  const p = e.target.closest('[data-pick]'); if(p){ const k = p.dataset.pick; p.disabled = true; p.textContent = 'Picking…';
+    try { const r = await api('/api/pickfolder?kind='+k, {method:'POST'}); const j = await r.json(); if(j.path) await setPath(k, j.path); } catch(err) {}
+    p.disabled = false; p.textContent = 'Change…'; return; }
+  const a = e.target.closest('[data-pauto]'); if(a){ setPath(a.dataset.pauto, null); return; }
+  const s = e.target.closest('[data-pset]'); if(s){ const v = $(`[data-pin="${s.dataset.pset}"]`).value.trim(); if(v) setPath(s.dataset.pset, v); }
+});
+
+/* ---------- GITHUB BUG REPORTS ---------- */
+const CFG = { githubRepo: '' };
+function ghReady(){ return /^[\w.-]+\/[\w.-]+$/.test(CFG.githubRepo||''); }
+function renderGhButton(){ $('#bug-gh').hidden = !ghReady(); if(ghReady()){ $('#bug-gh').title = 'Opens a new issue on github.com/' + CFG.githubRepo; } }
+if(DESK) fetch('config.json', {cache:'no-store'}).then(r => r.ok ? r.json() : {}).then(c => { Object.assign(CFG, c||{}); renderGhButton(); }).catch(() => {});
+async function copyText(t){ try { await navigator.clipboard.writeText(t); return true; } catch(e){ return false; } }
+$('#bug-gh').addEventListener('click', async () => {
+  if(!bugReady() || !ghReady()) return;
+  const what = $('#bug-what').value.trim(), how = $('#bug-how').value.trim(), diag = diagText();
+  const title = 'Bug: ' + what.split('\n')[0].slice(0, 80);
+  const log = '```text\n' + diag + '\n```';
+  const body = full => `### What happened\n${what}\n\n### How it happened\n${how || '_Not filled in_'}\n\n### App log\n${full ? log : '_The full log was copied to your clipboard. Paste it on the line below._\n\n'}\n`;
+  const base = `https://github.com/${CFG.githubRepo}/issues/new?labels=bug&title=${encodeURIComponent(title)}&body=`;
+  let url = base + encodeURIComponent(body(true)), copied = false;
+  if(url.length > 7000){ url = base + encodeURIComponent(body(false)); copied = await copyText(log); }
+  let opened = false;
+  if(DESK){ try { const r = await api('/api/open?url=' + encodeURIComponent(url), {method:'POST'}); opened = r.ok; } catch(e) {} }
+  if(!opened){ const w = window.open(url, '_blank', 'noopener'); opened = !!w || true; }
+  bugStatus(copied ? 'GitHub opened in your browser. The log was too long for the link, so it\'s on your clipboard: paste it into the issue, then press Submit.' : 'GitHub opened in your browser with everything filled in. Check it over and press Submit.');
+  uCount('bug-github'); vcLog('report', 'github');
+});
+
+/* ---------- boot ---------- */
+renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderQuests();
+let startTab = 'recipes'; { const t = tabGet(); if(t && TABS.includes(t)) startTab = t; }
+const hash = (location.hash||'').slice(1); if(TABS.includes(hash)) startTab = hash;
+showTab(startTab);
+})();
+</script>
