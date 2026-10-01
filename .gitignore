@@ -1,7 +1,8 @@
 # per-user data, never commit
-data/
+/data/
 source/out/
 source/tools/lastreport.txt
 source/tools/lastopen.txt
 *.log
 node_modules/
+source/tools/mock-icons/

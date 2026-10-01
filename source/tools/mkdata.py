@@ -38,3 +38,15 @@ m['ic']=ic
 open('game.bundle.json','w',encoding='utf-8').write(json.dumps(m,separators=(',',':'),ensure_ascii=False))
 import collections
 print('icons',len(ic), collections.Counter(v[0] for v in ic.values()), sum(1 for v in ic.values() if len(v)>2), sum(1 for v in ic.values() if not v[1]))
+
+# ---- icon paths (only the path text; the app reads the actual icons from the player's own game install)
+need=set(m['ix'])|set(m['xi'])|set(m['ic'])
+ip={}; pre='textures/ui/frontend/icons/'
+for f in KIND:
+    for x in json.load(open(SRC+f+'.json')):
+        i=x.get('Id'); p=(x.get('IconPath') or '').lower().replace('\\','/')
+        if not i or not p or i not in need: continue
+        ip.setdefault(i, p[len(pre):] if p.startswith(pre) else '/'+p)
+m['ip']=ip
+open('game.bundle.json','w',encoding='utf-8').write(json.dumps(m,separators=(',',':'),ensure_ascii=False))
+print('icon paths',len(ip))

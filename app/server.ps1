@@ -10,6 +10,7 @@ $DataDir   = Join-Path $AppDir 'data'
 if (-not (Test-Path $DataDir)) { New-Item -ItemType Directory -Path $DataDir | Out-Null }
 $DataFile  = Join-Path $DataDir 'companion.json'
 $PathsFile = Join-Path $DataDir 'paths.json'
+$IconDir   = Join-Path $DataDir 'icons'
 $LogFile   = Join-Path $DataDir 'helper.log'
 $Port      = 47831
 $Prefix    = "http://127.0.0.1:$Port/"
@@ -162,6 +163,35 @@ function Pick-Folder([string]$title, [string]$start) {
   return $null
 }
 
+# ---------- game packs (read-only, for item icons) ----------
+$script:BanksCache = $null; $script:BanksAt = [datetime]::MinValue
+function Get-BanksDir {
+  # Cached for a minute: the page reads many ranges in a row and finding the game can take a moment.
+  if ($script:BanksCache -and ((Get-Date) - $script:BanksAt).TotalSeconds -lt 60) { return $script:BanksCache }
+  $script:BanksCache = $null; $script:BanksAt = Get-Date
+  $st = Paths-Status
+  if (-not $st.game.ok -or -not $st.game.path) { return $null }
+  $b = Join-Path $st.game.path 'GAMEDATA\PCBANKS'
+  if (Test-Path -LiteralPath $b) { $script:BanksCache = $b; return $b } else { return $null }
+}
+function Read-Range([string]$path, [int64]$off, [int]$len) {
+  $fs = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+  try {
+    if ($off -ge $fs.Length) { return ,([byte[]]@()) }
+    $len = [int][Math]::Min([int64]$len, $fs.Length - $off)
+    $buf = New-Object byte[] $len
+    [void]$fs.Seek($off, [System.IO.SeekOrigin]::Begin)
+    $got = 0
+    while ($got -lt $len) { $n = $fs.Read($buf, $got, $len - $got); if ($n -le 0) { break }; $got += $n }
+    return ,$buf
+  } finally { $fs.Dispose() }
+}
+function Read-BodyBytes($req, [int]$max) {
+  if ($req.ContentLength64 -gt $max) { throw 'too large' }
+  $ms = New-Object System.IO.MemoryStream
+  try { $req.InputStream.CopyTo($ms); if ($ms.Length -gt $max) { throw 'too large' }; return ,$ms.ToArray() } finally { $ms.Dispose() }
+}
+
 # ---------- server ----------
 # Already running? Just open another window.
 try {
@@ -172,7 +202,7 @@ try {
 $Mime = @{
   '.html' = 'text/html; charset=utf-8'; '.js' = 'text/javascript; charset=utf-8'; '.css' = 'text/css; charset=utf-8';
   '.json' = 'application/json; charset=utf-8'; '.ico' = 'image/x-icon'; '.png' = 'image/png'; '.svg' = 'image/svg+xml';
-  '.woff2' = 'font/woff2'; '.txt' = 'text/plain; charset=utf-8'
+  '.woff2' = 'font/woff2'; '.txt' = 'text/plain; charset=utf-8'; '.webp' = 'image/webp'
 }
 
 function Send($ctx, [int]$code, [byte[]]$bytes, [string]$type) {
@@ -205,7 +235,41 @@ function Handle($ctx) {
     if ($req.Headers['X-VC'] -ne '1') { SendText $ctx 403 '{"error":"forbidden"}'; return }
     $script:lastPing = Get-Date
     switch ($path) {
-      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":4}'; return }
+      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":5}'; return }
+      '/api/paks'  {
+        $b = Get-BanksDir
+        if (-not $b) { SendJson $ctx @{ ok = $false; detail = 'Could not find your No Man''s Sky game files. Check the game folder in Settings, Game files.' }; return }
+        $list = @(Get-ChildItem -LiteralPath $b -Filter 'NMSARC.*.pak' -File | ForEach-Object { [pscustomobject]@{ name = $_.Name; size = $_.Length; mtime = [int64](($_.LastWriteTimeUtc - [datetime]'1970-01-01').TotalMilliseconds) } })
+        SendText $ctx 200 (ConvertTo-Json -InputObject @{ ok = $true; paks = $list } -Compress -Depth 4); return
+      }
+      '/api/pak'   {
+        # Read-only byte ranges of the game's own pack files, so the page can copy item icons out of them.
+        $name = $req.QueryString['name']
+        if ($name -notmatch '^NMSARC\.[A-Za-z0-9_]+\.pak$') { SendText $ctx 400 '{"error":"bad pack name"}'; return }
+        $b = Get-BanksDir; if (-not $b) { SendText $ctx 404 '{"error":"game not found"}'; return }
+        $p = Join-Path $b $name
+        if (-not (Test-Path -LiteralPath $p -PathType Leaf)) { SendText $ctx 404 '{"error":"pack not found"}'; return }
+        [int64]$off = 0; [int]$len = 0
+        if (-not [int64]::TryParse([string]$req.QueryString['off'], [ref]$off) -or -not [int]::TryParse([string]$req.QueryString['len'], [ref]$len) -or $off -lt 0 -or $len -le 0 -or $len -gt 33554432) { SendText $ctx 400 '{"error":"bad range"}'; return }
+        Send $ctx 200 (Read-Range $p $off $len) 'application/octet-stream'; return
+      }
+      '/api/icons' {
+        if (-not (Test-Path $IconDir)) { New-Item -ItemType Directory -Path $IconDir | Out-Null }
+        $idx = Join-Path $IconDir 'index.json'
+        if ($req.HttpMethod -eq 'POST') {
+          $file = [string]$req.QueryString['file']
+          if ($file -eq 'index.json') {
+            $body = Read-Body $req 8MB
+            if (-not $body.TrimStart().StartsWith('{')) { SendText $ctx 400 '{"error":"not json"}'; return }
+            [System.IO.File]::WriteAllText($idx, $body, $Utf8); SendText $ctx 200 '{"ok":true}'; return
+          }
+          if ($file -notmatch '^[A-Za-z0-9._-]{1,140}\.webp$' -or $file.Contains('..')) { SendText $ctx 400 '{"error":"bad icon name"}'; return }
+          [System.IO.File]::WriteAllBytes((Join-Path $IconDir $file), (Read-BodyBytes $req 2MB))
+          SendText $ctx 200 '{"ok":true}'; return
+        }
+        if (Test-Path $idx) { Send $ctx 200 ([System.IO.File]::ReadAllBytes($idx)) 'application/json; charset=utf-8' } else { SendText $ctx 200 '{}' }
+        return
+      }
       '/api/saves' { SendText $ctx 200 (ConvertTo-Json -InputObject (Get-Saves) -Compress -Depth 3); return }
       '/api/save'  {
         $dir = $req.QueryString['dir']; $name = $req.QueryString['name']
@@ -243,6 +307,7 @@ function Handle($ctx) {
             }
           }
           Save-Paths ([pscustomobject]$cur)
+          $script:BanksCache = $null
         }
         SendJson $ctx (Paths-Status); return
       }
@@ -284,12 +349,19 @@ function Handle($ctx) {
   if ($req.HttpMethod -ne 'GET') { SendText $ctx 405 'Method not allowed' 'text/plain'; return }
   $rel = [System.Uri]::UnescapeDataString($path.TrimStart('/'))
   if ($rel -eq '') { $rel = 'index.html' }
-  $full = [System.IO.Path]::GetFullPath((Join-Path $WebDir $rel))
-  $root = [System.IO.Path]::GetFullPath($WebDir)
+  $base = $WebDir
+  if ($rel.StartsWith('icons/')) { $base = $IconDir; $rel = $rel.Substring(6) }
+  $full = [System.IO.Path]::GetFullPath((Join-Path $base $rel))
+  $root = [System.IO.Path]::GetFullPath($base)
   if (-not $full.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path $full -PathType Leaf)) { SendText $ctx 404 'Not found' 'text/plain'; return }
   $ext = [System.IO.Path]::GetExtension($full).ToLower()
   $type = $Mime[$ext]; if (-not $type) { $type = 'application/octet-stream' }
-  Send $ctx 200 ([System.IO.File]::ReadAllBytes($full)) $type
+  $bytes = [System.IO.File]::ReadAllBytes($full)
+  if ($base -eq $IconDir) {
+    $res = $ctx.Response; $res.StatusCode = 200; $res.ContentType = $type; $res.Headers['Cache-Control'] = 'max-age=86400'; $res.Headers['X-Content-Type-Options'] = 'nosniff'
+    $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length); $res.OutputStream.Close(); return
+  }
+  Send $ctx 200 $bytes $type
 }
 
 $listener = New-Object System.Net.HttpListener

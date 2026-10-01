@@ -11,6 +11,9 @@
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 5.5A5.5 5.5 0 0 0 3.2 4M3 10.5A5.5 5.5 0 0 0 12.8 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M3 1.5V4.5H6M13 14.5V11.5H10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="mtxt" id="syncpilltxt">Sync</span>
       </button>
+      <label class="menubtn autopill" id="autopill" for="autosync3" hidden title="Re-read your save by itself while you play. Every tab updates: inventory, recipes you can make, map and stats.">
+        <input type="checkbox" id="autosync3"> <span class="mtxt">Auto-sync</span>
+      </label>
       <button type="button" class="menubtn" id="menubtn" aria-haspopup="dialog" aria-controls="drawer" aria-expanded="false" aria-label="Settings and help">
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span class="mtxt">Settings &amp; help</span>
@@ -22,7 +25,6 @@
 
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button role="tab" id="t-recipes" data-tab="recipes" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 14h9"/></svg>Recipes</button>
-    <button role="tab" id="t-planner" data-tab="planner" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>What can I make?</button>
     <button role="tab" id="t-inventory" data-tab="inventory" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Inventory</button>
     <button role="tab" id="t-resources" data-tab="resources" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Where to find</button>
     <button role="tab" id="t-portals" data-tab="portals" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="6" ry="8.5"/><ellipse cx="12" cy="12" rx="2.5" ry="4.5"/></svg>Portals</button>
@@ -31,7 +33,7 @@
     <button role="tab" id="t-pinned" data-tab="pinned" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>Pinned<span class="n" id="pincount">0</span></button>
     <label class="navsel"><span class="lbl">Section</span>
       <select id="navselect" aria-label="Go to section">
-        <option value="recipes">Recipes</option><option value="planner">What can I make?</option><option value="inventory">Inventory</option><option value="resources">Where to find</option>
+        <option value="recipes">Recipes</option><option value="inventory">Inventory</option><option value="resources">Where to find</option>
         <option value="portals">Portals</option><option value="galaxy">My galaxy</option><option value="quests">Quests</option><option value="pinned">Pinned</option>
       </select>
     </label>
@@ -43,9 +45,9 @@
     <div class="controls">
       <div class="row">
         <div class="seg big" role="group" aria-label="Recipe type">
-          <button type="button" data-rtype="refine" aria-pressed="true">Refiner</button>
-          <button type="button" data-rtype="craft" aria-pressed="false">Crafting</button>
-          <button type="button" data-rtype="cook" aria-pressed="false">Cooking</button>
+          <button type="button" data-rtype="refine" aria-pressed="true">Refiner <span class="rcnt" id="rc-refine"></span></button>
+          <button type="button" data-rtype="craft" aria-pressed="false">Crafting <span class="rcnt" id="rc-craft"></span></button>
+          <button type="button" data-rtype="cook" aria-pressed="false">Cooking <span class="rcnt" id="rc-cook"></span></button>
         </div>
         <label class="search" for="q">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -59,18 +61,12 @@
         </div>
       </div>
       <div class="row" id="rfilters"></div>
+      <div class="row"><label class="toggle cantog" for="rcan"><input type="checkbox" id="rcan"> Only recipes I can make now</label><span class="small muted" id="rcanhint"></span></div>
     </div>
-    <div id="itemcard"></div>
-    <div class="list" id="rlist" aria-live="polite"></div>
-    <button class="btn more" id="rmore" type="button" hidden>Show more</button>
-  </section>
-
-  <!-- PLANNER -->
-  <section class="panel" id="p-planner" role="tabpanel" aria-labelledby="t-planner" hidden>
-    <div class="card">
+    <div class="card" id="canbox" hidden>
       <div class="row" style="justify-content:space-between">
-        <h2>What's in your storage?</h2>
-        <div class="seg" role="group" aria-label="Where the planner counts items from">
+        <h2>What you have</h2>
+        <div class="seg" role="group" aria-label="Where to count your items from">
           <button type="button" data-psrc="sync" aria-pressed="false">From my save</button>
           <button type="button" data-psrc="list" aria-pressed="true">My own list</button>
         </div>
@@ -81,7 +77,7 @@
         <div class="small muted" id="plsum"></div>
       </div>
       <div id="pllist">
-      <p class="muted small" style="margin:0">Add what you're carrying. The planner shows every refiner, crafting and cooking recipe you can run right now, and how many times.</p>
+      <p class="muted small" style="margin:0">Add what you're carrying. The list below then only shows the refiner, crafting and cooking recipes you can run with it, and how many times.</p>
       <div class="row">
         <input class="txt" id="invname" list="itemnames" placeholder="Item name" style="flex:1 1 220px" autocomplete="off">
         <input class="txt" id="invqty" type="number" min="1" value="100" style="width:110px" aria-label="Quantity">
@@ -92,17 +88,11 @@
       <div class="note" id="invexample" hidden>These are example items so you can see how it works. Clear them and add your own.</div>
       <div class="inv" id="invlist"></div>
       </div>
-    </div>
-    <div class="row">
-      <div class="seg" role="group" aria-label="Planner results">
-        <button type="button" data-ptype="refine" aria-pressed="true">Refine <span id="pc-refine"></span></button>
-        <button type="button" data-ptype="craft" aria-pressed="false">Craft <span id="pc-craft"></span></button>
-        <button type="button" data-ptype="cook" aria-pressed="false">Cook <span id="pc-cook"></span></button>
-      </div>
       <label class="toggle" for="pbase"><input type="checkbox" id="pbase"> Hide base building parts</label>
     </div>
-    <div class="list" id="plist"></div>
-    <button class="btn more" id="pmore" type="button" hidden>Show more</button>
+    <div id="itemcard"></div>
+    <div class="list" id="rlist" aria-live="polite"></div>
+    <button class="btn more" id="rmore" type="button" hidden>Show more</button>
   </section>
 
   <!-- INVENTORY -->
@@ -133,6 +123,30 @@
 
   <!-- RESOURCES -->
   <section class="panel" id="p-resources" role="tabpanel" aria-labelledby="t-resources" hidden>
+    <div class="card" id="starguide">
+      <div class="row" style="justify-content:space-between"><h2>Star class codes</h2>
+        <label class="search" for="starq" style="flex:0 1 260px"><input id="starq" type="search" placeholder="Decode a code, e.g. G7pf" autocomplete="off" maxlength="8"></label></div>
+      <p class="muted small" style="margin:0">Every system shows a star class like <b>G7pf</b> on the galaxy map. The <b>letter</b> is what matters in game: it sets the star's colour, which metal its planets have and which hyperdrive you need. The <b>number</b> and the <b>small letters</b> come from real astronomy and are only flavour in No Man's Sky.</p>
+      <div id="stardecode" class="stardecode" hidden></div>
+      <div class="tbl"><table class="t">
+        <thead><tr><th>Letter</th><th>Colour</th><th>Metal</th><th>Drive needed</th></tr></thead>
+        <tbody>
+          <tr><td><b>F, G</b></td><td><span class="dot" style="background:#E8C54A"></span>Yellow</td><td>Copper</td><td>None (starter systems)</td></tr>
+          <tr><td><b>K, M</b></td><td><span class="dot" style="background:#D9523C"></span>Red</td><td>Cadmium</td><td>Cadmium Drive</td></tr>
+          <tr><td><b>E</b></td><td><span class="dot" style="background:#4FB069"></span>Green</td><td>Emeril</td><td>Emeril Drive</td></tr>
+          <tr><td><b>O, B</b></td><td><span class="dot" style="background:#4A8BE0"></span>Blue</td><td>Indium</td><td>Indium Drive</td></tr>
+          <tr><td><b>X, Y</b></td><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Quartzite</td><td>Atlantid Drive (rarest)</td></tr>
+        </tbody>
+      </table></div>
+      <div class="grid2" style="gap:12px">
+        <div><h3 style="margin:4px 0">The number (0–9)</h3><p class="small muted" style="margin:0">How hot the star is within its letter: <b>0 is the hottest</b>, 9 the coolest. A G2 is a little hotter than a G7. It doesn't change anything in game.</p></div>
+        <div><h3 style="margin:4px 0">The small letters</h3><div class="kv starsfx">
+          <span><b>p</b>peculiar spectrum</span><span><b>e</b>emission lines</span><span><b>f</b>nitrogen and helium emission</span><span><b>m</b>extra metal lines</span>
+          <span><b>n</b>broad, blurry lines (fast spin)</span><span><b>s</b>sharp, narrow lines</span><span><b>v</b>variable spectrum</span><span><b>w</b>weak lines</span>
+          <span><b>k</b>gas clouds in front of it</span><span><b>q</b>shifted lines</span></div>
+          <p class="small muted" style="margin:6px 0 0">Real astronomy terms. In No Man's Sky they're flavour only.</p></div>
+      </div>
+    </div>
     <div class="grid2">
       <div class="card">
         <h2>Metals by star colour</h2>
@@ -282,6 +296,15 @@
         </div>
         <div class="syslist" id="glist"></div>
       </div>
+    </div>
+    <div class="card" id="gspecies">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="flex:1">Species discovered per planet</h3>
+        <input class="txt" id="gspq" type="search" placeholder="Filter" style="width:150px" autocomplete="off">
+      </div>
+      <p class="muted small" style="margin:0">How many creatures, plants and minerals you've scanned on each planet, from your save. Your save doesn't know how many a planet has in total, so use this as a shortlist: planets with lots of scans are likely complete. In game, open <b>Discoveries</b> and hold <b>Register completion</b> on any that show N/N for a nanite bonus.</p>
+      <div class="tbl"><table class="t" id="gsptbl"></table></div>
+      <button class="btn more" id="gspmore" type="button" hidden>Show all</button>
     </div>
     <div class="card syncbar" id="syncbar">
       <div class="row" style="justify-content:space-between; align-items:flex-start">
@@ -485,7 +508,17 @@
         <button type="button" class="btn ghost" data-pauto="game">Use auto-detect</button>
       </div>
       <div class="row"><input class="txt" data-pin="game" placeholder="Or paste a folder path" style="flex:1 1 200px" autocomplete="off"><button type="button" class="btn" data-pset="game">Use this</button></div>
-      <p class="muted small" style="margin:0">The app only reads from this folder. A later update will use it to show the game's own icons, pulled from your install.</p>
+      <p class="muted small" style="margin:0">The app only reads from this folder. It never changes anything in it.</p>
+    </div>
+    <div class="field pathbox" id="gibox">
+      <span class="lbl">Item icons from your game</span>
+      <p class="muted small" style="margin:0">The app copies the game's own item icons out of your No Man's Sky install into its data folder, so recipes, inventories and item cards look like the game. No icons come with the app itself; they're read from your copy of the game. Drawn icons are used for anything it can't find.</p>
+      <div class="small" id="gistat">Not loaded yet.</div>
+      <div class="gibar" id="gibar" hidden><span id="gifill"></span></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="girun">Load icons from my game</button>
+        <label class="toggle" for="giuse"><input type="checkbox" id="giuse" checked> Use game icons</label>
+      </div>
     </div>
   </div>
 
@@ -509,12 +542,13 @@
 
   <div class="dsec" id="d-help" hidden>
     <details open><summary>Recipes</summary><p>Pick Refiner, Crafting or Cooking, then search any item. <b>Uses it</b> shows recipes that need the item, <b>Makes it</b> shows recipes that produce it. Searching an exact item name shows an info card. Click any item chip to jump to it. ☆ pins a recipe to the Pinned tab.</p><p>The <b>×</b> number is output value ÷ input value, so above ×1 makes you money. <b>Profit / run</b> is units gained each run. <b>Items in → out</b> ignores value and just counts items.</p></details>
-    <details><summary>What can I make?</summary><p>Add items and amounts from your storage. The list shows every recipe you can run right now and how many times. Edit an amount in place or remove it with ×.</p></details>
-    <details><summary>Where to find</summary><p>Tables for star colours and planet types, plus the game's own description for every raw material. Switch to Fish to search by biome.</p></details>
-    <details><summary>Inventory</summary><p>Your exosuit, starships, corvettes (their own inventories plus the storage units built into them), freighter and base storage containers, read from your save. <b>Everything</b> adds up each item across all of them and shows where it is. Click an item to see its recipes. It refreshes whenever the app syncs.</p><p>In <b>What can I make?</b>, pick <b>From my save</b> to plan with what you actually have, and tick which inventories to count.</p></details>
+    <details><summary>Recipes you can make now</summary><p>In Recipes, tick <b>Only recipes I can make now</b>. The list then only shows recipes you have the materials for, with how many times you can run each one, and the counts appear on the Refiner, Crafting and Cooking buttons. Search still works on top of it.</p><p>Choose <b>From my save</b> and tick which inventories count (exosuit, ships, corvettes, freighter, base storage, exocraft), or <b>My own list</b> to type items and amounts in yourself.</p></details>
+    <details><summary>Where to find</summary><p>A star class guide (type a code like G7pf to decode it), tables for star colours and planet types, plus the game's own description for every raw material. Switch to Fish to search by biome.</p></details>
+    <details><summary>Item icons</summary><p>In the desktop app, the real item icons are copied out of your own No Man's Sky install the first time it runs. It takes a few minutes in the background, and you can watch it in Settings &amp; help, Game files. They're kept in the app's data folder and refreshed by themselves after a game update. Nothing in your game folder is changed, and no game artwork comes with the app.</p></details>
+    <details><summary>Inventory</summary><p>Your exosuit, starships, corvettes (their own inventories plus the storage units built into them), freighter and base storage containers, read from your save. <b>Everything</b> adds up each item across all of them and shows where it is. Click an item to see its recipes. It refreshes whenever the app syncs.</p><p>In <b>Recipes</b>, tick <b>Only recipes I can make now</b> to see what you can make with what you actually have.</p></details>
     <details><summary>Portals</summary><p>Tap glyphs on the keypad (numbered 1–16 like the portal) or paste a code. Each glyph pops into the address bar, which stays in view while you scroll. Tap any of the 12 spots to pick it: with <b>Replace</b> the next glyph overwrites that spot, with <b>Insert</b> it goes in before it and the rest move along. The × on a spot removes that glyph. Undo steps back through your changes. On a keyboard, type the hex code (0–9, A–F).</p><p>The first glyph is the planet, and the planet buttons swap it to reach other planets in the same system. Save addresses with a name; Copy puts the numbers on your clipboard.</p></details>
     <details><summary>My galaxy</summary><p>Drag to pan, scroll or pinch to zoom; arrow keys work too. Pick a camera: <b>Top down</b>, <b>Angled</b>, <b>Side</b> or <b>Front</b>, or turn it freely with the sliders, Right-drag or Shift-drag (Q and E turn it with the keyboard). <b>Height</b> stretches the galaxy's thickness so you can see which systems sit above or below the plane. The <b>Galaxy</b> list switches between the galaxies your save has data for.</p><p>Click a system for details, then <b>Open system view</b> for its planets. Switch between colouring by type and by who discovered it.</p></details>
-    <details><summary>Sync</summary><p>In the desktop app, Sync reads your newest save. Turn on auto-sync and pick how often it checks in the Sync section of this menu. The game only writes a new save when you land, get out of your ship, warp or save manually, so changes show up after that.</p></details>
+    <details><summary>Sync</summary><p>In the desktop app, Sync reads your newest save. Tick <b>Auto-sync</b> next to the Sync button at the top, and every tab keeps itself up to date while you play: inventory, recipes you can make, the map and your stats. Pick how often it checks in the Sync section of this menu. The game only writes a new save when you land, get out of your ship, warp or save manually, so changes show up after that.</p></details>
     <details><summary>Reporting a bug</summary><p>Open <b>Report a bug</b> in this menu, say what happened and how, and save, copy or download the report. The attached log has no save data, names, locations or personal details; you can read all of it before sending.</p></details>
     <details><summary>Quests</summary><p>Change a quest's status with its dropdown and write your next step in the notes. <b>Add a goal</b> makes your own card; double-click a title to rename it.</p></details>
     <details><summary>Display</summary><p>Settings → Display picks how portal glyphs show (icons, numbers, names, hex), whether big numbers are written in full or short (1.37B), how a system's location is given, and whether inventories show as a grid like in the game or as a list.</p></details>
@@ -527,6 +561,9 @@
 
 <script>
 __SAVESYNC__
+</script>
+<script>
+__GAMEICONS__
 </script>
 <script>
 window.VC_LOG = { t0: Date.now(), ev: [], err: 0, hook: null };
@@ -552,7 +589,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '1.6.0';
+const APPVER = '1.7.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -614,7 +651,7 @@ function hl(name){
 function chip(id, q, out){
   const it = I[id];
   const t = it.p ? '<span class="tag purple" title="Only found in purple star systems">purple</span>' : '';
-  return `<button type="button" class="chip${out?' out':''}" data-item="${esc(it.n)}" title="${esc(it.g)} · ${fmt(it.v)} u each"><span class="q">${fmt(q)}×</span><span>${hl(it.n)}</span></button>${t}`;
+  return `<button type="button" class="chip${out?' out':''}" data-item="${esc(it.n)}" title="${esc(it.g)} · ${fmt(it.v)} u each">${giImg(idOf(id),'cimg')}<span class="q">${fmt(q)}×</span><span>${hl(it.n)}</span></button>${t}`;
 }
 function pinBtn(key){
   const on = S.pins.includes(key);
@@ -693,7 +730,14 @@ const KIND_SVG = {
   q:'<circle cx="12" cy="12" r="8"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6M12 17v.1"/>'
 };
 const IC = G.ic || {};
+/* ---------- GAME ICONS (read from the player's own install, never shipped with the app) ---------- */
+const IP = G.ip || {};
+const GI = { map: new Map(), state: 'idle', done: 0, total: 0, found: 0, msg: '', sig: '', ran: false };
+function giFull(rel){ return rel.charAt(0)==='/' ? rel.slice(1) : 'textures/ui/frontend/icons/' + rel; }
+function giUrl(id){ if(DSP.gameIcons===0 || !id) return null; const p = IP[id]; return p ? (GI.map.get(p) || null) : null; }
+function giImg(id, cls){ const u = giUrl(id); return u ? `<img class="${cls||'gimg'}" src="${u}" alt="" loading="lazy" decoding="async" draggable="false">` : ''; }
 function itemIconHTML(id, size){
+  const gu = giUrl(id); if(gu) return `<span class="ico img ${size||''}"><img src="${gu}" alt="" loading="lazy" decoding="async" draggable="false"></span>`;
   const h = IC[id]; const kind = h ? h[0] : /^PROC_/.test(id) ? 'c' : 'q'; const col = h && h[1] ? '#'+h[1] : '';
   const sym = h && h[2];
   const style = col ? ` style="--ic:${col}"` : '';
@@ -703,7 +747,7 @@ function itemIconHTML(id, size){
 
 /* ---------- DISPLAY SETTINGS (how multi-format things are shown) ---------- */
 S.settings = S.settings || {};
-const DSP = S.settings.disp = Object.assign({ gIcon:1, gNum:1, gName:1, gHex:0, big:'full', loc:'both', invView:'grid', gridNames:0 }, S.settings.disp || {});
+const DSP = S.settings.disp = Object.assign({ gIcon:1, gNum:1, gName:1, gHex:0, big:'full', loc:'both', invView:'grid', gridNames:0, gameIcons:1 }, S.settings.disp || {});
 function fmtBig(n){ if(DSP.big!=='short' || Math.abs(n) < 10000) return fmt(n); const a = Math.abs(n); const [d,s] = a>=1e9 ? [1e9,'B'] : a>=1e6 ? [1e6,'M'] : [1e3,'k']; return (n<0?'−':'') + (a/d).toFixed(a/d>=100?0:a/d>=10?1:2).replace(/\.?0+$/,'') + s; }
 // One glyph written out the ways the person has chosen.
 function glyphParts(v){ const out = []; if(DSP.gIcon) out.push(glyphSvg(v,'gsv')); if(DSP.gNum) out.push(`<b>${v+1}</b>`); if(DSP.gHex) out.push(`<code>${v.toString(16).toUpperCase()}</code>`); if(DSP.gName) out.push(`<i>${esc(GLYPHS[v][0])}</i>`); return out.join(''); }
@@ -719,7 +763,7 @@ function addrStrip(arr){
 }
 
 /* ---------- tabs ---------- */
-const TABS = ['recipes','planner','inventory','resources','portals','galaxy','quests','pinned'];
+const TABS = ['recipes','inventory','resources','portals','galaxy','quests','pinned'];
 let current = 'recipes';
 function showTab(t){
   current = t;
@@ -729,7 +773,6 @@ function showTab(t){
   $('#scroller').scrollTop = 0;
   if(t==='galaxy') mapResize();
   if(t==='pinned') renderPinned();
-  if(t==='planner') renderPlanner();
   if(t==='inventory') renderInventory();
   if(t==='portals') renderAddr();
   U.tabs = U.tabs || {}; U.tabs[t] = (U.tabs[t]||0)+1; vcLog('tab', t);
@@ -737,7 +780,8 @@ function showTab(t){
 $$('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
 /* ---------- RECIPES ---------- */
-const R = { type:'refine', q:'', mode:'any', shown:60, slots:0, sort:'mult', money:false, cat:'', csort:'value' };
+const R = { type:'refine', q:'', mode:'any', shown:60, slots:0, sort:'mult', money:false, cat:'', csort:'value', can:false };
+let CANN = new Map();
 function renderFilters(){
   const f = $('#rfilters');
   if(R.type==='refine' || R.type==='cook'){
@@ -764,15 +808,19 @@ function matchQ(r, q, mode){
   const inHit = r.inN.some(n => n.includes(q)); const outHit = r.outN.includes(q);
   return mode==='in' ? inHit : mode==='out' ? outHit : (inHit||outHit);
 }
+function canFilter(rows){
+  if(!R.can) return rows;
+  return rows.filter(r => CANN.has(r.key) && !(P.hideBase && r.type==='craft' && r.cat==='Base part'));
+}
 function recipeRows(){
   const q = R.q.trim().toLowerCase();
   if(R.type==='craft'){
-    let out = CRAFT.filter(r => (!R.cat || r.cat===R.cat) && matchQ(r,q,R.mode));
+    let out = canFilter(CRAFT.filter(r => (!R.cat || r.cat===R.cat) && matchQ(r,q,R.mode)));
     out.sort((a,b) => R.csort==='name' ? a.outN.localeCompare(b.outN) : R.csort==='cheap' ? a.vin-b.vin : b.vout-a.vout);
     return out;
   }
   const src = R.type==='refine' ? REF : COOK;
-  let out = src.filter(r => (!R.slots || R.type!=='refine' || r.ins.length===R.slots) && (!R.money || (!r.nan && r.mult>1.001)) && matchQ(r,q,R.mode));
+  let out = canFilter(src.filter(r => (!R.slots || R.type!=='refine' || r.ins.length===R.slots) && (!R.money || (!r.nan && r.mult>1.001)) && matchQ(r,q,R.mode)));
   out.sort((a,b) => {
     if(R.sort==='name') return a.outN.localeCompare(b.outN) || b.mult-a.mult;
     if(R.sort!=='qty' && a.nan!==b.nan) return a.nan?1:-1;
@@ -805,8 +853,11 @@ function renderRecipes(){
   const c = $('#rcount2'); if(c) c.textContent = `${rows.length} of ${total}`;
   itemCard();
   const list = $('#rlist');
-  if(!rows.length){ list.innerHTML = `<div class="empty">No ${R.type} recipes match "${esc(R.q)}". Try part of a name, like "chrom" or "cell", or another recipe type.</div>`; $('#rmore').hidden = true; return; }
-  list.innerHTML = rows.slice(0, R.shown).map(r => row(r)).join('');
+  if(!rows.length){
+    const why = R.can ? `Nothing to ${R.type==='refine'?'refine':R.type} ${R.q?`matching "${esc(R.q)}" `:''}with ${plSrc()==='sync' ? 'what\'s in the ticked inventories' : 'what\'s in your list'}. Try another recipe type, tick more inventories, or turn off "Only recipes I can make now".`
+      : `No ${R.type} recipes match "${esc(R.q)}". Try part of a name, like "chrom" or "cell", or another recipe type.`;
+    list.innerHTML = `<div class="empty">${why}</div>`; $('#rmore').hidden = true; return; }
+  list.innerHTML = rows.slice(0, R.shown).map(r => row(r, R.can && CANN.has(r.key) ? `<span class="profit" style="color:var(--accent)">can run ${fmt(CANN.get(r.key))}×</span>` : '')).join('');
   const left = rows.length - R.shown; $('#rmore').hidden = left<=0; $('#rmore').textContent = `Show ${Math.min(left,60)} more`;
 }
 function setQuery(v){ R.q = v; R.shown = 60; $('#q').value = v; $('#qclear').hidden = !v; renderRecipes(); }
@@ -889,8 +940,9 @@ function gridCell(id, a, max, where, dim){
   const amt = (sub || !max || max >= 1000) ? fmt(a) : `${fmt(a)} / ${fmt(max)}`;
   const tip = `${f.n} · ${fmt(a)}${max ? ' / '+fmt(max) : ''}${f.v ? ' · worth '+fmt(f.v*a)+' u' : ''}${where ? ' · ' + where : ''}`;
   const attr = f.i!==null ? ` data-item="${esc(f.n)}" role="button" tabindex="0"` : '';
-  const centre = sub || sym ? '<span class="orb" aria-hidden="true"></span>' : `<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${KIND_SVG[kind]||KIND_SVG.q}</svg>`;
-  return `<div class="gc${dim?' dim':''}${f.i!==null?' link':''}" style="--ic:${col}" title="${esc(tip)}" aria-label="${esc(f.n)}, ${esc(amt)}"${attr}>${sym ? `<span class="gpill">${esc(sym)}</span>` : ''}${centre}<span class="gq">${amt}</span>${DSP.gridNames ? `<span class="gnm">${esc(f.n)}</span>` : ''}</div>`;
+  const gimg = giImg(id, 'gpic');
+  const centre = gimg ? gimg : sub || sym ? '<span class="orb" aria-hidden="true"></span>' : `<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${KIND_SVG[kind]||KIND_SVG.q}</svg>`;
+  return `<div class="gc${dim?' dim':''}${f.i!==null?' link':''}${gimg?' hasimg':''}" style="--ic:${col}" title="${esc(tip)}" aria-label="${esc(f.n)}, ${esc(amt)}"${attr}>${sym ? `<span class="gpill">${esc(sym)}</span>` : ''}${centre}<span class="gq">${amt}</span>${DSP.gridNames ? `<span class="gnm">${esc(f.n)}</span>` : ''}</div>`;
 }
 const EMPTY_CELL = '<div class="gc empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 5H5v3M16 5h3v3M8 19H5v-3M16 19h3v-3"/></svg></div>';
 function containerGrid(c){
@@ -991,17 +1043,15 @@ $('#plgroups').addEventListener('change', e => { const k = e.target.dataset.plg;
 function runs(ins, have){ let n = Infinity; for(const [id,q] of ins){ const h = have.get(id)||0; n = Math.min(n, Math.floor(h/q)); } return n===Infinity?0:n; }
 function renderPlanner(){
   renderInv(); renderPlSrc();
-  const have = stock();
-  const pack = src => src.map(r => ({r, n: runs(r.ins, have)})).filter(x => x.n>0);
-  const res = { refine: pack(REF), craft: pack(CRAFT).filter(x => !P.hideBase || x.r.cat!=='Base part'), cook: pack(COOK) };
-  ['refine','craft','cook'].forEach(t => $('#pc-'+t).textContent = `(${res[t].length})`);
-  const list = res[P.type];
-  list.sort((a,b) => P.type==='craft' ? b.r.vout-a.r.vout : (b.r.profit*b.n - a.r.profit*a.n));
-  hlq = '';
-  $('#plist').innerHTML = list.length ? list.slice(0,P.shown).map(x => row(x.r, `<span class="profit" style="color:var(--accent)">can run ${fmt(x.n)}×</span>`)).join('')
-    : `<div class="empty">Nothing to ${P.type} with ${plSrc()==='sync' ? 'what\'s in the ticked inventories' : 'what\'s in your list yet. Add more items above'}.</div>`;
-  const left = list.length - P.shown; $('#pmore').hidden = left<=0; $('#pmore').textContent = `Show ${Math.min(left,40)} more`;
+  const have = stock(); CANN = new Map();
+  const cnt = { refine:0, craft:0, cook:0 };
+  [[REF,'refine'],[CRAFT,'craft'],[COOK,'cook']].forEach(([src,t]) => src.forEach(r => { const n = runs(r.ins, have); if(n>0){ CANN.set(r.key, n); if(!(t==='craft' && P.hideBase && r.cat==='Base part')) cnt[t]++; } }));
+  ['refine','craft','cook'].forEach(t => { const el = $('#rc-'+t); if(el) el.textContent = R.can ? `(${cnt[t]})` : ''; });
+  $('#canbox').hidden = !R.can; $('#rcan').checked = R.can;
+  $('#rcanhint').textContent = R.can ? `${cnt.refine+cnt.craft+cnt.cook} recipes you can run right now` : '';
+  if(current==='recipes') renderRecipes();
 }
+function setCan(on){ R.can = on; S.pl.can = on ? 1 : 0; R.shown = 60; save(); renderPlanner(); uCount('can-make-'+(on?'on':'off')); }
 function addInv(){
   const n = $('#invname').value.trim().toLowerCase(); const id = byName.get(n);
   const q = Math.max(1, parseInt($('#invqty').value,10)||1);
@@ -1017,9 +1067,31 @@ $('#invname').addEventListener('input', () => $('#invname').setCustomValidity(''
 $('#invclear').addEventListener('click', () => { S.inv = []; S.invExample = false; save(); renderPlanner(); });
 $('#invlist').addEventListener('change', e => { const i = e.target.dataset.invq; if(i===undefined) return; S.inv[+i][1] = Math.max(0, parseInt(e.target.value,10)||0); S.invExample=false; save(); renderPlanner(); });
 $('#invlist').addEventListener('click', e => { const i = e.target.dataset.invx; if(i===undefined) return; S.inv.splice(+i,1); save(); renderPlanner(); });
-$$('[data-ptype]').forEach(b => b.addEventListener('click', () => { P.type = b.dataset.ptype; P.shown=40; sync('ptype', P.type); renderPlanner(); }));
 $('#pbase').addEventListener('change', e => { P.hideBase = e.target.checked; renderPlanner(); });
-$('#pmore').addEventListener('click', () => { P.shown += 40; renderPlanner(); });
+$('#rcan').addEventListener('change', e => setCan(e.target.checked));
+R.can = !!S.pl.can;
+
+/* ---------- STAR CLASS DECODER ---------- */
+const STARL = { F:['Yellow','#E8C54A','Copper','no special drive'], G:['Yellow','#E8C54A','Copper','no special drive'], K:['Red','#D9523C','Cadmium','the Cadmium Drive'], M:['Red','#D9523C','Cadmium','the Cadmium Drive'],
+  E:['Green','#4FB069','Emeril','the Emeril Drive'], O:['Blue','#4A8BE0','Indium','the Indium Drive'], B:['Blue','#4A8BE0','Indium','the Indium Drive'], X:['Purple','#9A5BD8','Quartzite','the Atlantid Drive'], Y:['Purple','#9A5BD8','Quartzite','the Atlantid Drive'] };
+const STARS = { p:'peculiar spectrum', e:'emission lines', f:'nitrogen and helium emission', m:'extra metal lines', n:'broad, blurry lines', s:'sharp, narrow lines', v:'variable spectrum', w:'weak lines', k:'gas clouds in front of it', q:'shifted lines' };
+function starDecode(code){
+  const m = /^\s*([A-Za-z])\s*(\d)?\s*([a-z]*)\s*$/.exec(code||''); if(!m) return null;
+  const L = STARL[m[1].toUpperCase()]; if(!L) return { bad: m[1].toUpperCase() };
+  return { L, letter:m[1].toUpperCase(), num: m[2], sfx: [...(m[3]||'')].filter(c => STARS[c]) };
+}
+function renderStar(){
+  const v = $('#starq').value.trim(); const el = $('#stardecode');
+  if(!v){ el.hidden = true; return; }
+  const d = starDecode(v); el.hidden = false;
+  if(!d){ el.innerHTML = '<span class="muted">Type a code like G7pf: a letter, a number, then any small letters.</span>'; return; }
+  if(d.bad){ el.innerHTML = `<span class="muted">"${esc(d.bad)}" isn't a star class used in No Man's Sky. Try F, G, K, M, E, O, B, X or Y.</span>`; return; }
+  const [col, hex, metal, drive] = d.L;
+  el.innerHTML = `<b><span class="dot" style="background:${hex}"></span>${esc(d.letter)}${d.num||''}${d.sfx.join('')}</b>: a <b>${col.toLowerCase()}</b> star. Its planets carry <b>${metal}</b>, and you need <b>${drive}</b> to warp there.`
+    + (d.num!==undefined ? ` Temperature ${d.num} of 0–9 (${+d.num<=3 ? 'hot end' : +d.num>=7 ? 'cool end' : 'middle'} of its class).` : '')
+    + (d.sfx.length ? ` Extras: ${d.sfx.map(c => `<b>${c}</b> ${STARS[c]}`).join(', ')}.` : '');
+}
+$('#starq').addEventListener('input', () => { renderStar(); });
 
 /* ---------- RESOURCES ---------- */
 const RS = { kind:'raw', q:'' };
@@ -1308,6 +1380,7 @@ function renderInfo(){
   $('#gsysbtn').addEventListener('click', () => { showSystem = !showSystem; renderInfo(); if(showSystem) $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
   renderSystem();
 }
+function spN(d){ return d ? d[0] : 0; }
 function discLine(label, d){
   if(!d) return `<span><b>${label}</b>0</span>`;
   return `<span><b>${label}</b>${d[0]}${d[1]&&d[1]<d[0]?` (${d[1]} by you)`:d[1]===d[0]?' · all by you':''}</span>`;
@@ -1323,7 +1396,7 @@ function renderSystem(){
   if(!maxP){ box.innerHTML = `<h2>${sysHead(s)} · system view</h2><p class="muted" style="margin:0">No planet data in your save for this system. You passed through without landing or scanning planets.</p>`; return; }
   if(selPlanet===null || selPlanet>maxP || !(P[selPlanet] || (s.b||[]).some(b=>b[2]===selPlanet))) selPlanet = idxs.sort((a,b)=>a-b)[0];
   const Wd = Math.max(560, 150 + maxP*110), cy = 90;
-  let svg = `<svg viewBox="0 0 ${Wd} 180" width="100%" style="max-width:${Wd}px; display:block" role="img" aria-label="Planets in ${esc(sysTitle(s))}">
+  let svg = `<svg viewBox="0 0 ${Wd} 194" width="100%" style="max-width:${Wd}px; display:block" role="img" aria-label="Planets in ${esc(sysTitle(s))}">
     <defs><radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFF6D8"/><stop offset=".55" stop-color="#F0A640"/><stop offset="1" stop-color="#F0A640" stop-opacity="0"/></radialGradient></defs>
     <circle cx="40" cy="${cy}" r="46" fill="url(#sun)"/>`;
   for(let p=1; p<=maxP; p++){
@@ -1337,7 +1410,8 @@ function renderSystem(){
       <circle cx="${x}" cy="${cy}" r="${r}" fill="${col}"/><circle cx="${x-r/3}" cy="${cy-r/3}" r="${r/3}" fill="#fff" opacity=".18"/>
       ${hasBase?`<circle cx="${x+r*0.75}" cy="${cy-r*0.75}" r="6" fill="var(--teal)" stroke="var(--surface)" stroke-width="2"/>`:''}
       <text x="${x}" y="${cy+r+22}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" font-family="IBM Plex Sans, sans-serif">${esc((pl&&pl.n)||('Planet '+p)).slice(0,18)}</text>
-      <text x="${x}" y="${cy+r+38}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${esc((pl&&pl.bio)||'')}</text></g>`;
+      <text x="${x}" y="${cy+r+38}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${esc((pl&&pl.bio)||'')}</text>
+      ${pl && (spN(pl.fa)||spN(pl.fl)) ? `<text x="${x}" y="${cy+r+54}" text-anchor="middle" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono, monospace">${spN(pl.fa)} fauna · ${spN(pl.fl)} flora</text>` : ''}</g>`;
   }
   svg += '</svg>';
   const p = selPlanet, pl = P[p] || {};
@@ -1367,12 +1441,29 @@ function renderSystem(){
 $('#gsystem').addEventListener('click', e => { const g = e.target.closest('[data-pl]'); if(!g) return; selPlanet = +g.dataset.pl; renderSystem(); });
 $('#gsystem').addEventListener('keydown', e => { const g = e.target.closest('[data-pl]'); if(!g || (e.key!=='Enter' && e.key!==' ')) return; e.preventDefault(); selPlanet = +g.dataset.pl; renderSystem(); });
 $$('[data-gcol]').forEach(bn => bn.addEventListener('click', () => { colMode = bn.dataset.gcol; sync('gcol', colMode); renderLegend(); draw(); }));
-function renderList(){
+function renderList(){ renderSpecies();
   const q = $('#gsearch').value.trim().toLowerCase();
   const rows = SY.filter(s => s.n || s.dn || s.b || isCur(s)).filter(s => !q || sysTitle(s).toLowerCase().includes(q) || (s.b||[]).some(b=>b[0].toLowerCase().includes(q)))
     .sort((a,b) => (isCur(b)-isCur(a)) || (!!b.b - !!a.b) || dist(a)-dist(b));
   $('#glist').innerHTML = rows.map(s => `<button type="button" data-sys="${SY.indexOf(s)}"><span>${sysHead(s)}${s.b?` <span class="tag cat">${s.b.length} base${s.b.length>1?'s':''}</span>`:''}</span><span class="d">${fmt(dist(s))} ly</span></button>`).join('') || '<div class="empty">No matches.</div>';
 }
+var spAll = false;
+function renderSpecies(){
+  const q = ($('#gspq').value||'').trim().toLowerCase();
+  const rows = [];
+  SY.forEach((s,i) => Object.entries(s.P||{}).forEach(([p,pl]) => { if(p==='0') return; const fa = spN(pl.fa), fl = spN(pl.fl), mi = spN(pl.mi); if(!(fa||fl||mi)) return;
+    const name = pl.n || ('Planet '+p); const sys = sysTitle(s);
+    if(q && !(name.toLowerCase().includes(q) || sys.toLowerCase().includes(q))) return;
+    rows.push({i, p:+p, name, sys, fa, fl, mi, unnamed: !pl.n}); }));
+  rows.sort((a,b) => (b.fa+b.fl) - (a.fa+a.fl) || b.mi - a.mi || a.name.localeCompare(b.name));
+  const shown = spAll ? rows : rows.slice(0, 12);
+  $('#gsptbl').innerHTML = rows.length ? `<thead><tr><th>Planet</th><th>System</th><th>Creatures</th><th>Plants</th><th>Minerals</th></tr></thead><tbody>${shown.map(r => `<tr data-sp="${r.i},${r.p}" style="cursor:pointer" title="Open in system view"><td>${esc(r.name)}${r.unnamed?' <span class="tag cat">Unnamed</span>':''}</td><td class="small">${esc(r.sys)}</td><td>${r.fa}</td><td>${r.fl}</td><td>${r.mi}</td></tr>`).join('')}</tbody>`
+    : `<tbody><tr><td class="muted">${q ? 'No planets match.' : 'No scanned creatures, plants or minerals in this galaxy yet.'}</td></tr></tbody>`;
+  $('#gspmore').hidden = spAll || rows.length <= 12; $('#gspmore').textContent = `Show all ${rows.length}`;
+}
+$('#gspq').addEventListener('input', renderSpecies);
+$('#gspmore').addEventListener('click', () => { spAll = true; renderSpecies(); });
+$('#gsptbl').addEventListener('click', e => { const tr = e.target.closest('[data-sp]'); if(!tr) return; const [i,p] = tr.dataset.sp.split(',').map(Number); sel = SY[i]; selPlanet = p; showSystem = true; focusOn(sel, 3); draw(); renderInfo(); $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
 $('#glist').addEventListener('click', e => { const b = e.target.closest('[data-sys]'); if(!b) return; sel = SY[+b.dataset.sys]; selPlanet = null; focusOn(sel, 3); draw(); renderInfo(); });
 $('#gsearch').addEventListener('input', renderList);
 $('#gpath').addEventListener('change', e => { showPath = e.target.checked; draw(); });
@@ -1464,7 +1555,7 @@ function setGalaxy(g){
   if(!sel) sel = SY.find(isCur) || null;
   renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); draw();
   if(current==='inventory') renderInventory();
-  if(current==='planner') renderPlanner();
+  if(current==='recipes'){ if(R.can) renderPlanner(); else itemCard(); }
 }
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw); } catch(e) {}
 
@@ -1669,7 +1760,8 @@ function renderSync(msg, bad){
   const g = GX.stats;
   $('#syncstats').innerHTML = g ? `<span><b>Units</b>${fmtBig(g.units||0)}</span><span><b>Nanites</b>${fmtBig(g.nanites||0)}</span><span><b>Quicksilver</b>${fmtBig(g.quicksilver||0)}</span>${g.summary?`<span><b>Last seen</b>${esc(g.summary)}</span>`:''}` : '';
   $('#syncpilltxt').textContent = syncing ? 'Syncing…' : L ? `Synced ${ago(L.at)}` : 'Sync';
-  $('#autosync').checked = !!ST.autosync; $('#autosync2').checked = !!ST.autosync;
+  $('#autosync').checked = !!ST.autosync; $('#autosync2').checked = !!ST.autosync; $('#autosync3').checked = !!ST.autosync;
+  $('#autopill').classList.toggle('on', !!ST.autosync); $('#autopill').title = ST.autosync ? `Auto-sync is on: checking for a new save every ${syncEvery()<60 ? syncEvery()+' seconds' : 'minute'}. Every tab updates.` : 'Turn on to re-read your save by itself while you play. Every tab updates: inventory, recipes you can make, map and stats.';
   sync('every', String(syncEvery()));
 }
 async function syncNow(manual){
@@ -1699,13 +1791,14 @@ async function syncNow(manual){
 function schedSync(){ clearTimeout(syncTimer); if(!DESK) return; syncTimer = setTimeout(async () => { if(ST.autosync) { try { await syncNow(false); } catch(e) {} } schedSync(); }, syncEvery()*1000); }
 function setAuto(on){ ST.autosync = on; save(); renderSync(); schedSync(); if(on) syncNow(false); uCount('autosync-'+(on?'on':'off')); }
 if(DESK){
-  $('#syncpill').hidden = false; $('#mkshortcut').hidden = false;
+  $('#syncpill').hidden = false; $('#autopill').hidden = false; $('#mkshortcut').hidden = false;
   $('#savedwhere').textContent = 'Everything is saved on this PC in the app\'s data folder (data\\companion.json), with the previous copy kept as companion.json.bak. It stays put when the app is updated.';
   $('#syncnow').addEventListener('click', () => syncNow(true));
   $('#syncpill').addEventListener('click', () => { syncNow(true); });
   $('#invsync').addEventListener('click', () => syncNow(true));
   $('#autosync').addEventListener('change', e => setAuto(e.target.checked));
   $('#autosync2').addEventListener('change', e => setAuto(e.target.checked));
+  $('#autosync3').addEventListener('change', e => setAuto(e.target.checked));
   $('#syncevery').addEventListener('click', e => { const b = e.target.closest('[data-every]'); if(!b) return; ST.syncEvery = +b.dataset.every; save(); renderSync(); schedSync(); uCount('sync-every-'+ST.syncEvery); });
   setInterval(() => { renderSync(); if(current==='inventory') $('#invsynced').textContent = S.lastSync ? `Last synced ${ago(S.lastSync.at)}.` : 'Not synced yet.'; }, 30000);
   $('#mkshortcut').addEventListener('click', async e => { const bn = e.currentTarget; try { const r = await api('/api/shortcut', {method:'POST'}); bn.textContent = r.ok ? 'Shortcut added to desktop' : 'Could not add shortcut'; } catch(err) { bn.textContent = 'Could not add shortcut'; } });
@@ -1819,6 +1912,84 @@ $('#d-files').addEventListener('click', async e => {
   const s = e.target.closest('[data-pset]'); if(s){ const v = $(`[data-pin="${s.dataset.pset}"]`).value.trim(); if(v) setPath(s.dataset.pset, v); }
 });
 
+/* ---------- GAME ICON LOADER ---------- */
+function giFile(rel){ return rel.replace(/^\//,'').replace(/\.dds$/i,'').replace(/[^a-z0-9._-]+/gi,'_').slice(-120) + '.webp'; }
+function giRender(){
+  const st = $('#gistat'); if(!st) return;
+  $('#giuse').checked = DSP.gameIcons!==0;
+  const n = GI.map.size;
+  if(!DESK){ st.textContent = 'Only in the desktop app, which can read your game files.'; $('#girun').disabled = true; $('#giuse').disabled = true; return; }
+  if(HELPER && HELPER < 5){ st.textContent = 'Close the app fully, wait a minute, then reopen it to turn this on (the helper needs restarting after this update).'; $('#girun').disabled = true; return; }
+  const bar = $('#gibar'); bar.hidden = GI.state!=='running';
+  if(GI.state==='running'){ st.textContent = GI.msg || `Loading icons… ${fmt(GI.done)} of ${fmt(GI.total)}`; $('#gifill').style.width = (GI.total ? Math.round(GI.done/GI.total*100) : 3) + '%'; $('#girun').disabled = true; $('#girun').textContent = 'Loading…'; return; }
+  $('#girun').disabled = false; $('#girun').textContent = n ? 'Reload icons from my game' : 'Load icons from my game';
+  st.innerHTML = GI.state==='error' ? `<span style="color:var(--bad)">⚠ ${esc(GI.msg)}</span>` : n ? `<span style="color:var(--good)">✓ ${fmt(n)} icons loaded from your game.</span>${GI.msg ? ' <span class="muted">'+esc(GI.msg)+'</span>' : ''}` : 'Not loaded yet.';
+}
+function giRefresh(){ if(current==='recipes') renderRecipes(); if(current==='inventory') renderInventory(); if(current==='pinned') renderPinned(); }
+let giRT = null; function giSoon(){ clearTimeout(giRT); giRT = setTimeout(giRefresh, 600); }
+async function giLoadIndex(){
+  if(!DESK) return null;
+  try { const r = await api('/api/icons'); if(!r.ok) return null; const j = await r.json(); if(j && j.files){ GI.map = new Map(Object.entries(j.files).map(([k,f]) => [k, 'icons/' + f])); GI.sig = j.sig || ''; } return j; } catch(e){ return null; }
+}
+async function giBuild(force){
+  if(!DESK || GI.state==='running') return;
+  GI.state = 'running'; GI.done = 0; GI.total = 0; GI.found = 0; GI.msg = 'Looking for your game files…'; giRender();
+  const t0 = performance.now(); let made = 0, failed = 0;
+  try {
+    const r = await api('/api/paks'); if(r.status===404) throw new Error('Close the app fully and reopen it to turn this on.');
+    const pk = await r.json();
+    if(!pk.ok || !pk.paks || !pk.paks.length) throw new Error(pk.detail || 'Could not find your No Man\'s Sky game files. Check the game folder above.');
+    const sig = pk.paks.map(p => p.name + ':' + p.size + ':' + p.mtime).join('|');
+    const want = new Map(); Object.values(IP).forEach(rel => want.set(giFull(rel).toLowerCase(), rel));
+    const done = force ? new Map() : new Map(GI.map);
+    const files = {}; if(!force) GI.map.forEach((u, rel) => files[rel] = u.replace(/^icons\//,''));
+    const rank = n => /TexUI/i.test(n) ? 0 : /TexMisc/i.test(n) ? 1 : /TexAtlas/i.test(n) ? 2 : /Tex/i.test(n) ? 3 : /UI/.test(n) ? 4 : 9;
+    const order = pk.paks.filter(p => rank(p.name) < 9).sort((a,b) => rank(a.name)-rank(b.name));
+    GI.total = [...want.values()].filter(rel => !done.has(rel)).length;
+    for(const p of order){
+      if(![...want.values()].some(rel => !done.has(rel))) break;
+      GI.msg = `Reading ${p.name}…`; giRender();
+      const reader = async (off, len) => { const rr = await api(`/api/pak?name=${encodeURIComponent(p.name)}&off=${off}&len=${len}`); if(!rr.ok) throw new Error('Could not read ' + p.name + ' (' + rr.status + ')'); return new Uint8Array(await rr.arrayBuffer()); };
+      let pak; try { pak = await new GameIcons.Pak(p.name, p.size, reader).open(); } catch(e){ vcLog('icons', p.name + ': ' + e.message); continue; }
+      const here = [...want.entries()].filter(([full, rel]) => !done.has(rel) && pak.has(full));
+      for(const [full, rel] of here){
+        GI.msg = ''; 
+        try {
+          const dds = await pak.file(full); const img = GameIcons.decodeDDS(dds, 128);
+          const cv = document.createElement('canvas'); const S2 = 96; cv.width = S2; cv.height = S2;
+          const src = document.createElement('canvas'); src.width = img.w; src.height = img.h; src.getContext('2d').putImageData(new ImageData(img.data, img.w, img.h), 0, 0);
+          const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high'; cx.drawImage(src, 0, 0, S2, S2);
+          const blob = await new Promise(res => cv.toBlob(res, 'image/webp', 0.92)); if(!blob) throw new Error('could not encode image');
+          const name = giFile(rel);
+          const up = await api('/api/icons?file=' + encodeURIComponent(name), {method:'POST', headers:{'Content-Type':'application/octet-stream'}, body: blob});
+          if(!up.ok) throw new Error('save failed (' + up.status + ')');
+          files[rel] = name; done.set(rel, 'icons/' + name + '?v=' + Date.now().toString(36)); GI.map.set(rel, done.get(rel)); made++;
+          if(made % 40 === 0){ giSoon(); await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files})}); }
+        } catch(e){ failed++; if(failed <= 5) vcLog('icons', rel.split('/').pop() + ': ' + e.message); }
+        GI.done++; if(GI.done % 8 === 0){ giRender(); await new Promise(res => setTimeout(res, 0)); }
+      }
+    }
+    await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files})});
+    GI.sig = sig; GI.state = 'done';
+    const missing = [...want.values()].filter(rel => !GI.map.has(rel)).length;
+    GI.msg = missing ? `${fmt(missing)} items have no icon in your game files and keep the drawn icon.` : '';
+    vcLog('icons', `made ${made}, failed ${failed}, missing ${missing}, ${Math.round((performance.now()-t0)/1000)} s`); uCount('icons-built');
+  } catch(e){ GI.state = 'error'; GI.msg = e.message || String(e); vcLog('icons', 'stopped: ' + GI.msg); }
+  giRender(); giRefresh();
+}
+$('#girun').addEventListener('click', () => giBuild(GI.map.size > 0));
+$('#giuse').addEventListener('change', e => { DSP.gameIcons = e.target.checked ? 1 : 0; save(); giRefresh(); uCount('gameicons-'+(e.target.checked?'on':'off')); });
+if(DESK) setTimeout(async () => {
+  const idx = await giLoadIndex(); giRender(); if(GI.map.size) giRefresh();
+  if(DSP.gameIcons===0) return;
+  try { const r = await api('/api/paks'); if(!r.ok) return; const pk = await r.json(); if(!pk.ok || !pk.paks || !pk.paks.length) return;
+    const sig = pk.paks.map(p => p.name + ':' + p.size + ':' + p.mtime).join('|');
+    if(!idx || !idx.files || !GI.map.size) giBuild(false);
+    else if(idx.sig !== sig){ GI.msg = 'Your game was updated, so the icons are being refreshed.'; giBuild(true); }
+  } catch(e){}
+}, 2500);
+else giRender();
+
 /* ---------- GITHUB BUG REPORTS ---------- */
 const CFG = { githubRepo: '' };
 function ghReady(){ return /^[\w.-]+\/[\w.-]+$/.test(CFG.githubRepo||''); }
@@ -1843,7 +2014,8 @@ $('#bug-gh').addEventListener('click', async () => {
 
 /* ---------- boot ---------- */
 renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderQuests();
-let startTab = 'recipes'; { const t = tabGet(); if(t && TABS.includes(t)) startTab = t; }
+renderPlanner();
+let startTab = 'recipes'; { const t = tabGet(); if(t==='planner'){ if(!R.can) setCan(true); } else if(t && TABS.includes(t)) startTab = t; }
 const hash = (location.hash||'').slice(1); if(TABS.includes(hash)) startTab = hash;
 showTab(startTab);
 })();
