@@ -2,10 +2,10 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Alpha test build (1.8.0).** Expect rough edges. The app's files live on the **[`alpha` branch](../../tree/alpha)**. Please report bugs from inside the app: **Settings & help → Report a bug → Report on GitHub**.
+> **Alpha test build.** Expect rough edges. Please report bugs from inside the app: **Settings & help → Report a bug → Report on GitHub**.
 
 ## Features
-- **Recipes:** every refiner, crafting and cooking recipe, sorted by value or profit, with pins and item cards that show how many of an item you own. Each recipe says how many you can make **now**, **with sub-crafts** (making missing ingredients one step down) and **from scratch** (all the way down to raw materials), with a full ingredient tree and exactly what you're short. Tick **Only recipes I can make now** to see what you can refine, craft or cook with the inventories you choose.
+- **Recipes:** every refiner, crafting and cooking recipe, sorted by value or profit, with pins and item cards that show how many of an item you own. Each recipe says how many you can make **now**, **with sub-crafts** (making missing ingredients one step down) and **from scratch** (all the way down to raw materials), with a crafting tree (what you have, what to make, what to gather), the steps in order, and what you'd need to gather for one more. Tick **Only recipes I can make now** to see what you can refine, craft or cook with the inventories you choose.
 - **Inventory:** your exosuit, starships, corvettes (plus their built storage), freighter and base storage containers, laid out like the in-game screen. The **Everything** view has filters: item kinds (raw, refined, basic/advanced crafted, trade goods, curiosities, food, fish, tech, base parts, corvette parts), which inventories count, hide corvette parts, only things used in recipes, and worth selling.
 - **Where to find:** a star class decoder (G7pf and so on), resources by star colour and biome, plus fish.
 - **Portals:** a glyph keypad with replace/insert editing, keyboard input and saved addresses.
@@ -18,11 +18,12 @@ An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your 
 ## Save tools (advanced)
 Hidden until you tick **Save tools** in **Settings & help → Game files → Advanced**. A **Save tools** tab then appears with:
 - **Saves & backups:** back up any save, restore any backup, or make an older save (a restore point) the one the game loads.
-- **Inventories:** put any item and amount in any slot of any inventory (exosuit, ships, freighter, storage containers, corvette workshop storage, exocraft and more), fill stacks, unlock or lock slots.
+- **Inventories:** click a slot and pick any item from a creative-menu style picker (categories, search, icons), then set the amount up to that item's stack limit (−1, +1, ¼, ½ or full stack). Items tied to quests come with a warning. Works on every inventory (exosuit, ships, freighter, storage containers, corvette workshop storage, exocraft and more), and can unlock or lock slots.
 - **Currencies:** units, nanites and quicksilver.
 - **Settlements:** finish construction, clear debt, bring the next decision sooner or clear a waiting one, rename, and edit stats, building states, perks, production and timers, or the whole entry as raw JSON.
-- **Quests:** change a mission's step, remove a mission so it starts fresh, or restore missions from a backup.
-- **Timers:** every date the save keeps (settlement building, living ship growth, cooldowns and more), with buttons to move them back like the clock trick.
+- **Quests:** grouped by questline with readable names (tracking, has progress, finished); change a mission's step, reset it, or restore quests from a backup.
+- **Timers:** grouped with plain names (settlements, living ship, freighter and frigates, pets, quest cooldowns and more), with buttons to move them back like the clock trick.
+- **Show only what's active** (on by default) hides empty inventories, quests you haven't started, old timers and idle settlement plots.
 - **Everything (raw):** browse and change any value in the save, with readable field names.
 
 How it keeps your save safe:
