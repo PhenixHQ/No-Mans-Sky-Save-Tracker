@@ -2606,7 +2606,7 @@ function secInv(){
       <span class="lbl">Sort</span><button type="button" class="btn ghost" data-edisort="name">A–Z</button><button type="button" class="btn ghost" data-edisort="kind">By kind</button><button type="button" class="btn ghost" data-edisort="value">By value</button></div>
     <div class="row"><input class="txt" id="edfind" placeholder="Find an item in every inventory, e.g. Storm Crystal" value="${esc(ED.find||'')}" style="flex:1 1 260px"></div>
     ${ED.find ? invFindHTML(ED.find) : ''}
-    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}${ED.picking ? pickerHTML() : ''}`;
+    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}${ED.picking ? pickerHTML(invPickList(m)) : ''}`;
 }
 function invFindHTML(q){
   q = q.trim().toLowerCase(); if(q.length < 2) return ''; const cs = edContainers(); const out = [];
@@ -2632,6 +2632,24 @@ function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), ou
   const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
   Object.keys(IX).forEach(add); Object.keys(XI).forEach(add);
   return PICKITEMS = out.sort((a,b) => a.n.localeCompare(b.n)); }
+// What an inventory may hold: 'tech' (technology only), 'cargo' (no technology) or 'any'.
+function techInstall(m, id, cell){
+  const fam = techFam(id); const same = m.slots.filter(s2 => s2.type==='Technology' && techFam(s2.id)===fam && isUpg(s2.id)).length;
+  if(isUpg(id) && /^UP_/.test(id) && same >= 3) throw new Error('The game allows 3 upgrades of one kind per inventory, and this one already has 3. Remove one first.');
+  if(!cell) throw new Error('No empty tech slot. Unlock more slots or remove a module first.');
+  if(!m.valid.some(([vx,vy]) => vx===cell[0] && vy===cell[1])){ m.valid.push(cell); invValidCommit(m, `${m.label}: unlock slot ${cell[0]+1}, ${cell[1]+1}`); }
+  const tpl = m.slots.find(s2 => cleanTid(s2.id)===id);
+  m.slots.push({ id: '^' + id + (/^UP_|^CV_/.test(id) ? '#' + String(Math.floor(Math.random()*90000)+10000) : ''), amt: tpl ? tpl.max : -1, max: tpl ? tpl.max : 100, type: 'Technology', x: cell[0], y: cell[1], dmg: 0, fi: true, dirty: true, src: null });
+  invCommit(m, `${m.label}: install ${itemInfo(id).n}`);
+}
+function invKind(m){ const n = m.path.map(k => typeof k==='number' ? '' : KN(k)).join(' ');
+  return /TechOnly|Multitools|WeaponInventory/.test(n) ? 'tech' : /_Cargo/.test(n) ? 'cargo' : 'any'; }
+function invPickList(m){ const k = invKind(m); if(k==='tech'){ const l = techModules(techPlat({ label: m.label, path: m.path })); l.techOnly = true; return l; }
+  if(k==='cargo') return pickItems().filter(x => !isTechId(x.id)); return null; }
+function isTechId(id){ id = String(id).replace(/^\^/,'').replace(/#.*$/,''); return guessType(id)==='Technology' || /^(UP_|CV_)/.test(id) || itemCat(id)==='tech'; }
+function invFits(m, id){ const k = invKind(m), t = isTechId(id) ? 'Technology' : 'Item';
+  if(k==='tech' && t!=='Technology') return 'This inventory only holds technology. Add modules in the Technology section instead.';
+  if(k==='cargo' && t==='Technology') return 'Cargo inventories can\'t hold technology.'; return ''; }
 function pickerHTML(only){
   const all = only || pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cat = ED.pc || 'raw';
   const cnt = {}; all.forEach(x => cnt[x.c] = (cnt[x.c]||0)+1);
@@ -2639,7 +2657,7 @@ function pickerHTML(only){
   return `<div class="edpick" role="dialog" aria-modal="true" aria-label="Choose an item"><div class="edpickin">
     <div class="row" style="justify-content:space-between"><h3>Choose an item</h3><button type="button" class="btn ghost" id="edpx">Close</button></div>
     <input class="txt" id="edpq" placeholder="Search every item by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
-    ${only ? '<p class="small muted" style="margin:0">Only modules that fit this inventory are listed.</p>' : ''}<div class="fchips"${only ? ' hidden' : ''}>${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
+    ${only ? `<p class="small muted" style="margin:0">${only.techOnly ? 'This inventory only holds technology, so only modules that fit it are listed.' : 'Only items that fit this inventory are listed.'}</p>` : ''}<div class="fchips"${only ? ' hidden' : ''}>${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
     <div class="edpgrid">${show.map(x => `<button type="button" class="edpi" data-edpi="${esc(x.id)}" title="${esc(x.n)} (${esc(x.id)})">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span></button>`).join('') || '<div class="muted">Nothing found.</div>'}</div>
     ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}</div></div>`;
 }
@@ -3048,14 +3066,12 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edpx') || (t.classList && t.classList.contains('edpick'))){ ED.picking = false; edRender(); return; }
   if((x = q('[data-edpc]'))){ ED.pc = x.dataset.edpc; ED.pq = ''; edRender(); return; }
   if((x = q('[data-edpi]')) && ED.sec==='tech'){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
-      const fam = techFam(id); const same = m.slots.filter(s2 => s2.type==='Technology' && techFam(s2.id)===fam && isUpg(s2.id)).length;
-      if(isUpg(id) && /^UP_/.test(id) && same >= 3) throw new Error('The game allows 3 upgrades of one kind per inventory, and this one already has 3. Remove one first.');
       let cell = TECHSEL && !m.slots.some(s2 => s2.x+','+s2.y===TECHSEL) ? TECHSEL.split(',').map(Number) : m.valid.find(([vx,vy]) => !m.slots.some(s2 => s2.x===vx && s2.y===vy));
-      if(!cell) throw new Error('No empty tech slot. Unlock more slots or remove a module first.');
-      if(!m.valid.some(([vx,vy]) => vx===cell[0] && vy===cell[1])){ m.valid.push(cell); invValidCommit(m, `${m.label}: unlock slot ${cell[0]+1}, ${cell[1]+1}`); }
-      const tpl = m.slots.find(s2 => cleanTid(s2.id)===id);
-      m.slots.push({ id: '^' + id + (/^UP_|^CV_/.test(id) ? '#' + String(Math.floor(Math.random()*90000)+10000) : ''), amt: tpl ? tpl.max : -1, max: tpl ? tpl.max : 100, type: 'Technology', x: cell[0], y: cell[1], dmg: 0, fi: true, dirty: true, src: null });
-      invCommit(m, `${m.label}: install ${itemInfo(id).n}`); TECHSEL = null; }); uCount('tools-tech-install'); return; }
+      techInstall(m, id, cell); TECHSEL = null; }); uCount('tools-tech-install'); return; }
+  // Technology picked in the Inventories section: install it like the Technology section does
+  if((x = q('[data-edpi]')) && ED.sec==='inv' && INVM && isTechId(x.dataset.edpi) && !invFits(INVM, x.dataset.edpi)){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
+      const cell = ED.invCell.split(',').map(Number); if(m.slots.some(s2 => s2.x===cell[0] && s2.y===cell[1])) throw new Error('Empty this slot first, then add the module.');
+      techInstall(m, id, cell); }); uCount('tools-tech-install'); return; }
   if((x = q('[data-edtc]'))){ const k = x.dataset.edtc; const m = INVM; const at = s2 => s2.x+','+s2.y;
     if(TECHSEL && TECHSEL!==k && m.slots.some(s2 => at(s2)===TECHSEL) && m.valid.some(([vx,vy]) => vx+','+vy===k)){
       return invAction(m => { const a = m.slots.find(s2 => at(s2)===TECHSEL), b = m.slots.find(s2 => at(s2)===k); const [ax,ay] = [a.x,a.y]; const [kx,ky] = k.split(',').map(Number);
@@ -3075,13 +3091,13 @@ $('#p-tools').addEventListener('click', async e => {
     ED.techPrev = keep; invCommit(m, `${m.label}: best layout (score ${before} → ${after})`); uCount('tools-tech-arrange'); });
   if(q('#edt-max')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const added = techMax(m, plat); if(!added.length) throw new Error('Nothing to add: every technology already has 3 upgrades, or there are no empty slots. Try Unlock every tech slot first.'); invCommit(m, `${m.label}: add ${added.length} S-class upgrade${added.length===1?'':'s'}`); });
   if(q('#edt-unlock')) return invAction(m => { const have = new Set(m.valid.map(([a,b]) => a+','+b)); let n = 0; const W = m.inv[KO('Width')] || m.w, H = m.inv[KO('Height')] || m.h; for(let y=0; y<H; y++) for(let x2=0; x2<W; x2++) if(!have.has(x2+','+y)){ m.valid.push([x2,y]); n++; } if(!n) throw new Error('Every slot is already unlocked.'); invValidCommit(m, `${m.label}: unlock ${n} tech slots`); });
-  if((x = q('[data-edpi]'))){ ED.pick = x.dataset.edpi; ED.picking = false; const lim = stackLimit(ED.pick, INVM, null); ED.pickAmt = lim; edRender(); uCount('tools-pick'); return; }
+  if((x = q('[data-edpi]'))){ const bad = INVM && invFits(INVM, x.dataset.edpi); if(bad){ ED.picking = false; edMsg(bad, true); edRender(); return; } ED.pick = x.dataset.edpi; ED.picking = false; const lim = stackLimit(ED.pick, INVM, null); ED.pickAmt = lim; edRender(); uCount('tools-pick'); return; }
   if((x = q('[data-edamt]'))){ const inp = $('#edi-amt'); const lim = +inp.max; let v = Math.round(+inp.value||0); const k = x.dataset.edamt;
     v = k==='-1' ? v-1 : k==='+1' ? v+1 : k==='q' ? Math.max(1, Math.floor(lim/4)) : k==='h' ? Math.max(1, Math.floor(lim/2)) : lim; inp.value = Math.max(0, Math.min(lim, v)); ED.pickAmt = +inp.value; return; }
   const m = INVM;
   const cellK = () => m.slots.findIndex(s => s.x+','+s.y===ED.invCell);
   if(q('#edi-set')) return invAction(m => {
-    const k0 = cellK(); const id = ED.pick || (k0>=0 ? String(m.slots[k0].id).replace(/^\^/,'') : null); if(!id) throw new Error('Choose an item first.');
+    const k0 = cellK(); const id = ED.pick || (k0>=0 ? String(m.slots[k0].id).replace(/^\^/,'') : null); if(!id) throw new Error('Choose an item first.'); if(ED.pick){ const bad = invFits(m, id); if(bad){ ED.pick = null; throw new Error(bad); } }
     const keepId = k0>=0 && !ED.pick ? m.slots[k0].id : null; // keep procedural IDs (with #seed) when only the amount changes
     const type = k0>=0 && !ED.pick ? m.slots[k0].type : guessType(id); const max = stackLimit(id.replace(/#.*$/,''), m, k0>=0 ? m.slots[k0] : null);
     const amt = Math.max(0, Math.min(max, Math.round(+$('#edi-amt').value||0))); if(!amt) throw new Error('Set an amount above 0, or use Empty slot.');
