@@ -3552,7 +3552,8 @@ async function edFiles(){
   ED.dirs = dirs;
   if(!ED.dir){ ED.files = []; return; }
   const j = await (await api('/api/savefiles?dir=' + encodeURIComponent(ED.dir))).json();
-  ED.files = (j.files||[]).filter(f => !/^mf_/.test(f.name)).sort((a,b) => b.mtime - a.mtime);
+  // saves first (newest first), the account file last: it's a different kind of file
+  ED.files = (j.files||[]).filter(f => !/^mf_/.test(f.name)).sort((a,b) => (a.name==='accountdata.hg') - (b.name==='accountdata.hg') || b.mtime - a.mtime);
 }
 async function edFetch(url){ const r = await api(url); if(!r.ok) throw new Error('Could not read ' + (url.split('name=')[1]||'the file') + ' (' + r.status + ')'); return new Uint8Array(await r.arrayBuffer()); }
 async function edOpen(bytes, mfBytes, name){
@@ -4035,7 +4036,7 @@ function secSet(){
    <div class="card"><h3>Everything in this settlement (raw)</h3><p class="muted small" style="margin:0">The whole settlement entry as the save stores it. Edit carefully; it has to stay valid JSON.</p>
      <textarea id="edsraw" rows="12" class="txt mono" style="width:100%">${esc(JSON.stringify(s, null, 1))}</textarea><div class="row"><button type="button" class="btn" id="edsrawset">Save raw entry</button></div></div>`;
 }
-function setPath(){ const x = setList().find(x => x.i===ED.setSel); return x ? PSP.concat([x.key, x.i]) : null; }
+function setPath(){ if(!getAt(ED.cur.obj, PSP)) return null; const x = setList().find(x => x.i===ED.setSel); return x ? PSP.concat([x.key, x.i]) : null; }
 function setArrEdit(sub, vals, label){ const P = setPath(); const sp = edSpan(P.concat([sub])); const orig = ED.cur.text.slice(sp.s, sp.e);
   const els = SaveTools.elements(ED.cur.text, P.concat([sub])) || []; const parts = vals.map((v,i) => SaveTools.literal(v, els[i] ? ED.cur.text.slice(els[i].s, els[i].e) : ''));
   void orig; edPut(P.concat([sub]), '[' + parts.join(',') + ']', label, vals.slice()); }
@@ -4159,9 +4160,10 @@ async function edRender(){
   if(!ED.files.length && !ED.loadedList){ ED.loadedList = true; b.innerHTML = '<div class="empty">Looking for your saves…</div>'; try { await edFiles(); await edBackups(); } catch(e){ edMsg('Could not list your saves: ' + e.message, true); } return edRender(); }
   if(ED.sec!=='saves' && ED.sec!=='cmp' && !ED.cur){ b.innerHTML = `<div class="empty">Pick a save to edit first. ${ED.files[0] ? `<button type="button" class="btn primary" data-edload="${esc(ED.files[0].name)}">Edit the newest save (${esc(ED.files[0].name)})</button>` : ''}</div>`; return; }
   if(ED.busy){ b.innerHTML = '<div class="empty">Working…</div>'; return; }
+  if(ED.cur && !getAt(ED.cur.obj, PSP) && !['saves','cmp','raw'].includes(ED.sec)){ b.innerHTML = `<div class="empty">${esc(ED.cur.name)} is the account file (expedition rewards and account-wide unlocks), not a game save, so only <b>Everything (raw)</b> works on it. To edit inventories, tech, settlements and the rest, press Edit on a save file in Saves &amp; backups. ${ED.files.find(f => /^save/.test(f.name)) ? `<button type="button" class="btn primary" data-edload="${esc(ED.files.find(f => /^save/.test(f.name)).name)}">Edit ${esc(ED.files.find(f => /^save/.test(f.name)).name)} instead</button>` : ''}</div>`; return; }
   try {
     b.innerHTML = ED.sec==='saves' ? secSaves() : ED.sec==='inv' ? secInv() : ED.sec==='tech' ? secTech() : ED.sec==='cur' ? secCur() : ED.sec==='set' ? secSet() : ED.sec==='quest' ? secQuest() : ED.sec==='time' ? secTime() : ED.sec==='cmp' ? secCmp() : secRaw();
-  } catch(e){ b.innerHTML = `<div class="empty">Something in this part of the save wasn't what the app expected: ${esc(e.message)}. The raw editor still works.</div>`; vcLog('error', 'save tools: ' + e.message); }
+  } catch(e){ b.innerHTML = `<div class="empty">Something in this part of the save wasn't what the app expected: ${esc(e.message)}. The raw editor still works. Please send a bug report from Settings &amp; help so it can be fixed.</div>`; vcLog('error', `save tools (${ED.sec}, ${ED.cur ? ED.cur.name : 'no file'}): ${e.message} @ ${String(e.stack||'').split('\n').slice(1,3).map(l => l.trim().replace(/\(.*?:(\d+:\d+)\)/,'($1)')).join(' < ')}`); }
 }
 $('#p-tools').addEventListener('click', async e => {
   const t = e.target; const q = sel => t.closest(sel);
