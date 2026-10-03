@@ -234,7 +234,7 @@
     <div class="grid2">
       <div class="card">
         <h2>Metals by star colour</h2>
-        <p class="muted small" style="margin:0">The star's colour decides which stellar metal its planets carry. "Activated" versions appear on extreme-weather planets and sell for more. The last column is what a freighter Stellar Extractor mostly gathers there (players' reports; purple is our best guess).</p>
+        <p class="muted small" style="margin:0">The star's colour decides which stellar metal its planets carry. "Activated" versions appear on extreme-weather planets and sell for more. The last column is what a freighter Stellar Extractor gathers in that system.</p>
         <div class="tbl"><table class="t">
           <thead><tr><th>Star</th><th>Metal</th><th>Activated</th><th>Freighter extractor</th></tr></thead>
           <tbody>
@@ -242,7 +242,7 @@
             <tr><td><span class="dot" style="background:#D9523C"></span>Red</td><td>Cadmium</td><td>Activated Cadmium</td><td>Nitrogen</td></tr>
             <tr><td><span class="dot" style="background:#4FB069"></span>Green</td><td>Emeril</td><td>Activated Emeril</td><td>Sulphurine</td></tr>
             <tr><td><span class="dot" style="background:#4A8BE0"></span>Blue</td><td>Indium</td><td>Activated Indium</td><td>Radon</td></tr>
-            <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Quartzite</td><td>Activated Quartzite</td><td>Methane <span class="muted small">(likely)</span></td></tr>
+            <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Quartzite</td><td>Activated Quartzite</td><td>Methane</td></tr>
           </tbody>
         </table></div>
       </div>
@@ -259,8 +259,8 @@
             <tr><td>Radioactive</td><td>Gamma Root</td><td>Uranium</td></tr>
             <tr><td>Barren / desert</td><td>Cactus Flesh</td><td>Pyrite</td></tr>
             <tr><td>Dead / airless</td><td>—</td><td>Rusted Metal</td></tr>
-            <tr><td>Gas giant <span class="tag purple">purple</span></td><td>—</td><td>Activated Quartzite, Crystallised Helium</td></tr>
-            <tr><td>Waterworld <span class="tag purple">purple</span></td><td>—</td><td>Lithium (deep water)</td></tr>
+            <tr><td>Gas giant <span class="tag purple">purple</span></td><td>—</td><td>Crystallised Helium (gas: Methane)</td></tr>
+            <tr><td>Waterworld <span class="tag purple">purple</span></td><td>—</td><td>Lithium</td></tr>
           </tbody>
         </table></div>
       </div>
@@ -268,25 +268,26 @@
     <div class="grid2">
       <div class="card">
         <h2>Freighter Stellar Extractor</h2>
-        <p class="muted small" style="margin:0">A freighter room (also an orbital base module) that gathers from space by itself, no fuel. Build cost: 60 Silver, 45 Gold, 40 Magnetised Ferrite. Empty it at its terminal.</p>
+        <p class="muted small" style="margin:0">A freighter room (also an orbital base module) that gathers from space by itself, powered by the freighter. Build cost: 60 Silver, 45 Gold, 40 Magnetised Ferrite. Empty it at its terminal.</p>
         <div class="tbl"><table class="t"><thead><tr><th>Star</th><th>Mostly gathers</th><th>Good for</th></tr></thead><tbody>
           <tr><td><span class="dot" style="background:#E8C54A"></span>Yellow</td><td>Chromatic Metal</td><td>Crafting almost everything</td></tr>
           <tr><td><span class="dot" style="background:#D9523C"></span>Red</td><td>Nitrogen</td><td>Nitrogen Salt, Semiconductor</td></tr>
           <tr><td><span class="dot" style="background:#4FB069"></span>Green</td><td>Sulphurine</td><td>Thermic Condensate, Radon in the refiner</td></tr>
           <tr><td><span class="dot" style="background:#4A8BE0"></span>Blue</td><td>Radon</td><td>Enriched Carbon</td></tr>
-          <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Methane (likely)</td><td>Search it in Recipes for its uses</td></tr>
+          <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Methane</td><td>Activated Quartzite (with Quartzite and Crystallised Helium or Lithium), Sodium Nitrate</td></tr>
         </tbody></table></div>
-        <p class="small" style="margin:0">Its game file lists all five (Chromatic Metal, Sulphurine, Radon, Nitrogen, Methane) and says the haul varies with the local star. The star-to-gas pairs are what players report, so park the freighter by a star of the colour you need.</p>
+        <p class="small" style="margin:0">Each output holds up to 350. The extractor's game file lists its five outputs in the same order as the game's five star colours (yellow, green, blue, red, purple), and the terminal shows "Processing &lt;colour&gt;-Class Stellar Material", one colour per system; that matches what players report. Park the freighter by a star of the colour you need.</p>
       </div>
       <div class="card">
-        <h2>Gases: Nitrogen, Radon, Sulphurine</h2>
-        <p class="muted small" style="margin:0">The easiest source is the freighter <b>Stellar Extractor</b> (left), which gathers all of these plus Methane. On planets, build an <b>Atmosphere Harvester</b> at a base (100 Ammonia, 2 Metal Plating, 2 Hermetic Seal) on the right kind of planet and collect from it now and then. Gas giants and concentrated gas clouds help too.</p>
+        <h2>Gases: Nitrogen, Radon, Sulphurine, Methane</h2>
+        <p class="muted small" style="margin:0">The easiest source is the freighter <b>Stellar Extractor</b> (left), one gas per star colour. On planets, build an <b>Atmosphere Harvester</b> (100 Ammonia, 2 Metal Plating, 2 Hermetic Seal) on the right kind of planet, or a powered <b>Gas Extractor</b> (5 Metal Plating, 100 Chromatic Metal) on a gas site found with the Analysis Visor's Surveying upgrade.</p>
         <div class="tbl"><table class="t"><thead><tr><th>Gas</th><th>Planet atmosphere</th></tr></thead><tbody>
           <tr><td>Nitrogen</td><td>Lush, Toxic</td></tr>
           <tr><td>Radon</td><td>Radioactive, Frozen</td></tr>
           <tr><td>Sulphurine</td><td>Scorched, Desert</td></tr>
+          <tr><td>Methane</td><td>Gas giants (purple systems)</td></tr>
         </tbody></table></div>
-        <p class="small" style="margin:0">The refiner also turns one gas into another (for example 3 Sulphurine into 1 Radon); search the gas in Recipes to see them all.</p>
+        <p class="small" style="margin:0">The refiner also turns gases into each other: 3 Sulphurine → 1 Radon, 3 Radon → 1 Nitrogen, 3 Nitrogen → 1 Sulphurine, 3 Methane → 1 Nitrogen, and 3 each of Sulphurine, Radon and Nitrogen → 1 Methane. Search a gas in Recipes for the rest.</p>
       </div>
     </div>
     <div class="card">
@@ -1444,7 +1445,7 @@ function renderTrade(){
       ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Distance</th></tr></thead><tbody>${near.map(x => `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${econIcon(x.e)} ${esc(ECON.get(x.e).n)}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`).join('')}</tbody></table>`
         : '<p class="muted small" style="margin:0">No systems with a known economy yet. When you see a system\'s economy in game (galaxy map or station), tag it here or in My galaxy and it shows up.</p>'}
       ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span>${econIcon(econOf(curSys))}<select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select></div>` : ''}
-      <p class="muted small" style="margin:0">Strong (wealthy) economies stock all five tiers; weak ones only the cheaper goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
+      <p class="muted small" style="margin:0">Strong economies (shown as Wealthy, Prosperous, Advanced, Affluent, Booming, Flourishing, High Supply or Opulent) stock all five tiers; weaker ones only the cheaper goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
     ${TRADE.econ.map(e => { const gs = goods.filter(g => g.e===e.k); if(!gs.length) return ''; const c = closest(e.k);
       return `<div class="card econ"><div class="row" style="justify-content:space-between"><h3>${econIcon(e.k, 'econic lg')} ${esc(e.n)}</h3><span class="muted small">${esc(e.alt)}</span></div>
         ${c ? `<p class="small" style="margin:0">Closest you know: <b>${esc(sysName(c.s))}</b> · ${c.d < 400 ? 'same region' : '≈ ' + fmt(c.d) + ' ly'}</p>` : ''}
@@ -2595,7 +2596,7 @@ function edContainers(){
 }
 // ---------- what each craft is, and which technology the game lets it install ----------
 const TCAT = __TECHCAT__;
-const VNAMES = ['Roamer','Nomad','Colossus','Pilgrim','Hovercraft (unused slot)','Nautilon','Minotaur']; // the game's vehicle order: Buggy, Bike, Truck, WheeledBike, Hovercraft, Submarine, Mech
+const VNAMES = ['Roamer','Nomad','Colossus','Pilgrim','Dragonfly','Nautilon','Minotaur']; // GcVehicleType order Buggy, Bike, Truck, WheeledBike, Hovercraft, Submarine, Mech; names from the game's VEHICLE_*_TITLE text
 function craftTechIds(e){ const out = []; Object.keys(e||{}).forEach(k => { const v = e[k]; if(v && typeof v==='object' && Array.isArray(v[KO('Slots')])) v[KO('Slots')].forEach(sl => out.push(cleanTid(sl[KO('Id')]))); }); return out; }
 function vehType(e, i){ const t = craftTechIds(e); if(t.some(x => /^SUB_/.test(x))) return 'Nautilon'; if(t.some(x => /^MECH_/.test(x))) return 'Minotaur'; if(t.some(x => /^EXO_(PLOUGH|REFINER)/.test(x))) return 'Colossus'; return VNAMES[i] || `Exocraft ${i+1}`; }
 function shipKind(e){ const f = String((e[KO('Resource')]||{})[KO('Filename')]||'').toUpperCase(); const t = craftTechIds(e);
@@ -3078,7 +3079,7 @@ function setPath(){ if(!getAt(ED.cur.obj, PSP)) return null; const x = setList()
 // ---------- settlement effects (perks) ----------
 const PERKS = __PERKS__; const PERKBY = new Map(PERKS.perks.map(x => [x.id, x]));
 const PSTAT = ['Max population','Happiness','Productivity','Upkeep','Sentinels','Debt','Alert','Bug attacks'];
-const PSTR = ['huge','large','medium','small','small','medium','large'];
+const PSTR = ['varies','large','medium','small','small','medium','large'];
 function perkInfo(raw){ const id = String(raw).replace(/^\^/,''), base = id.replace(/#.*$/,''); return { id, base, p: PERKBY.get(base) }; }
 // "Upkeep −small": positive strengths (0–3) are good for the settlement; for upkeep that means lower costs
 function perkStats(p){ const proc = p.kind==='proc' || p.kind==='job'; return (p.s||[]).map(([st, k]) => { const good = k <= 3; const up = st===3 || st===4 ? !good : good; return proc ? `${PSTAT[st]||'Stat'} ${up ? 'up' : 'down'}` : `${PSTAT[st]||'Stat'} ${up ? '+' : '−'}${PSTR[k]||''}`; }).join(', '); }
