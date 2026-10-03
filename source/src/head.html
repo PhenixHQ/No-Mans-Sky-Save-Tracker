@@ -512,4 +512,67 @@ footer{border-top:1px solid var(--line); padding-top:16px}
 .gibar{height:6px; border-radius:4px; background:var(--surface-2); overflow:hidden}
 .gibar span{display:block; height:100%; width:3%; background:var(--teal); transition:width .3s}
 @media (max-width:640px){ .gc .gpic{width:40px; height:40px; margin:-20px 0 0 -20px} }
+/* loading screen */
+.boot{position:fixed; inset:0; z-index:200; display:grid; place-items:center; background:var(--bg, #0d1418); color:var(--ink, #e8eef0); transition:opacity .35s}
+.boot.out{opacity:0; pointer-events:none}
+.bootin{display:grid; justify-items:center; gap:12px; max-width:min(520px, calc(100vw - 32px)); text-align:center; padding:16px}
+.bootlogo svg{animation:bootspin 6s linear infinite}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .bootlogo svg{animation:none} }
+.boott{font:600 22px var(--display, var(--body, system-ui))}
+.bootstep{font:500 14px var(--body, system-ui); color:var(--muted, #9aa)}
+.bootbar{width:min(320px, 70vw); height:6px; border-radius:4px; background:var(--surface-2, #223); overflow:hidden}
+.bootbar span{display:block; height:100%; width:8%; background:var(--teal, #4fb3bf); transition:width .4s}
+.boottip{display:grid; gap:4px; margin-top:14px; min-height:64px; font:400 15px/1.45 var(--body, system-ui)}
+.boottip .lbl{font:600 11px var(--mono, monospace); letter-spacing:.08em; text-transform:uppercase; color:var(--accent, #e8a33d)}
+/* inventory filters */
+.ivfilters{display:grid; gap:8px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+.ivfilters .row{gap:8px; align-items:center}
+.ivfilters .lbl{min-width:44px}
+.fchips{display:flex; flex-wrap:wrap; gap:6px}
+.fchip{border:1px solid var(--line); background:var(--surface-2); color:var(--muted); font:500 12.5px var(--body); padding:5px 10px; border-radius:999px; cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--teal-soft); border-color:var(--teal); color:var(--ink)}
+/* how many can I make */
+.mkbtn{display:inline-flex; flex-wrap:wrap; gap:4px 10px; border:1px dashed var(--line); background:transparent; color:var(--muted); font:500 12.5px var(--body); padding:4px 9px; border-radius:7px; cursor:pointer}
+.mkbtn b{color:var(--accent); font-family:var(--mono); margin-right:3px}
+.mkbtn:hover{border-color:var(--accent)}
+.mkwrap{margin:-4px 0 6px; padding:12px 14px; border:1px solid var(--line); border-top:0; border-radius:0 0 10px 10px; background:var(--surface-2)}
+.mkdet{display:grid; gap:8px}
+.mktree, .mktree ul{list-style:none; margin:0; padding-left:18px}
+.mktree{padding-left:2px}
+.mktree li{margin:3px 0}
+.mktree .tq{font-family:var(--mono); color:var(--muted)}
+.small.bad{color:var(--bad)} .small.good{color:var(--good)}
+/* save tools */
+.advbox{border:1px dashed var(--line); border-radius:10px; padding:8px 12px}
+.advbox summary{cursor:pointer; color:var(--muted); font-size:13px}
+.advbox[open]{display:grid; gap:8px}
+.edwarn{display:block; background:var(--accent-soft); font-size:14px; line-height:1.5}
+.edbar{display:grid; gap:6px; position:sticky; top:0; z-index:5; background:var(--bg); padding:6px 0}
+.edbar:empty{display:none}
+.edbar .row{gap:8px; align-items:center}
+.edlist{margin:4px 0 0; padding-left:18px}
+.edsecs{flex-wrap:wrap; margin:8px 0}
+#edbody{display:grid; gap:12px}
+.edt{width:100%; border-collapse:collapse; font-size:13.5px}
+.edt th, .edt td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+.edt th{font:600 11px var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.edt tr.sel td{background:var(--teal-soft)}
+.edt td.row{gap:6px; flex-wrap:wrap}
+.edt.raw td:first-child{width:34%; word-break:break-word}
+.edgrid{grid-template-columns:repeat(var(--cols), 64px); gap:5px}
+.edgrid .edc{width:64px; height:64px; padding:0; cursor:pointer; position:relative; display:block; color:var(--ink); font:inherit; border-left:3px solid var(--ic, var(--line))}
+.edgrid .edc.empty{border-left-width:1px; background:var(--surface)}
+.edgrid .edc.off{border:1px dashed var(--line); background:transparent; border-radius:8px; display:grid; place-items:center}
+.edgrid .edc .gpic{width:40px; height:40px; margin:-20px 0 0 -20px; top:44%}
+.edgrid .edc .gnm{position:absolute; inset:4px 4px 16px; font-size:9.5px; line-height:1.15; overflow:hidden; text-align:center}
+.edgrid .edc .gq{position:absolute; right:3px; bottom:2px; font:600 10px var(--mono)}
+.edgrid .edc.sel{outline:2px solid var(--accent); outline-offset:1px}
+.edgrid .edc.dirty::after{content:''; position:absolute; top:3px; right:3px; width:7px; height:7px; border-radius:50%; background:var(--accent)}
+.edgrid .edc.warnc{border-style:dashed}
+.edform h3, #edbody h3{margin:0; font-size:15px}
+.edgrid2{display:grid; grid-template-columns:max-content minmax(120px, 220px); gap:6px 12px; align-items:center}
+.edcrumb{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
+textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
+@media (max-width:640px){ .edgrid{grid-template-columns:repeat(var(--cols), 44px)} .edgrid .edc{width:44px; height:44px} .edgrid .edc .gpic{width:28px; height:28px; margin:-14px 0 0 -14px} .edt{font-size:12.5px} }
 </style>

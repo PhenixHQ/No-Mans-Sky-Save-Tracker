@@ -1,7 +1,9 @@
 # NMS Save Tracker - local helper
 # Serves the app to a private window on this PC only (127.0.0.1), reads your
 # No Man's Sky saves for Sync, and stores your app data in the "data" folder
-# next to this app. It never changes your game files or saves.
+# next to this app. It never changes your game files. It only writes to a save
+# when you use the opt-in save tools, never while the game is running, and it
+# backs the save up to data\backups first.
 
 $ErrorActionPreference = 'Stop'
 $AppDir    = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -139,6 +141,44 @@ function Get-Saves {
   return ,$list
 }
 
+# ---------- save tools (opt-in in the app; every write is backed up first) ----------
+$BackupDir = Join-Path $DataDir 'backups'
+function Get-SaveDir([string]$id) { return (Get-SaveDirs | Where-Object { $_.id -eq $id } | Select-Object -First 1) }
+function Test-SaveName([string]$n) { return ($n -match '^(save\d*|accountdata)\.hg$') }
+function Test-GameRunning { return [bool](Get-Process -Name 'NMS' -ErrorAction SilentlyContinue) }
+function Get-MTime([string]$p) { return [int64](((Get-Item -LiteralPath $p).LastWriteTimeUtc - [datetime]'1970-01-01').TotalMilliseconds) }
+function New-Backup($d, [string]$name, [string]$label) {
+  if (-not (Test-Path $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
+  $src = Join-Path $d.full $name
+  if (-not (Test-Path -LiteralPath $src)) { throw 'save not found' }
+  $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+  $id = $stamp + '-' + ($name -replace '\.hg$', '')
+  $dst = Join-Path $BackupDir $id
+  New-Item -ItemType Directory -Path $dst | Out-Null
+  [System.IO.File]::WriteAllBytes((Join-Path $dst $name), (Read-Shared $src))
+  $mf = Join-Path $d.full ('mf_' + $name)
+  if (Test-Path -LiteralPath $mf) { [System.IO.File]::WriteAllBytes((Join-Path $dst ('mf_' + $name)), (Read-Shared $mf)) }
+  $info = @{ id = $id; label = $label; dir = $d.id; name = $name; at = [int64]((Get-Date).ToUniversalTime() - [datetime]'1970-01-01').TotalMilliseconds; mtime = (Get-MTime $src); size = (Get-Item -LiteralPath $src).Length }
+  [System.IO.File]::WriteAllText((Join-Path $dst 'info.json'), (ConvertTo-Json -InputObject $info -Compress), $Utf8)
+  Write-Log "Backup $id ($label)"
+  return $info
+}
+function Get-Backups {
+  $out = @()
+  if (Test-Path $BackupDir) {
+    Get-ChildItem -LiteralPath $BackupDir -Directory | ForEach-Object {
+      $f = Join-Path $_.FullName 'info.json'
+      if (Test-Path $f) { try { $out += (Get-Content -Raw -LiteralPath $f -Encoding UTF8 | ConvertFrom-Json) } catch {} }
+    }
+  }
+  return ,$out
+}
+function Get-BackupPath([string]$id) {
+  if ($id -notmatch '^[0-9]{8}-[0-9]{6}-[0-9]{3}-[a-z0-9]+$') { return $null }
+  $p = Join-Path $BackupDir $id
+  if (Test-Path -LiteralPath $p -PathType Container) { return $p } else { return $null }
+}
+
 function Paths-Status {
   $p = Read-Paths
   $gAuto = $null; $gPath = $p.game; $gSrc = 'manual'
@@ -235,7 +275,101 @@ function Handle($ctx) {
     if ($req.Headers['X-VC'] -ne '1') { SendText $ctx 403 '{"error":"forbidden"}'; return }
     $script:lastPing = Get-Date
     switch ($path) {
-      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":5}'; return }
+      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":6}'; return }
+      '/api/gamerunning' { SendJson $ctx @{ running = (Test-GameRunning) }; return }
+      '/api/savefiles' {
+        # Every save, manifest and account file in one account folder (for the save tools).
+        $d = Get-SaveDir ([string]$req.QueryString['dir']); if (-not $d) { SendText $ctx 404 '{"error":"save folder not found"}'; return }
+        $list = @(Get-ChildItem -LiteralPath $d.full -File | Where-Object { $_.Name -match '^(mf_)?(save\d*|accountdata)\.hg$' } | ForEach-Object { [pscustomobject]@{ name = $_.Name; size = $_.Length; mtime = [int64](($_.LastWriteTimeUtc - [datetime]'1970-01-01').TotalMilliseconds) } })
+        SendText $ctx 200 (ConvertTo-Json -InputObject @{ dir = $d.id; files = $list } -Compress -Depth 4); return
+      }
+      '/api/savefile' {
+        $d = Get-SaveDir ([string]$req.QueryString['dir']); $name = [string]$req.QueryString['name']
+        if (-not $d) { SendText $ctx 404 '{"error":"save folder not found"}'; return }
+        if ($name -notmatch '^(mf_)?(save\d*|accountdata)\.hg$') { SendText $ctx 400 '{"error":"bad file name"}'; return }
+        $p = Join-Path $d.full $name
+        if (-not (Test-Path -LiteralPath $p)) { SendText $ctx 404 '{"error":"file not found"}'; return }
+        Send $ctx 200 (Read-Shared $p) 'application/octet-stream'; return
+      }
+      '/api/savewrite' {
+        # Body: 4-byte little-endian length of the new save, the save bytes, then the new manifest bytes.
+        if ($req.HttpMethod -ne 'POST') { SendText $ctx 405 '{"error":"post only"}'; return }
+        $d = Get-SaveDir ([string]$req.QueryString['dir']); $name = [string]$req.QueryString['name']; $label = [string]$req.QueryString['label']
+        if (-not $d) { SendText $ctx 404 '{"error":"save folder not found"}'; return }
+        if (-not (Test-SaveName $name)) { SendText $ctx 400 '{"error":"bad save name"}'; return }
+        if (Test-GameRunning) { SendText $ctx 409 '{"error":"No Man''s Sky is running. Save and quit the game first, then try again."}'; return }
+        $p = Join-Path $d.full $name; $mfp = Join-Path $d.full ('mf_' + $name)
+        if (-not (Test-Path -LiteralPath $p) -or -not (Test-Path -LiteralPath $mfp)) { SendText $ctx 404 '{"error":"save or manifest not found"}'; return }
+        [int64]$expect = 0
+        if ([int64]::TryParse([string]$req.QueryString['expect'], [ref]$expect) -and $expect -gt 0) {
+          if ([Math]::Abs((Get-MTime $p) - $expect) -gt 1500) { SendText $ctx 409 '{"error":"The save changed since it was loaded (the game saved again). Reload it in the save tools and make the change again."}'; return }
+        }
+        $body = Read-BodyBytes $req 64MB
+        if ($body.Length -lt 8) { SendText $ctx 400 '{"error":"empty"}'; return }
+        $n = [BitConverter]::ToUInt32($body, 0)
+        if ($n -le 16 -or ($n + 4) -ge $body.Length) { SendText $ctx 400 '{"error":"bad body"}'; return }
+        $save = New-Object byte[] $n; [Array]::Copy($body, 4, $save, 0, $n)
+        $mfl = $body.Length - 4 - $n; $mf = New-Object byte[] $mfl; [Array]::Copy($body, 4 + $n, $mf, 0, $mfl)
+        # 4276986341 = 0xFEEDA1E5, the marker at the start of every save chunk
+        if ([BitConverter]::ToUInt32($save, 0) -ne [uint32]4276986341) { SendText $ctx 400 '{"error":"not a save"}'; return }
+        if ($mfl -ne (Get-Item -LiteralPath $mfp).Length) { SendText $ctx 400 '{"error":"manifest size does not match"}'; return }
+        if (-not $label) { $label = 'Before an edit' }
+        $bk = New-Backup $d $name $label
+        $tmp = $p + '.nmst.tmp'; $tmf = $mfp + '.nmst.tmp'
+        [System.IO.File]::WriteAllBytes($tmp, $save); [System.IO.File]::WriteAllBytes($tmf, $mf)
+        Move-Item -LiteralPath $tmp -Destination $p -Force
+        Move-Item -LiteralPath $tmf -Destination $mfp -Force
+        # read both files back and compare them with what was sent
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try {
+          $h = { param($b) [BitConverter]::ToString($sha.ComputeHash([byte[]]$b)) }
+          $same = ((& $h ([System.IO.File]::ReadAllBytes($p))) -eq (& $h $save)) -and ((& $h ([System.IO.File]::ReadAllBytes($mfp))) -eq (& $h $mf))
+        } finally { $sha.Dispose() }
+        Write-Log "Wrote $name in $($d.id) ($($save.Length) bytes, check $same, backup $($bk.id))"
+        SendText $ctx 200 (ConvertTo-Json -InputObject @{ ok = $same; backup = $bk.id; mtime = (Get-MTime $p); size = $save.Length } -Compress); return
+      }
+      '/api/backups' {
+        if ($req.HttpMethod -eq 'POST') {
+          $act = [string]$req.QueryString['action']
+          if ($act -eq 'create') {
+            $d = Get-SaveDir ([string]$req.QueryString['dir']); $name = [string]$req.QueryString['name']
+            if (-not $d -or -not (Test-SaveName $name)) { SendText $ctx 400 '{"error":"bad save"}'; return }
+            $label = [string]$req.QueryString['label']; if (-not $label) { $label = 'Made by hand' }
+            SendJson $ctx (New-Backup $d $name $label.Substring(0, [Math]::Min(80, $label.Length))); return
+          }
+          if ($act -eq 'delete') {
+            $bp = Get-BackupPath ([string]$req.QueryString['id']); if (-not $bp) { SendText $ctx 404 '{"error":"no such backup"}'; return }
+            Remove-Item -LiteralPath $bp -Recurse -Force; SendText $ctx 200 '{"ok":true}'; return
+          }
+          if ($act -eq 'label') {
+            $bp = Get-BackupPath ([string]$req.QueryString['id']); if (-not $bp) { SendText $ctx 404 '{"error":"no such backup"}'; return }
+            $f = Join-Path $bp 'info.json'; $info = Get-Content -Raw -LiteralPath $f -Encoding UTF8 | ConvertFrom-Json
+            $l = [string]$req.QueryString['label']; $info.label = $l.Substring(0, [Math]::Min(80, $l.Length))
+            [System.IO.File]::WriteAllText($f, (ConvertTo-Json -InputObject $info -Compress), $Utf8); SendText $ctx 200 '{"ok":true}'; return
+          }
+          if ($act -eq 'open') {
+            if (-not (Test-Path $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
+            Start-Process -FilePath 'explorer.exe' -ArgumentList ('"' + $BackupDir + '"'); SendText $ctx 200 '{"ok":true}'; return
+          }
+          SendText $ctx 400 '{"error":"unknown action"}'; return
+        }
+        SendText $ctx 200 (ConvertTo-Json -InputObject (Get-Backups) -Compress -Depth 3); return
+      }
+      '/api/backupfile' {
+        $bp = Get-BackupPath ([string]$req.QueryString['id']); $name = [string]$req.QueryString['name']
+        if (-not $bp -or $name -notmatch '^(mf_)?(save\d*|accountdata)\.hg$') { SendText $ctx 404 '{"error":"not found"}'; return }
+        $f = Join-Path $bp $name; if (-not (Test-Path -LiteralPath $f)) { SendText $ctx 404 '{"error":"not found"}'; return }
+        Send $ctx 200 ([System.IO.File]::ReadAllBytes($f)) 'application/octet-stream'; return
+      }
+      '/api/iconpack' {
+        # One file with every icon, so the app can show them all at start-up with a single read.
+        if ($req.HttpMethod -ne 'POST') { SendText $ctx 405 '{"error":"post only"}'; return }
+        if (-not (Test-Path $IconDir)) { New-Item -ItemType Directory -Path $IconDir | Out-Null }
+        $bytes = Read-BodyBytes $req 96MB
+        $tmp = Join-Path $IconDir 'pack.bin.tmp'
+        [System.IO.File]::WriteAllBytes($tmp, $bytes); Move-Item -LiteralPath $tmp -Destination (Join-Path $IconDir 'pack.bin') -Force
+        SendText $ctx 200 '{"ok":true}'; return
+      }
       '/api/paks'  {
         $b = Get-BanksDir
         if (-not $b) { SendJson $ctx @{ ok = $false; detail = 'Could not find your No Man''s Sky game files. Check the game folder in Settings, Game files.' }; return }

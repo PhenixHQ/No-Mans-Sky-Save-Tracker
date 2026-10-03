@@ -1,0 +1,26 @@
+// 1.8.0: loading screen, inventory filters, make counts
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const errs=[];
+const p=await b.newPage({viewport:{width:1280,height:900},colorScheme:'dark'});
+p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+const t0=Date.now(); await p.goto('http://127.0.0.1:47831/');
+const tip=await p.textContent('#boottip'); console.log('tip:',tip);
+await p.waitForSelector('#boot',{state:'hidden',timeout:20000}); console.log('boot hidden after',Date.now()-t0,'ms');
+await p.click('#t-inventory'); await p.waitForTimeout(500);
+console.log('filters visible', await p.isVisible('#ivfilters'), await p.textContent('#ivfcount'));
+console.log('cats', await p.$$eval('#ivfcat .fchip', a=>a.map(x=>x.textContent)));
+console.log('srcs', await p.$$eval('#ivfsrc .fchip', a=>a.map(x=>x.textContent)));
+await p.click('[data-ivfc="raw"]'); console.log('raw only:', await p.textContent('#ivfcount'));
+await p.click('[data-ivfc="raw"]'); await p.check('#ivf-corv'); console.log('no corvette:', await p.textContent('#ivfcount'));
+await p.click('[data-ivfs="corvstore"]'); console.log('no corv storage:', await p.textContent('#ivfcount'));
+await p.selectOption('#ivf-val','1000000'); console.log('1M+:', await p.textContent('#ivfcount'));
+await p.click('#ivf-clear'); console.log('cleared:', await p.textContent('#ivfcount'));
+await p.screenshot({path:'/tmp/claude-0/tG-inv.png'});
+await p.click('#t-recipes'); await p.click('[data-rtype="craft"]'); 
+let t1=Date.now(); await p.fill('#q','Warp Cell'); await p.waitForTimeout(300); console.log('search+counts ms',Date.now()-t1);
+console.log('mk:', await p.$$eval('.mkbtn', a=>a.slice(0,4).map(x=>x.textContent)));
+await p.click('.mkbtn'); await p.waitForTimeout(200); console.log('detail:', (await p.textContent('.mkwrap')).slice(0,300));
+await p.screenshot({path:'/tmp/claude-0/tG-rec.png'});
+t1=Date.now(); await p.fill('#q',''); await p.click('[data-rtype="refine"]'); await p.waitForTimeout(100); console.log('refine list ms',Date.now()-t1);
+t1=Date.now(); await p.click('[data-rtype="craft"]'); await p.waitForTimeout(100); console.log('craft list ms',Date.now()-t1);
+console.log('errors',errs);await b.close();})();

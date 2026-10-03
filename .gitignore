@@ -6,3 +6,4 @@ source/tools/lastopen.txt
 *.log
 node_modules/
 source/tools/mock-icons/
+source/tools/mock-backups/
