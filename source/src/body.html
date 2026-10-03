@@ -265,6 +265,30 @@
         </table></div>
       </div>
     </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Freighter Stellar Extractor</h2>
+        <p class="muted small" style="margin:0">A freighter room (also an orbital base module) that gathers from space by itself, no fuel. What it collects depends on the colour of the star in the system it's parked in. Build cost: 60 Silver, 45 Gold, 40 Magnetised Ferrite.</p>
+        <div class="tbl"><table class="t"><thead><tr><th>Star</th><th>Gathers</th></tr></thead><tbody>
+          <tr><td><span class="dot" style="background:#E8C54A"></span>Yellow</td><td>Copper</td></tr>
+          <tr><td><span class="dot" style="background:#D9523C"></span>Red</td><td>Cadmium</td></tr>
+          <tr><td><span class="dot" style="background:#4FB069"></span>Green</td><td>Emeril</td></tr>
+          <tr><td><span class="dot" style="background:#4A8BE0"></span>Blue</td><td>Indium</td></tr>
+          <tr><td><span class="dot" style="background:#9A5BD8"></span>Purple</td><td>Quartzite</td></tr>
+        </tbody></table></div>
+        <p class="small" style="margin:0"><b>It does not make gases.</b> Move the freighter to a star of the right colour to switch metals. Refine the metal with Chromatic Metal recipes for more value.</p>
+      </div>
+      <div class="card">
+        <h2>Gases: Nitrogen, Radon, Sulphurine</h2>
+        <p class="muted small" style="margin:0">Gases come from planet atmospheres. Build an <b>Atmosphere Harvester</b> at a base (100 Ammonia, 2 Metal Plating, 2 Hermetic Seal) on the right kind of planet and collect from it now and then. Gas giants and concentrated gas clouds help too.</p>
+        <div class="tbl"><table class="t"><thead><tr><th>Gas</th><th>Planet atmosphere</th></tr></thead><tbody>
+          <tr><td>Nitrogen</td><td>Lush, Toxic</td></tr>
+          <tr><td>Radon</td><td>Radioactive, Frozen</td></tr>
+          <tr><td>Sulphurine</td><td>Scorched, Desert</td></tr>
+        </tbody></table></div>
+        <p class="small" style="margin:0">The refiner also turns one gas into another (for example 3 Sulphurine into 1 Radon); search the gas in Recipes to see them all.</p>
+      </div>
+    </div>
     <div class="card">
       <h2>Found almost everywhere</h2>
       <div class="kv">
@@ -278,6 +302,7 @@
         <div class="seg" role="group" aria-label="Resource list">
           <button type="button" data-rsrc="raw" aria-pressed="true">Raw materials</button>
           <button type="button" data-rsrc="fish" aria-pressed="false">Fish</button>
+          <button type="button" data-rsrc="trade" aria-pressed="false">Trade goods</button>
         </div>
         <label class="search" for="rq">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -709,7 +734,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.2.0';
+const APPVER = '2.3.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -1389,7 +1414,43 @@ $('#starq').addEventListener('input', () => { renderStar(); });
 const RS = { kind:'raw', q:'' };
 const RAW = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Raw').sort((a,b)=>a.it.n.localeCompare(b.it.n));
 const FISH = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Fish').sort((a,b)=>a.it.n.localeCompare(b.it.n));
+/* ---------- trade goods: which economy sells them, and your known places nearby ---------- */
+const TRADE = __TRADE__; const ECON = new Map(TRADE.econ.map(e => [e.k, e]));
+const sysKey = s => `${s.g||0}:${s.x},${s.y},${s.z},${s.s}`;
+const sysName = s => s.n || s.dn || ((s.b||[])[0] ? (s.b[0][1]==='Freighter' ? 'Freighter base system' : s.b[0][0] + ' system') : (s.t||[])[0] ? s.t[0][0] : `System ${s.x},${s.y},${s.z}`);
+// Regions are about 400 light years apart; systems in the same region count as next door.
+const lyBetween = (a, b) => (a.g||0)!==(b.g||0) ? Infinity : Math.round(Math.hypot(a.x-b.x, a.y-b.y, a.z-b.z) * 400);
+function econOf(s){ return (S.econ||{})[sysKey(s)] || ''; }
+function tradeAnchors(){ const out = []; const sys = (GX && GX.sys) || [];
+  if(GX && GX.cur && GX.cur.x !== undefined) out.push({ k:'cur', l:'Where I am now', a:GX.cur });
+  if(GX && GX.fr && GX.fr.x !== undefined) out.push({ k:'fr', l:'My freighter', a:GX.fr });
+  sys.forEach(s => (s.b||[]).forEach(([n,t]) => { if(t==='Base') out.push({ k:'b:' + sysKey(s) + ':' + n, l:'Base: ' + n, a:s }); }));
+  sys.forEach(s => { if(econOf(s) && !(s.b||[]).some(b => b[1]==='Base')) out.push({ k:'s:' + sysKey(s), l:sysName(s), a:s }); });
+  return out; }
+function tradePlaces(){ return ((GX && GX.sys) || []).filter(s => econOf(s) || (s.b||[]).length || s.tr); }
+function renderTrade(){
+  const q = RS.q.trim().toLowerCase(); const anchors = tradeAnchors(); const ak = anchors.some(a => a.k===S.tnear) ? S.tnear : (anchors[0]||{}).k; const an = anchors.find(a => a.k===ak);
+  const places = an ? tradePlaces().map(s => ({ s, d: lyBetween(s, an.a), e: econOf(s) })).filter(x => isFinite(x.d)).sort((a,b) => a.d - b.d) : [];
+  const near = places.filter(x => x.e).slice(0, 5); const curSys = GX && GX.cur && (GX.sys||[]).find(s => sysKey(s)===sysKey(GX.cur));
+  const closest = k => places.find(x => x.e===k);
+  const goods = TRADE.goods.filter(g => !q || (g.n + ' ' + ECON.get(g.e).n + ' ' + ECON.get(g.e).alt).toLowerCase().includes(q));
+  $('#rcount').textContent = `${goods.length} of ${TRADE.goods.length}`;
+  $('#reslist').innerHTML = `<div class="card tradenear"><div class="row" style="justify-content:space-between"><h3>Places you know near</h3><select id="tnear" aria-label="Near which place">${anchors.map(a => `<option value="${esc(a.k)}" ${a.k===ak?'selected':''}>${esc(a.l)}</option>`).join('') || '<option>Sync first</option>'}</select></div>
+      ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Distance</th></tr></thead><tbody>${near.map(x => `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${esc(ECON.get(x.e).n)}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`).join('')}</tbody></table>`
+        : '<p class="muted small" style="margin:0">No systems with a known economy yet. When you see a system\'s economy in game (galaxy map or station), tag it here or in My galaxy and it shows up.</p>'}
+      ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span><select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select></div>` : ''}
+      <p class="muted small" style="margin:0">Strong (wealthy) economies stock all five tiers; weak ones only the cheaper goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
+    ${TRADE.econ.map(e => { const gs = goods.filter(g => g.e===e.k); if(!gs.length) return ''; const c = closest(e.k);
+      return `<div class="card econ"><div class="row" style="justify-content:space-between"><h3>${esc(e.n)}</h3><span class="muted small">${esc(e.alt)}</span></div>
+        ${c ? `<p class="small" style="margin:0">Closest you know: <b>${esc(sysName(c.s))}</b> · ${c.d < 400 ? 'same region' : '≈ ' + fmt(c.d) + ' ly'}</p>` : ''}
+        <div class="tgoods">${gs.map(g => `<div class="tgood" title="${esc(g.d)}">${itemIconHTML(g.id,'sm')}<span><b>${esc(g.n)}</b><br><span class="muted small">tier ${g.t} · ~${fmt(g.v)} u</span></span></div>`).join('')}</div></div>`; }).join('')}`;
+}
+$('#reslist').addEventListener('change', e => { const t = e.target;
+  if(t.id==='tnear'){ S.tnear = t.value; save(); renderTrade(); }
+  if(t.id==='tcurecon'){ const cs = (GX.sys||[]).find(s => sysKey(s)===sysKey(GX.cur)); if(cs) setEcon(cs, t.value); renderTrade(); } });
+function setEcon(s, k){ S.econ = S.econ || {}; if(k) S.econ[sysKey(s)] = k; else delete S.econ[sysKey(s)]; save(); uCount('econ-tag'); }
 function renderRes(){
+  if(RS.kind==='trade') return renderTrade();
   const q = RS.q.trim().toLowerCase();
   const src = RS.kind==='raw' ? RAW : FISH;
   const rows = src.filter(({it}) => !q || it.n.toLowerCase().includes(q) || (it.d||'').toLowerCase().includes(q) || (it.g||'').toLowerCase().includes(q) || (it.fb||[]).join(' ').toLowerCase().includes(q));
@@ -1664,10 +1725,12 @@ function renderInfo(){
   const nameNote = s.n ? '' : s.dn ? '<p class="muted small" style="margin:0">Name taken from this system\'s space station.</p>' : `<p class="muted small" style="margin:0">${(s.b||s.t) ? 'Shown by the name of your base or teleporter here. ' : ''}The game makes up system names as you arrive and doesn't store them in your save.</p>`;
   el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${sysHead(s)}</h2>${isCur(s)?'<span class="tag nan">You are here</span>':''}</div>${nameNote}
     <div class="kv">${DSP.loc!=='game' ? `<span><b>To core</b>≈ ${fmt(dist(s))} ly</span>` : ''}<span><b>Discovered by</b>${esc(byLabel(s.by))}</span>${DSP.loc!=='ly' ? `<span><b>Coords</b>X ${s.x} · Y ${s.y} · Z ${s.z}</span><span><b>System</b>#${s.s}</span>` : ''}${DSP.loc!=='game' ? `<span><b>Height</b>${s.y ? '≈ '+fmt(Math.abs(s.y)*LY)+' ly '+(s.y>0?'above':'below')+' the plane' : 'on the plane'}</span>` : ''}</div>
+    <div class="row"><label class="lbl" for="gecon">Economy</label><select id="gecon"><option value="">Not tagged</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(s)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select>${s.tr ? `<span class="muted small">you've traded here</span>` : ''}</div>
     ${bases?`<div><div class="lbl" style="margin-bottom:4px">Your bases</div><ul style="margin:0; padding-left:18px">${bases}</ul></div>`:''}
     ${tele?`<div><div class="lbl" style="margin-bottom:4px">Teleporter stops</div><ul style="margin:0; padding-left:18px">${tele}</ul></div>`:''}
     <div class="row"><button class="btn primary" type="button" id="gsysbtn" aria-pressed="${showSystem}">${showSystem?'Hide system view':'Open system view'}${np?` (${np} planet${np>1?'s':''})`:''}</button>
     <button class="btn" type="button" id="gsend">Planet 1 address → Portals</button></div>`;
+  $('#gecon').addEventListener('change', e => { setEcon(s, e.target.value); });
   $('#gsend').addEventListener('click', () => { addr = portalHex(1,s).split('').map(c=>parseInt(c,16)); renderAddr(); showTab('portals'); });
   $('#gsysbtn').addEventListener('click', () => { showSystem = !showSystem; renderInfo(); if(showSystem) $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
   renderSystem();
@@ -2378,6 +2441,16 @@ async function edOpen(bytes, mfBytes, name){
   const obj = SaveTools.parse(text); const mf = SaveTools.mfOpen(mfBytes, SaveTools.mfIndexFor(name));
   return { text, obj, mf, raw };
 }
+// The game saved after we loaded: load the newer save and put the waiting changes back on top (by path, not by position)
+async function edReloadRedo(){
+  const c = ED.cur; if(!c) return; const pend = [...ED.edits.values()]; ED.edits = new Map(); ED.askRedo = null;
+  await edFiles(); await edLoad(c.name); if(!ED.cur) return;
+  const failed = [];
+  pend.forEach(e => { try { let v; try { v = SaveTools.parse(e.text); } catch(err){ v = undefined; } edPut(e.path, e.text, e.label, v); } catch(err){ failed.push(e.label); } });
+  ED.invModels = new Map(); INVM = null;
+  edMsg(failed.length ? `Reloaded the newer save. ${pend.length - failed.length} of ${pend.length} changes are back; these couldn't be redone: ${failed.join('; ')}.` : `Reloaded the newer save and put your ${pend.length} change${pend.length===1?'':'s'} back. Write again when ready.`, !!failed.length);
+  edRender();
+}
 async function edLoad(name){
   if(ED.edits.size && !confirm('Throw away the changes you haven\'t written yet?')) return;
   ED.busy = true; edMsg('Loading ' + name + '…'); edRender();
@@ -2417,7 +2490,8 @@ function edRenderBar(){
     <button type="button" class="btn ghost" id="edreload">Reload from disk</button>${lastToolBackup() ? `<button type="button" class="btn ghost" id="edundo" title="Put ${esc(c.name)} back as it was before the last write">Undo last write</button>` : ''}
     <label class="toggle" for="edact" title="Hide finished timers, quests you haven't started, empty slots and idle plots"><input type="checkbox" id="edact" ${edActive()?'checked':''}> Show only what's active</label></div>
     ${list.length ? `<details><summary class="small">See what will change</summary><ul class="small edlist">${list.map(e => `<li>${esc(e.label)}</li>`).join('')}</ul></details>` : ''}
-    ${ED.askMenu ? `<div class="edmenu"><b>Near-live mode:</b> in game, save, then choose <b>Quit to Main Menu</b> (not Quit to Desktop). When you see the main menu, press: <button type="button" class="btn primary" id="edwritemenu">I'm at the main menu, write it</button> Then load the save in game to see the change.${ST.nearLive==='no' ? ' <span style="color:var(--bad)">Last test said the game didn\'t pick changes up this way.</span>' : ''}</div>` : ''}
+    ${ED.askRedo ? `<div class="edmenu"><b>The game saved again after you loaded this save.</b> Your changes weren't written. <button type="button" class="btn primary" id="edredo">Reload and redo my changes</button> This loads the newer save and puts your ${ED.edits.size} change${ED.edits.size===1?'':'s'} back on top. Inventories you changed keep the contents you set. Then write again.</div>` : ''}
+    ${ED.askMenu ? `<div class="edmenu"><b>Near-live mode:</b> 1. In game, save and choose <b>Quit to Main Menu</b> (not to desktop). 2. Press <b>Reload from disk</b> here and make your changes (or, if you already made them, write and use <b>Reload and redo</b> when asked). 3. Press <button type="button" class="btn primary" id="edwritemenu">I'm at the main menu, write it</button> 4. Load the save in game.${ST.nearLive==='no' ? ' <span style="color:var(--bad)">Last test said the game didn\'t pick changes up this way.</span>' : ''}</div>` : ''}
     <div class="small" id="edmsg">${ED.msg ? `<span style="color:${ED.bad?'var(--bad)':'var(--good)'}">${esc(ED.msg)}</span>` : ''}</div>`;
 }
 async function edWrite(opts){
@@ -2435,7 +2509,7 @@ async function edWrite(opts){
     const label = opts.label || `Before ${ED.edits.size} change${ED.edits.size===1?'':'s'} from the save tools`;
     const r = await api(`/api/savewrite?dir=${encodeURIComponent(c.dir)}&name=${encodeURIComponent(c.name)}&expect=${c.mtime||0}&label=${encodeURIComponent(label)}${opts.menu ? '&menu=1' : ''}`, {method:'POST', headers:{'Content-Type':'application/octet-stream'}, body});
     const j = await r.json().catch(() => ({}));
-    if(!r.ok) throw new Error(j.error || ('The helper said no (' + r.status + ')'));
+    if(!r.ok){ if(r.status===409 && /changed since it was loaded/.test(j.error||'')) ED.askRedo = { menu: !!opts.menu }; throw new Error(j.error || ('The helper said no (' + r.status + ')')); }
     // read it back and check it byte for byte, then that it unpacks and parses
     const back = await edFetch(`/api/savefile?dir=${encodeURIComponent(c.dir)}&name=${encodeURIComponent(c.name)}`);
     let same = back.length === packed.length; for(let i=0; same && i<back.length; i++) if(back[i]!==packed[i]) same = false;
@@ -2445,7 +2519,7 @@ async function edWrite(opts){
     vcLog('tools', `wrote ${c.name}: ${n} changes${opts.stamp ? ', made newest' : ''}`); uCount('tools-write');
     await edFiles(); await edBackups(); ED.busy = false;
     const name = c.name; ED.cur = null; await edLoad(name);
-    ED.askMenu = false;
+    ED.askMenu = false; ED.askRedo = null;
     edMsg(`Written and checked${n ? ` (${n} change${n===1?'':'s'})` : ''}. The old save is backed up as ${j.backup}.${opts.menu ? ' Now load this save from the main menu in game.' : ''}`);
     S.lastSync = null; save(); syncNow(true);
   } catch(e){ edMsg(e.message, true); vcLog('tools', 'write failed: ' + e.message); }
@@ -2948,6 +3022,7 @@ const SKEY = { name:'NKm', owner:'3?K', bstate:'d3x', btime:'3@T', stats:'gUR', 
 function myUid(){ const c = ED.cur.obj[KO('CommonStateData')] || ED.cur.obj['<h0'] || {}; const a = (c[KO('UsedDiscoveryOwnersV2')] || c['F=J'] || [])[0] || {}; return a[KO('UID')] || a.K7E || ''; }
 function setList(){ const arr = getAt(ED.cur.obj, PSP.concat([KO('SettlementStatesV2')])) || getAt(ED.cur.obj, PSP.concat(['GQA'])) || []; const key = KO('SettlementStatesV2') in getAt(ED.cur.obj, PSP) ? KO('SettlementStatesV2') : 'GQA'; const uid = myUid();
   return arr.map((s, i) => ({ s, i, key, mine: s && s[SKEY.owner] && (s[SKEY.owner].K7E===uid || s[SKEY.owner].f5Q===uid) })).filter(x => x.s && (x.s[SKEY.name] || x.mine)); }
+let topStep = 0;
 function secSet(){
   const all = setList(); const list = ED.setMine ? all.filter(x => x.mine) : all;
   if(!list.length) return `<div class="card"><label class="toggle" for="edsmine"><input type="checkbox" id="edsmine" ${ED.setMine?'checked':''}> Only my settlements</label><div class="empty">No settlements${ED.setMine ? ' of yours' : ''} in this save.</div></div>`;
@@ -2968,18 +3043,24 @@ function secSet(){
    <div class="card"><h3>Name</h3><div class="row"><input class="txt" id="edsname" value="${esc(SaveTools.rawToStr(s[SKEY.name]||''))}" maxlength="60" style="flex:1 1 240px"><button type="button" class="btn" id="edsnameset">Rename</button></div></div>
    <div class="card"><h3>Stats</h3><div class="edgrid2">${stats.map((v,i) => `<label class="lbl" for="edss-${i}">${SSTAT[i]||'Stat '+(i+1)}</label><input class="txt" type="number" id="edss-${i}" data-edss="${i}" value="${v}">`).join('')}</div>
      <div class="row"><button type="button" class="btn" id="edssset">Save stats</button><span class="muted small">Stat names follow the game's order; if one looks swapped, the raw editor below shows the exact numbers.</span></div></div>
-   <div class="card"><h3>Buildings</h3>
+   ${(() => { const ks = bs.filter(v => bldBuilt(v)).map(bldStep).filter(Boolean); topStep = ks.length ? Math.max(...ks) : 0; const behindN = ks.filter(k => k < topStep).length;
+     return `<div class="card"><h3>Buildings</h3>${behindN ? `<p class="small" style="margin:0 0 6px"><b>${behindN} plot${behindN===1?' is':'s are'} behind</b> the highest stage here (${esc(bldStepLabel(topStep))}); they're highlighted below.</p>` : ''}`; })()}
      <p class="muted small" style="margin:0 0 6px">The save doesn't record which building stands on which plot, so name them once and the app remembers (the game's own name fills in for the plot it's asking you to upgrade). <b>Stage</b> sets a built plot to a class. The steps come from the patterns the game itself writes; they're experimental until checked in game, and the save is backed up first.</p>
      <datalist id="edbtypes">${BTYPES.map(t => `<option value="${esc(t)}">`).join('')}</datalist>
      <table class="edt"><thead><tr><th>Plot</th><th>Building</th><th>Now</th><th>Stage</th><th></th></tr></thead><tbody>
-     ${bs.map((v,i) => { if(edActive() && !(bt[i] > now - 6.9*86400) && !bldBuilt(v)) return ''; const k = bldBuilt(v) ? bldStep(v) : 0;
-       return `<tr><td>${i+1}</td><td><input class="txt" list="edbtypes" data-edsbn="${i}" value="${esc(bldName(s, i))}" placeholder="Name this plot" style="width:170px"></td>
+     ${bs.map((v,i) => { if(edActive() && !(bt[i] > now - 6.9*86400) && !bldBuilt(v)) return ''; const k = bldBuilt(v) ? bldStep(v) : 0; const behind = k && k < topStep;
+       return `<tr${behind ? ' class="edrow-odd" title="Behind the rest of this settlement"' : ''}><td>${i+1}${behind ? ' <span class="tag bad">behind</span>' : ''}</td><td><input class="txt" list="edbtypes" data-edsbn="${i}" value="${esc(bldName(s, i))}" placeholder="Name this plot" style="width:170px"></td>
        <td>${esc(bldStatus(v, bt[i] > now - 6.9*86400))}${bt[i] ? `<br><span class="muted small">started ${fmtAgo(bt[i])}</span>` : ''}</td>
        <td>${bldBuilt(v) ? `<select data-edsstage="${i}">${k ? '' : '<option value="" selected>(unusual pattern)</option>'}${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n===k?'selected':''}>${esc(bldStepLabel(n))}</option>`).join('')}</select>` : '<span class="muted small">build it in game first</span>'}</td>
        <td class="row">${bt[i] > now - 6.9*86400 ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}<details class="small"><summary class="muted">game code</summary><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:130px"> <code class="muted">0x${(v>>>0).toString(16).toUpperCase()}</code></details></td></tr>`; }).join('')}
      ${edActive() && !bs.some((v,i) => bldBuilt(v) || bt[i] > now - 6.9*86400) ? '<tr><td colspan="5" class="muted">No buildings yet. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table>
-     <div class="row"><button type="button" class="btn" data-edsall="10">Set every built plot to S-class, finished</button><button type="button" class="btn ghost" id="edsbset">Save game codes</button><span class="muted small">“Game codes” are the raw numbers, for advanced use.</span></div></div>
-   <div class="card"><h3>Perks</h3><textarea id="edsperks" rows="4" class="txt" style="width:100%">${esc((s[SKEY.perks]||[]).map(p => String(p).replace(/^\^/,'')).join('\n'))}</textarea><div class="row"><button type="button" class="btn" id="edsperkset">Save perks</button><span class="muted small">One perk ID per line, e.g. STARTING_NEG1. Remove a line to drop that perk.</span></div></div>
+     <div class="row"><label class="lbl" for="edsallk">Every built plot</label><select id="edsallk">${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n===(topStep||10)?'selected':''}>${esc(bldStepLabel(n))}</option>`).join('')}</select><button type="button" class="btn" data-edsall="sel">Set them all</button><button type="button" class="btn ghost" id="edsbset">Save game codes</button><span class="muted small">“Game codes” are the raw numbers, for advanced use.</span></div></div>
+   <div class="card"><h3>Effects</h3>
+     <p class="muted small" style="margin:0 0 6px">The traits in the settlement overview (the save calls them perks). Add or remove any of them, good or bad. Names and effects come from the game's own table.</p>
+     <ul class="edperks">${(s[SKEY.perks]||[]).map((p, i) => perkRow(p, i)).join('') || '<li class="muted">No effects.</li>'}</ul>
+     <div class="row"><button type="button" class="btn ghost" data-edpk="neg">Remove all negative</button><button type="button" class="btn ghost" data-edpk="pos">Remove all positive</button></div>
+     <div class="row"><select id="edpkadd" style="flex:1 1 280px"><option value="">Add an effect…</option>${['Good','Bad'].map(g => `<optgroup label="${g}">${PERKS.perks.filter(x => x.kind!=='proc' && x.kind!=='job' && !!x.neg===(g==='Bad')).map(x => `<option value="${esc(x.id)}">${esc(x.n)} · ${esc(perkStats(x))}</option>`).join('')}</optgroup>`).join('')}</select><button type="button" class="btn" id="edpkaddb">Add</button></div>
+     <details class="small"><summary class="muted">Advanced: edit the IDs directly</summary><textarea id="edsperks" rows="4" class="txt" style="width:100%">${esc((s[SKEY.perks]||[]).map(p => String(p).replace(/^\^/,'')).join('\n'))}</textarea><div class="row"><button type="button" class="btn" id="edsperkset">Save IDs</button><span class="muted small">One ID per line, e.g. STARTING_NEG1.</span></div></details></div>
    <div class="card"><h3>Production</h3><table class="edt"><thead><tr><th>Item</th><th>Stored</th><th>Cap</th><th>Amount ×</th><th>Speed ×</th></tr></thead><tbody>
      ${(s[SKEY.prod]||[]).map((p,i) => `<tr><td>${esc(idName(p.CZw))}</td><td><input class="txt" type="number" data-edsp="${i}:1o9" value="${p['1o9']}" style="width:90px"></td><td><input class="txt" type="number" data-edsp="${i}:T=R" value="${p['T=R']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}:5a3" value="${p['5a3']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}::aM" value="${p[':aM']}" style="width:90px"></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nothing produced.</td></tr>'}
      </tbody></table><div class="row"><button type="button" class="btn" id="edspset">Save production</button></div></div>
@@ -2988,6 +3069,17 @@ function secSet(){
      <textarea id="edsraw" rows="12" class="txt mono" style="width:100%">${esc(JSON.stringify(s, null, 1))}</textarea><div class="row"><button type="button" class="btn" id="edsrawset">Save raw entry</button></div></div>`;
 }
 function setPath(){ if(!getAt(ED.cur.obj, PSP)) return null; const x = setList().find(x => x.i===ED.setSel); return x ? PSP.concat([x.key, x.i]) : null; }
+// ---------- settlement effects (perks) ----------
+const PERKS = __PERKS__; const PERKBY = new Map(PERKS.perks.map(x => [x.id, x]));
+const PSTAT = ['Max population','Happiness','Productivity','Upkeep','Sentinels','Debt','Alert','Bug attacks'];
+const PSTR = ['huge','large','medium','small','small','medium','large'];
+function perkInfo(raw){ const id = String(raw).replace(/^\^/,''), base = id.replace(/#.*$/,''); return { id, base, p: PERKBY.get(base) }; }
+// "Upkeep −small": positive strengths (0–3) are good for the settlement; for upkeep that means lower costs
+function perkStats(p){ const proc = p.kind==='proc' || p.kind==='job'; return (p.s||[]).map(([st, k]) => { const good = k <= 3; const up = st===3 || st===4 ? !good : good; return proc ? `${PSTAT[st]||'Stat'} ${up ? 'up' : 'down'}` : `${PSTAT[st]||'Stat'} ${up ? '+' : '−'}${PSTR[k]||''}`; }).join(', '); }
+const perkClean = t => String(t||'').replace(/%[A-Z_]+%/g,'').replace(/\s+/g,' ').trim();
+function perkGood(p){ return p ? !p.neg : null; }
+function perkRow(raw, i){ const { id, base, p } = perkInfo(raw); const nm = p ? (perkClean(p.n) && !/%/.test(p.n) ? p.n : perkClean(p.d) || (p.kind==='job' ? 'A citizen\'s job' : 'Generated effect')) : id; const g = perkGood(p);
+  return `<li><span class="tag ${g===null ? 'cat' : g ? 'good' : 'bad'}">${g===null ? '?' : g ? 'Good' : 'Bad'}</span><b>${esc(nm)}</b> <span class="muted small">${p ? esc((p.kind==='proc' || p.kind==='job' ? 'made by the game for this settlement · ' : '') + perkStats(p)) : 'not in the game table'}</span> <button type="button" class="linkbtn" data-edpkrm="${i}" aria-label="Remove ${esc(nm)}">Remove</button></li>`; }
 function setArrEdit(sub, vals, label){ const P = setPath(); const sp = edSpan(P.concat([sub])); const orig = ED.cur.text.slice(sp.s, sp.e);
   const els = SaveTools.elements(ED.cur.text, P.concat([sub])) || []; const parts = vals.map((v,i) => SaveTools.literal(v, els[i] ? ED.cur.text.slice(els[i].s, els[i].e) : ''));
   void orig; edPut(P.concat([sub]), '[' + parts.join(',') + ']', label, vals.slice()); }
@@ -3121,6 +3213,7 @@ $('#p-tools').addEventListener('click', async e => {
   let x;
   if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; ED.tmenu = null; ED.invCell = null; TECHSEL = null; ED.pick = null; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest' || ED.sec==='cmp'){ await edFiles().catch(()=>{}); await edBackups(); } edRender(); return; }
   if(q('#edwritemenu')){ edWrite({ menu: true }); uCount('tools-nearlive'); return; }
+  if(q('#edredo')){ await edReloadRedo(); uCount('tools-redo'); return; }
   if(q('#ednltest')){ const f = ED.files[0]; if(!f) return; if(ED.edits.size){ edMsg('Write or discard the waiting changes first.', true); return; }
     if(!confirm(`Near-live test: this adds 1 nanite to ${f.name} while the game sits at its main menu.\n\nIn game: save, choose Quit to Main Menu, then press OK here.`)) return;
     ED.cur = null; await edLoad(f.name); if(!ED.cur) return; const ps = getAt(ED.cur.obj, PSP); const k = KO('Nanites') in ps ? KO('Nanites') : '7QL'; const v = u32(ps[k]) + 1;
@@ -3225,10 +3318,15 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edsnameset')){ const v = $('#edsname').value.trim(); if(!v) return; edTry(() => edSetVal(P.concat([SKEY.name]), v, `${sName}: rename to ${v}`)); edRender(); return; }
   if(q('#edssset')){ const st = $$('[data-edss]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.stats, st, `${sName}: stats`)); edRender(); return; }
   if(q('#edsbset')){ const bs = $$('[data-edsb]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: building states`)); edRender(); return; }
-  if((x = q('[data-edsall]'))){ const k = +x.dataset.edsall; const bs = sObj[SKEY.bstate].slice(); let n = 0; bs.forEach((v,i) => { if(bldBuilt(v) && bldStep(v)!==k){ bs[i] = bldStepVal(v, k); n++; } }); if(!n){ edMsg('Every built plot is already at that stage.'); return; }
+  if((x = q('[data-edsall]'))){ const k = x.dataset.edsall==='sel' ? +$('#edsallk').value : +x.dataset.edsall; const bs = sObj[SKEY.bstate].slice(); let n = 0; bs.forEach((v,i) => { if(bldBuilt(v) && bldStep(v)!==k){ bs[i] = bldStepVal(v, k); n++; } }); if(!n){ edMsg('Every built plot is already at that stage.'); return; }
     if(!confirm(`Experimental: set ${n} built plot${n===1?'':'s'} to ${bldStepLabel(k)}? The save is backed up first; check the buildings in game and restore the backup if anything looks wrong.`)) return;
     edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: ${n} plots → ${bldStepLabel(k)} (experimental)`)); uCount('tools-set-all'); edRender(); return; }
   if((x = q('[data-edsfin]'))){ const i = +x.dataset.edsfin; const bt = sObj[SKEY.btime].slice(); bt[i] = bt[i] - 604800; edTry(() => setArrEdit(SKEY.btime, bt, `${sName}: finish plot ${i+1}`)); edRender(); return; }
+  if((x = q('[data-edpkrm]'))){ const i = +x.dataset.edpkrm; const list = (sObj[SKEY.perks]||[]).slice(); const { id, p } = perkInfo(list[i]); list.splice(i, 1); edTry(() => setArrEdit(SKEY.perks, list, `${sName}: remove effect ${p ? p.n.replace(/%[A-Z_]+%/g,'').trim() || id : id}`)); edRender(); return; }
+  if((x = q('[data-edpk]'))){ const neg = x.dataset.edpk==='neg'; const list = (sObj[SKEY.perks]||[]).filter(r => { const { p } = perkInfo(r); return !p || !!p.neg !== neg; }); const n = (sObj[SKEY.perks]||[]).length - list.length;
+    if(!n){ edMsg(`No ${neg ? 'negative' : 'positive'} effects to remove.`); return; } edTry(() => setArrEdit(SKEY.perks, list, `${sName}: remove ${n} ${neg ? 'negative' : 'positive'} effect${n===1?'':'s'}`)); edRender(); return; }
+  if(q('#edpkaddb')){ const id = $('#edpkadd').value; if(!id){ edMsg('Pick an effect to add first.', true); return; } const list = (sObj[SKEY.perks]||[]).slice(); if(list.some(r => perkInfo(r).base===id)){ edMsg('This settlement already has that effect.', true); return; }
+    list.push('^' + id); edTry(() => setArrEdit(SKEY.perks, list, `${sName}: add effect ${PERKBY.get(id).n}`)); uCount('tools-set-perk'); edRender(); return; }
   if(q('#edsperkset')){ const list = $('#edsperks').value.split(/\n/).map(l => l.trim()).filter(Boolean).map(l => l.startsWith('^') ? l : '^' + l); edTry(() => setArrEdit(SKEY.perks, list, `${sName}: perks`)); edRender(); return; }
   if(q('#edspset')){ edTry(() => { $$('[data-edsp]').forEach(inp => { const [i, k] = [inp.dataset.edsp.split(':')[0], inp.dataset.edsp.split(':').slice(1).join(':')]; const v = +inp.value; const cur = sObj[SKEY.prod][+i][k]; if(v !== cur) edSetVal(P.concat([SKEY.prod, +i, k]), v, `${sName}: production ${+i+1} ${k}`); }); }); edRender(); return; }
   if((x = q('[data-edst]'))){ const [k, d] = [x.dataset.edst.slice(0, x.dataset.edst.lastIndexOf(':')), +x.dataset.edst.slice(x.dataset.edst.lastIndexOf(':')+1)]; edTry(() => edSetVal(P.concat([k]), sObj[k] - d, `${sName}: ${KN(k)} −${d/3600} h`)); edRender(); return; }
@@ -3385,7 +3483,7 @@ document.addEventListener('keydown', e => {
   if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
 });
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }

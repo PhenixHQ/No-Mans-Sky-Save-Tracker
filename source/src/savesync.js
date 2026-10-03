@@ -178,7 +178,10 @@ const SaveSync = (() => {
     // Quest steps for goal tracking: [missionId, step]; plus the quest being tracked.
     const ms = {}; (ps.MissionProgress || []).forEach(m => { const id = cleanId(m.Mission); if(id && id !== '?') ms[id] = Math.max(ms[id] === undefined ? -2 : ms[id], m.Progress|0); });
     stats.mission = cleanId(ps.CurrentMissionID || '');
-    return { v:4, sys, cur, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
+    // Freighter position, and the systems where you've traded at a terminal (last 100 trades the game keeps)
+    const fr = ps.FreighterUniverseAddress ? fromUA(ps.FreighterUniverseAddress) : null;
+    (ps.TradingSupplyData || []).forEach(t => { try { const a = decDisc(t.GalacticAddress); if(a.x === undefined) return; const k = key(a); if(!S.has(k)) return; const e = S.get(k); e.tr = (e.tr||0) + 1; const id = cleanId(t.Product); if(/^(TRA_|ILLEGAL_PROD)/.test(id)) (e.tg = e.tg || []).includes(id) || e.tg.push(id); } catch(err){} });
+    return { v:4, sys, cur, fr, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
   }
 
   function guessUid(ps, disc){
