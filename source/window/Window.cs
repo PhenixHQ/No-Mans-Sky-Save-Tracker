@@ -175,7 +175,7 @@ namespace NmsSaveTracker
       try
       {
         if (!File.Exists(boundsFile)) return;
-        var p = File.ReadAllText(boundsFile).Trim().Split(',');
+        var p = File.ReadAllText(boundsFile).Trim().Split(new[] { ',' });
         var r = new Rectangle(int.Parse(p[0]), int.Parse(p[1]), int.Parse(p[2]), int.Parse(p[3]));
         foreach (var sc in Screen.AllScreens)
           if (sc.WorkingArea.IntersectsWith(r) && r.Width >= 300 && r.Height >= 200) { Bounds = r; break; }
