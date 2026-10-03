@@ -2705,8 +2705,27 @@ function techContainers(){ const cs = edContainers(); return cs.map((c,i) => ({ 
 function techModules(plat){ return pickItems().filter(x => { const m = /^UP_(.+?)(\d|X)?$/.exec(x.id); return m && TPLAT[plat].includes(m[1]); }).concat(plat==='ship' ? pickItems().filter(x => /^CV_/.test(x.id)) : []); }
 // Adjacency score: touching pairs of the same family, plus upgrade modules on supercharged slots.
 function techScore(m){ const at = new Map(m.slots.filter(s => s.type==='Technology').map(s => [s.x+','+s.y, s])); let adj = 0, sc = 0; const sp = new Set(m.special.map(([x,y]) => x+','+y));
-  at.forEach((s, k) => { const [x,y] = k.split(',').map(Number); [[1,0],[0,1]].forEach(([dx,dy]) => { const o = at.get((x+dx)+','+(y+dy)); if(o && techFam(o.id)===techFam(s.id)) adj++; }); if(sp.has(k) && isUpg(s.id)) sc++; });
-  return { adj, sc, total: adj + sc*2 }; }
+  at.forEach((s, k) => { const [x,y] = k.split(',').map(Number); [[1,0],[0,1]].forEach(([dx,dy]) => { const o = at.get((x+dx)+','+(y+dy)); if(o && techFam(o.id)===techFam(s.id)) adj++; }); if(sp.has(k) && isUpg(s.id)) sc += techGrade(s.id) / 5; });
+  return { adj, sc, total: Math.round((adj + sc*2) * 10) / 10 }; }
+// Improves a layout by trying every swap of two cells (tech or empty) and keeping any that raise the score, until nothing helps.
+function techOptimize(m, start){
+  const tech = m.slots.filter(s => s.type==='Technology'); const nonTech = new Set(m.slots.filter(s => s.type!=='Technology').map(s => s.x+','+s.y));
+  const cells = m.valid.map(([x,y]) => x+','+y).filter(k => !nonTech.has(k)); const sp = new Set(m.special.map(([x,y]) => x+','+y));
+  const fam = new Map(tech.map(s => [s, techFam(s.id)])); const val = new Map(tech.map(s => [s, isUpg(s.id) ? techGrade(s.id)/5*2 : 0]));
+  const xy = cells.map(k => k.split(',').map(Number)); const idx = new Map(cells.map((k,i) => [k,i]));
+  const nbr = xy.map(([x,y]) => [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => idx.get((x+dx)+','+(y+dy))).filter(i => i!==undefined));
+  const grid = new Array(cells.length).fill(null); start.forEach((s, k) => { const i = idx.get(k); if(i!==undefined) grid[i] = s; });
+  tech.forEach(s => { if(!grid.includes(s)){ const i = grid.indexOf(null); if(i>=0) grid[i] = s; } });
+  const cellScore = i => { const s = grid[i]; if(!s) return 0; let v = sp.has(cells[i]) ? val.get(s) : 0; nbr[i].forEach(j => { const o = grid[j]; if(o && fam.get(o)===fam.get(s)) v += 0.5; }); return v; };
+  let improved = true, rounds = 0;
+  while(improved && rounds++ < 40){ improved = false;
+    for(let a=0; a<cells.length; a++) for(let b=a+1; b<cells.length; b++){
+      if(!grid[a] && !grid[b]) continue; if(grid[a] && grid[b] && fam.get(grid[a])===fam.get(grid[b]) && val.get(grid[a])===val.get(grid[b])) continue;
+      const touched = new Set([a, b, ...nbr[a], ...nbr[b]]); let before = 0; touched.forEach(i => before += cellScore(i));
+      [grid[a], grid[b]] = [grid[b], grid[a]]; let after = 0; touched.forEach(i => after += cellScore(i));
+      if(after > before + 1e-9) improved = true; else [grid[a], grid[b]] = [grid[b], grid[a]]; } }
+  const out = new Map(); grid.forEach((s, i) => { if(s) out.set(cells[i], s); }); return out;
+}
 function techArrange(m, plat){
   const tech = m.slots.filter(s => s.type==='Technology'); const valid = m.valid.map(([x,y]) => x+','+y); const vset = new Set(valid);
   const nonTech = new Set(m.slots.filter(s => s.type!=='Technology').map(s => s.x+','+s.y)); const free = new Set(valid.filter(k => !nonTech.has(k)));
@@ -3032,8 +3051,10 @@ $('#p-tools').addEventListener('click', async e => {
     if(TCORE.has(id) && !confirm(`${itemInfo(id).n} is core technology. Removing it can leave you unable to fly, warp or survive. Remove anyway?`)) return;
     m.slots.splice(i,1); invCommit(m, `${m.label}: remove ${itemInfo(id).n}`); TECHSEL = null; });
   if(q('#edt-arrange')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const before = techScore(m).total; const keep = m.slots.map(s2 => Object.assign({}, s2));
-    const place = techArrange(m, plat); place.forEach((s2, k) => { const [nx,ny] = k.split(',').map(Number); if(s2.x!==nx || s2.y!==ny){ s2.x = nx; s2.y = ny; s2.dirty = true; } });
-    const after = techScore(m).total; if(after < before){ m.slots = keep; throw new Error(`Your current layout already scores ${before}; the best layout found scores ${after}, so nothing was changed.`); }
+    const cur = new Map(m.slots.filter(s2 => s2.type==='Technology').map(s2 => [s2.x+','+s2.y, s2]));
+    const tryIt = start => { const pl = techOptimize(m, start); const tmp = m.slots.map(s2 => Object.assign({}, s2)); const map = new Map(m.slots.map((s2,i) => [s2, tmp[i]])); pl.forEach((s2, k) => { const [nx,ny] = k.split(',').map(Number); map.get(s2).x = nx; map.get(s2).y = ny; }); return { pl, sc: techScore(Object.assign({}, m, { slots: tmp })).total }; };
+    const a1 = tryIt(cur), a2 = tryIt(techArrange(m, plat)); const place = (a2.sc > a1.sc ? a2 : a1).pl; place.forEach((s2, k) => { const [nx,ny] = k.split(',').map(Number); if(s2.x!==nx || s2.y!==ny){ s2.x = nx; s2.y = ny; s2.dirty = true; } });
+    const after = techScore(m).total; if(after <= before){ m.slots = keep; throw new Error(`This layout is already the best the app can find (score ${before}), so nothing was changed.`); }
     ED.techPrev = keep; invCommit(m, `${m.label}: best layout (score ${before} → ${after})`); uCount('tools-tech-arrange'); });
   if(q('#edt-max')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const added = techMax(m, plat); if(!added.length) throw new Error('Nothing to add: every technology already has 3 upgrades, or there are no empty slots. Try Unlock every tech slot first.'); invCommit(m, `${m.label}: add ${added.length} S-class upgrade${added.length===1?'':'s'}`); });
   if(q('#edt-unlock')) return invAction(m => { const have = new Set(m.valid.map(([a,b]) => a+','+b)); let n = 0; const W = m.inv[KO('Width')] || m.w, H = m.inv[KO('Height')] || m.h; for(let y=0; y<H; y++) for(let x2=0; x2<W; x2++) if(!have.has(x2+','+y)){ m.valid.push([x2,y]); n++; } if(!n) throw new Error('Every slot is already unlocked.'); invValidCommit(m, `${m.label}: unlock ${n} tech slots`); });
