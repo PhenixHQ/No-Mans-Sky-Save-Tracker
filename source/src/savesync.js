@@ -175,7 +175,10 @@ const SaveSync = (() => {
     const u = x => (typeof x === 'number' && x < 0) ? x + 4294967296 : x;
     const stats = { units: u(ps.Units), nanites: u(ps.Nanites), quicksilver: u(ps.Specials), summary: ps.SaveSummary || '' };
     let inv = null; try { inv = inventories(ps); } catch(e) { inv = null; }
-    return { v:3, sys, cur, path, snap: new Date().toISOString().slice(0,10), stats, inv };
+    // Quest steps for goal tracking: [missionId, step]; plus the quest being tracked.
+    const ms = {}; (ps.MissionProgress || []).forEach(m => { const id = cleanId(m.Mission); if(id && id !== '?') ms[id] = Math.max(ms[id] === undefined ? -2 : ms[id], m.Progress|0); });
+    stats.mission = cleanId(ps.CurrentMissionID || '');
+    return { v:4, sys, cur, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
   }
 
   function guessUid(ps, disc){

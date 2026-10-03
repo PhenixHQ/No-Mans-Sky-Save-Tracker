@@ -275,7 +275,7 @@ function Handle($ctx) {
     if ($req.Headers['X-VC'] -ne '1') { SendText $ctx 403 '{"error":"forbidden"}'; return }
     $script:lastPing = Get-Date
     switch ($path) {
-      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":6}'; return }
+      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":7}'; return }
       '/api/gamerunning' { SendJson $ctx @{ running = (Test-GameRunning) }; return }
       '/api/savefiles' {
         # Every save, manifest and account file in one account folder (for the save tools).
@@ -297,7 +297,8 @@ function Handle($ctx) {
         $d = Get-SaveDir ([string]$req.QueryString['dir']); $name = [string]$req.QueryString['name']; $label = [string]$req.QueryString['label']
         if (-not $d) { SendText $ctx 404 '{"error":"save folder not found"}'; return }
         if (-not (Test-SaveName $name)) { SendText $ctx 400 '{"error":"bad save name"}'; return }
-        if (Test-GameRunning) { SendText $ctx 409 '{"error":"No Man''s Sky is running. Save and quit the game first, then try again."}'; return }
+        # menu=1: near-live mode. The player has confirmed the game is sitting at its main menu, where it doesn't hold the save.
+        if ((Test-GameRunning) -and [string]$req.QueryString['menu'] -ne '1') { SendText $ctx 409 '{"error":"No Man''s Sky is running. Save and quit the game first, then try again.","running":true}'; return }
         $p = Join-Path $d.full $name; $mfp = Join-Path $d.full ('mf_' + $name)
         if (-not (Test-Path -LiteralPath $p) -or -not (Test-Path -LiteralPath $mfp)) { SendText $ctx 404 '{"error":"save or manifest not found"}'; return }
         [int64]$expect = 0

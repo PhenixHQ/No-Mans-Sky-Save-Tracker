@@ -46,7 +46,7 @@ Testing without Windows: `NMS_SAVEDIR=folder/with/save.hg+mf_save.hg NMS_GAME=fo
 ## Helper API (server.ps1), all under /api/, header `X-VC: 1` required
 | endpoint | what |
 |---|---|
-| GET ping | `{ok, app, helper:6}` (page keeps pinging every 10 s; helper exits 45 s after the last ping) |
+| GET ping | `{ok, app, helper:7}` (page keeps pinging every 10 s; helper exits 45 s after the last ping) |
 | GET saves | list of `{dir, name, size, mtime}`; dir is `st_…`/`DefaultUser` (auto) or `manual` / `manual:st_…` |
 | GET save?dir&name | raw save*.hg bytes (shared read) |
 | GET/POST data | whole app state JSON (`data\companion.json`, atomic write + .bak) |
@@ -58,7 +58,7 @@ Testing without Windows: `NMS_SAVEDIR=folder/with/save.hg+mf_save.hg NMS_GAME=fo
 | GET gamerunning | `{running}` (Get-Process NMS) |
 | GET savefiles?dir | `{dir, files:[{name,size,mtime}]}` save*.hg, accountdata.hg and their mf_ files |
 | GET savefile?dir&name | raw bytes of one of those |
-| POST savewrite?dir&name&expect&label | body = u32 LE save length, save bytes, mf bytes. Refuses if NMS runs (409), if the save's mtime moved more than 1.5 s from `expect` (409), if it isn't FEEDA1E5 or the mf size differs (400). Backs up save + mf, writes .tmp then moves, SHA-256 checks both. Returns `{ok, backup, mtime, size}` |
+| POST savewrite?dir&name&expect&label[&menu=1] | `menu=1` = near-live mode: skips the game-running check (the player confirmed the game is at its main menu). Body = u32 LE save length, save bytes, mf bytes. Refuses if NMS runs (409), if the save's mtime moved more than 1.5 s from `expect` (409), if it isn't FEEDA1E5 or the mf size differs (400). Backs up save + mf, writes .tmp then moves, SHA-256 checks both. Returns `{ok, backup, mtime, size}` |
 | GET backups / POST backups?action=create\|delete\|label\|open | list `info.json`s; create (dir, name, label), delete (id), rename (id, label), open the folder |
 | GET backupfile?id&name | bytes of a file in one backup |
 | POST iconpack | writes data\icons\pack.bin (<= 96 MB) |
@@ -103,6 +103,15 @@ pins, inv (manual planner list), pl (planner source), iv (inventory tab), addr (
 - **Crafting tree:** `plan()` builds a node tree (have / make / gather / short) using `pickRecipe`, which never picks a recipe that loops back to an item already being made, and gathers raw materials instead of refining them in circles. `nodeHTML` draws it with connector lines (`.ctree`); `planSteps` lists the steps deepest-first with the same recipe merged; `planGather` gives what to gather for one more.
 - **Friendlier save tools:** "Show only what's active" (`ST.edAll` = 1 means show all; default is active only) hides empty inventories, not-started and tutorial quests, old timers and idle plots. Quests are grouped by questline (`QG` regexes) with readable names (`questName`) and states tracking / has progress / finished / not started (step -1 = not started, 2147483647 = finished repeatable job; the save keeps step numbers after a quest ends, so "has progress" can be done). Timers are grouped with plain labels (`timerInfo`).
 - **Item picker:** creative-menu style modal (`pickerHTML`) with category tabs from `itemCat`, search and icons. Amount box `n / limit` with −1, +1, ¼, ½, full; amounts are clamped to `stackLimit()` (biggest stack of the item already in the save in the same StackSizeGroup; exosuit gets half of a ship stack; safe defaults otherwise). `questWarn()` warns for quest-linked items (`QITEMS`).
+
+## 2.0.0 additions
+- **Technology editor** (save tools > Technology): `techFam` (module family from UP_<fam><grade>, or base tech via `TBASE`), `techGrade` (S 5, X 4.5, A 4, B 3, C 2, SeaTrash 1, read from the item name), `techPlat` (suit/ship/weapon/freighter/exocraft from the inventory path), `TPLAT` = module families per platform, `TPRIO` = supercharged-slot priority. `techArrange` places each family as a connected cluster seeded on a supercharged slot (best module on it) and refuses if the score would drop. `techMax` adds S-class modules (new random 5-digit seed) up to 3 per family into empty slots. Repair = DamageFactor 0.0 + FullyInstalled true; charge = Amount := MaxAmount (Amount -1 = no charge). Supercharged slots are `SpecialSlots` (MMm) of type TechBonus. Base machine buffers (MaintenanceInteractions, RefinerBufferData) are hidden from editor lists while "only active" is on.
+- **Goals sidebar** (`#side`; `S.goals = [{n, rows:[{t:item|cur|recipe|quest, id, q}], fold}]`; `ST.side` remembers it open). Sync now carries `GX.ms` (mission id -> step) and `stats.mission`; GX.v is 4.
+- **Near-live:** write with `{menu:true}`; the first-time test adds 1 nanite and asks the player; result in `ST.nearLive` ('ok'/'no').
+- **Settlements:** `bldLevel` counts the 10 "upgrade mark" bits (20–29) of a building state; fully upgraded buildings in saves are 0x3FF0007F. "Max out (experimental)" sets bits 20–29 on one plot. Not confirmed in game yet.
+- **Compare** (`cmpDiff`): currencies, item totals, inventories added/removed, quest steps, settlement stats/plots, discoveries, systems, bases, play time, plus a catch-all count of other changed values by area.
+- Undo last write = restore the newest "Before…" backup of the file; automatic backups trimmed to `ST.bkKeep` (default 40) per file, never hand-made ones. Edits carry `risk` for the write confirmation.
+- Tracker extras: Ctrl+K search (`gsResults`), keys 1–8, `/`, G, ?; `S.recent` (last 10 item cards); `S.inotes` (item notes); Copy as text (`planText`); What's new (`NEWS[APPVER]`, `S.seenVer`). Tests: `tL.js` (2.0.0 features, real helper).
 
 ## Roadmap / ideas Jay asked about
 - The save editor ("NMS Toolkit") was merged into the Tracker as the opt-in save tools in 1.8.0.

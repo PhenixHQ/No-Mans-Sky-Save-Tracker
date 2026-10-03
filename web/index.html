@@ -618,6 +618,45 @@ textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
 .qst.tracking{background:var(--accent-soft); color:var(--ink)} .qst.started{background:var(--teal-soft); color:var(--ink)} .qst.done{background:var(--good-soft); color:var(--good)}
 tr.q-tracking td{background:var(--accent-soft)}
 @media (max-width:640px){ .edpgrid{grid-template-columns:repeat(auto-fill, minmax(84px, 1fr))} .edpi{min-height:88px; font-size:11px} }
+/* technology editor */
+.techgrid .edc{border-left:4px solid var(--fam, var(--line))}
+.edgrid .edc.scslot{box-shadow:inset 0 0 0 2px rgba(232,163,61,.55)}
+.edgrid .edc .sc{position:absolute; left:3px; top:1px; color:var(--accent); font-size:11px}
+.edgrid .edc .tgr{position:absolute; right:4px; bottom:2px; font:700 10px var(--mono); color:var(--muted)}
+.edgrid .edc .tbad{position:absolute; left:2px; right:2px; bottom:2px; font:700 9px var(--body); color:var(--bad); text-align:center}
+.edgrid .edc.broken{border-color:var(--bad)}
+/* goals sidebar */
+.side{position:fixed; top:0; right:0; bottom:0; width:min(380px, 100vw); z-index:60; background:var(--bg); border-left:1px solid var(--line); box-shadow:-8px 0 24px rgba(0,0,0,.25); display:flex; flex-direction:column; padding:12px 14px; gap:10px; overflow:auto}
+body.side-open .wrap{margin-right:380px}
+@media (max-width:1100px){ body.side-open .wrap{margin-right:0} }
+#sidebody{display:grid; gap:14px}
+.sgsec{display:grid; gap:8px}
+.sgpin{display:grid; grid-template-columns:auto 1fr; gap:2px 8px; align-items:center; text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:9px; padding:7px 9px; cursor:pointer; font:500 13.5px var(--body)}
+.sgpin .ico{grid-row:span 2}
+.goal{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:8px 10px; display:grid; gap:8px}
+.goal.complete{border-color:var(--good)}
+.ghead{display:flex; align-items:center; gap:8px}
+.gname{flex:1 1 auto; min-width:0; background:transparent; border:0; color:var(--ink); font:600 14.5px var(--body); padding:2px 0}
+.gname:focus{outline:1px solid var(--line); border-radius:4px}
+.grows{display:grid; gap:8px}
+.grow{display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; font-size:13.5px}
+.grow.done .gmain > .row span:first-child{text-decoration:line-through; color:var(--muted)}
+.grow .ivbar{height:5px}
+.gform{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:6px}
+.gadd summary{cursor:pointer; color:var(--teal)}
+.edmenu{background:var(--teal-soft); border:1px solid var(--teal); border-radius:8px; padding:8px 10px; font-size:13.5px; line-height:1.6}
+/* search, news, misc */
+.gsbox{position:fixed; inset:0; z-index:180; background:rgba(0,0,0,.5); display:grid; place-items:start center; padding:10vh 16px 16px}
+.gsin{width:min(640px, 100%); background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; gap:10px; max-height:76vh; overflow:auto}
+.gsin h2{margin:0}
+#gsres{display:grid; gap:4px}
+.gsr{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; text-align:left; background:transparent; border:1px solid transparent; color:var(--ink); border-radius:8px; padding:6px 8px; cursor:pointer; font:500 14px var(--body)}
+.gsr.on, .gsr:hover{background:var(--surface); border-color:var(--line)}
+.newslist{margin:0; padding-left:20px; display:grid; gap:6px}
+.inote{width:100%; font-size:13.5px}
+.recent{gap:6px}
+.edfind{display:grid; gap:4px; justify-items:start}
+@media (max-width:1500px){ body.side-open header.top .menubtn .mtxt{display:none} }
 </style>
 
 <div class="boot" id="boot" role="status" aria-live="polite">
@@ -704,6 +743,8 @@ tr.q-tracking td{background:var(--accent-soft)}
       <label class="menubtn autopill" id="autopill" for="autosync3" hidden title="Re-read your save by itself while you play. Every tab updates: inventory, recipes you can make, map and stats.">
         <input type="checkbox" id="autosync3"> <span class="mtxt">Auto-sync</span>
       </label>
+      <button type="button" class="menubtn" id="gsbtn" title="Search everything (Ctrl+K)"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mtxt">Search</span></button>
+      <button type="button" class="menubtn" id="sidebtn" aria-pressed="false" aria-controls="side" title="Goals and pinned recipes (G)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><span class="mtxt">Goals</span></button>
       <button type="button" class="menubtn" id="menubtn" aria-haspopup="dialog" aria-controls="drawer" aria-expanded="false" aria-label="Settings and help">
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span class="mtxt">Settings &amp; help</span>
@@ -1048,10 +1089,12 @@ tr.q-tracking td{background:var(--accent-soft)}
     <div class="seg edsecs" role="group" aria-label="Save tools section">
       <button type="button" data-edsec="saves" aria-pressed="true">Saves &amp; backups</button>
       <button type="button" data-edsec="inv" aria-pressed="false">Inventories</button>
+      <button type="button" data-edsec="tech" aria-pressed="false">Technology</button>
       <button type="button" data-edsec="cur" aria-pressed="false">Currencies</button>
       <button type="button" data-edsec="set" aria-pressed="false">Settlements</button>
       <button type="button" data-edsec="quest" aria-pressed="false">Quests</button>
       <button type="button" data-edsec="time" aria-pressed="false">Timers</button>
+      <button type="button" data-edsec="cmp" aria-pressed="false">Compare</button>
       <button type="button" data-edsec="raw" aria-pressed="false">Everything (raw)</button>
     </div>
     <div id="edbody"></div>
@@ -1071,6 +1114,12 @@ tr.q-tracking td{background:var(--accent-soft)}
   </main>
 </div>
 
+<aside class="side" id="side" aria-label="Goals and pinned recipes" hidden>
+  <div class="dhead"><h2>Goals</h2><button type="button" class="btn ghost" id="sideclose" aria-label="Close goals">Close</button></div>
+  <div id="sidebody"></div><datalist id="gitems"></datalist>
+</aside>
+<div class="gsbox" id="gsbox" hidden><div class="gsin" role="dialog" aria-modal="true" aria-label="Search everything"><input class="txt" id="gsq" placeholder="Search items, systems, bases, goals, tabs, settings…" autocomplete="off"><div id="gsres"></div><p class="small muted" style="margin:0">↑ ↓ to move, Enter to open, Esc to close</p></div></div>
+<div class="gsbox" id="newsbox" hidden><div class="gsin" role="dialog" aria-modal="true" aria-labelledby="newst"><h2 id="newst">What's new in <span id="newsv"></span></h2><ul id="newslist" class="newslist"></ul><div class="row"><button type="button" class="btn primary" id="newsok">Got it</button></div></div></div>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
   <div class="dhead">
@@ -1277,6 +1326,8 @@ tr.q-tracking td{background:var(--accent-soft)}
     <details><summary>Save tools (advanced)</summary><p>Off by default. Turn them on in Settings &amp; help, Game files, Advanced. A Save tools tab appears with: <b>Saves &amp; backups</b> (back up any save, restore a backup, or make an older save the one the game loads), <b>Inventories</b> (any item and amount in any slot, unlock slots), <b>Currencies</b>, <b>Settlements</b> (finish construction, debt, name, stats, buildings, perks, production, timers, or the whole entry raw), <b>Quests</b> (change a step, remove a mission, or restore missions from a backup), <b>Timers</b> (move any date in the save back, like the clock trick) and <b>Everything (raw)</b> to browse and change any value.</p><p>Changes wait in a list until you press <b>Write to save</b>. The app refuses to write while No Man's Sky is running, backs the save up to data\backups first, then reads it back to check it. If anything looks wrong in game, restore the backup.</p></details>
     <details><summary>Reporting a bug</summary><p>Open <b>Report a bug</b> in this menu, say what happened and how, and save, copy or download the report. The attached log has no save data, names, locations or personal details; you can read all of it before sending.</p></details>
     <details><summary>Quests</summary><p>Change a quest's status with its dropdown and write your next step in the notes. <b>Add a goal</b> makes your own card; double-click a title to rename it.</p></details>
+    <details id="helpkeys"><summary>Keyboard shortcuts</summary><p><b>Ctrl+K</b> search everything · <b>1–8</b> switch tabs · <b>/</b> jump to the search box · <b>G</b> open or close Goals · <b>?</b> this help · <b>Esc</b> close a panel.</p></details>
+    <details><summary>Goals</summary><p>Press <b>Goals</b> at the top (or G) for a side panel with your pinned recipes and your own goals. Make a goal, then add rows: an item and how many, money, a recipe to be able to make, or a quest to finish. Every row updates by itself from your save, ticks off when done, and the panel lists what you still need to gather. Drag goals to reorder them.</p></details>
     <details><summary>Display</summary><p>Settings → Display picks how portal glyphs show (icons, numbers, names, hex), whether big numbers are written in full or short (1.37B), how a system's location is given, and whether inventories show as a grid like in the game or as a list.</p></details>
     <details><summary>Item cards</summary><p>Search an item by its exact name to get its card. <b>You own</b> adds it up across all your inventories; click it to see where it's stored. <b>Where to find</b> (or double-click the card) jumps to where it's gathered, or to the recipes that make it.</p></details>
     <details><summary>Where is my stuff saved?</summary><p id="savedwhere">Pins, storage, saved addresses, notes and these settings are kept in this browser only. They won't follow you to another device, and clearing your browser data removes them.</p></details>
@@ -1463,7 +1514,10 @@ const SaveSync = (() => {
     const u = x => (typeof x === 'number' && x < 0) ? x + 4294967296 : x;
     const stats = { units: u(ps.Units), nanites: u(ps.Nanites), quicksilver: u(ps.Specials), summary: ps.SaveSummary || '' };
     let inv = null; try { inv = inventories(ps); } catch(e) { inv = null; }
-    return { v:3, sys, cur, path, snap: new Date().toISOString().slice(0,10), stats, inv };
+    // Quest steps for goal tracking: [missionId, step]; plus the quest being tracked.
+    const ms = {}; (ps.MissionProgress || []).forEach(m => { const id = cleanId(m.Mission); if(id && id !== '?') ms[id] = Math.max(ms[id] === undefined ? -2 : ms[id], m.Progress|0); });
+    stats.mission = cleanId(ps.CurrentMissionID || '');
+    return { v:4, sys, cur, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
   }
 
   function guessUid(ps, disc){
@@ -1838,7 +1892,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '1.9.0';
+const APPVER = '2.0.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -2088,7 +2142,8 @@ function recipeRows(){
 function itemCard(){
   const q = R.q.trim().toLowerCase(); const id = byName.get(q);
   const el = $('#itemcard');
-  if(id===undefined){ el.innerHTML=''; return; }
+  if(id===undefined){ const rec = (S.recent||[]).filter(i => I[i]); el.innerHTML = !R.q && rec.length ? `<div class="row recent"><span class="lbl">Recently viewed</span>${rec.map(i => `<button type="button" class="chip" data-item="${esc(I[i].n)}">${giImg(idOf(i),'cimg')}<span>${esc(I[i].n)}</span></button>`).join('')}</div>` : ''; return; }
+  S.recent = [id].concat((S.recent||[]).filter(i => i!==id)).slice(0, 10); save();
   const it = I[id];
   const made = [REF,COOK,CRAFT].map(src => src.filter(r => r.out[0]===id).length);
   const used = [REF,COOK,CRAFT].map(src => src.filter(r => r.ins.some(([x])=>x===id)).length);
@@ -2100,7 +2155,8 @@ function itemCard(){
     <div class="kv"><span><b>Type</b>${esc(it.g)}</span><span><b>Value</b>${fmt(it.v)} u</span>
     <span><b>Made by</b>${made[0]} refiner · ${made[2]} craft · ${made[1]} cook</span>
     <span><b>Used in</b>${used[0]} refiner · ${used[2]} craft · ${used[1]} cook</span>${fish}</div>
-    ${it.d ? `<p class="muted small" style="margin:0">${esc(it.d)}</p>` : ''}</div>`;
+    ${it.d ? `<p class="muted small" style="margin:0">${esc(it.d)}</p>` : ''}
+    <textarea class="txt inote" data-inote="${id}" rows="2" placeholder="Your notes on ${esc(it.n)}, e.g. where to buy it cheap">${esc((S.inotes||{})[id]||'')}</textarea></div>`;
 }
 function renderRecipes(){
   hlq = R.q;
@@ -2136,6 +2192,7 @@ function goFind(i){
   R.type = t; sync('rtype', t); R.mode = 'out'; sync('mode', 'out'); renderFilters(); setQuery(it.n);
   setTimeout(() => $('#rlist').scrollIntoView({block:'start', behavior:'smooth'}), 30);
 }
+document.addEventListener('input', e => { const t = e.target; if(t.dataset && t.dataset.inote!==undefined){ S.inotes = S.inotes || {}; const v = t.value; if(v.trim()) S.inotes[t.dataset.inote] = v; else delete S.inotes[t.dataset.inote]; save(); } });
 document.addEventListener('dblclick', e => { const c = e.target.closest('[data-findcard]'); if(c && !e.target.closest('button')) goFind(+c.dataset.findcard); });
 
 /* ---------- global clicks ---------- */
@@ -2443,11 +2500,18 @@ function mkDetail(key){
   return `<div class="mkdet"><div class="kv"><span><b>Now</b>${fmt(c.now)}</span><span><b>With sub-crafts</b>${fmt(c.sub)}</span><span><b>From scratch</b>${fmt(c.all)}</span></div>
     <p class="small muted" style="margin:0"><b>Now</b> uses only the ingredients you already have. <b>With sub-crafts</b> also makes missing ingredients from what you have, one step down. <b>From scratch</b> goes all the way down to raw materials. Shared materials are only counted once.</p>
     <div class="lbl">Crafting tree for ${fmt(shown)}${c.all ? '' : ' (you can\'t make one yet)'}</div><ul class="ctree">${nodeHTML(tree, true)}</ul>
+    <div class="row"><button type="button" class="btn ghost" data-mkcopy="${r.key}">Copy as text</button></div>
     <div class="row small"><span class="tn have">have it</span><span class="tn make">make it</span><span class="tn gather">gather more</span><span class="tn short">short, nothing makes it</span></div>
     ${steps.length ? `<div class="lbl">Steps, in order</div><ol class="mksteps">${steps.map(x => `<li>${verb(x.r)} ${fmt(x.n)}× (${x.r.ins.map(([id,q]) => `${fmt(q*x.n)} ${esc(I[id].n)}`).join(' + ')}) <span class="muted">→</span> <b>${fmt(x.n*x.r.out[1])} ${esc(I[x.r.out[0]].n)}</b>${x.r.type==='refine' && x.r.ins.length>1 ? ` <span class="small muted">(${x.r.ins.length}-slot refiner)</span>` : ''}</li>`).join('')}</ol>` : ''}
     <div class="lbl">Where your ingredients are</div>${r.ins.map(([id]) => `<div class="small"><b>${esc(I[id].n)}</b>: ${fmt(HAVE.get(id)||0)}${where(id)}</div>`).join('')}
     <div class="lbl">To make ${fmt(target)}${c.all ? ' (one more)' : ''} you'd need to gather</div>${miss.size ? `<div class="row">${[...miss.entries()].map(([id,q]) => chip(id, q, false)).join('')}</div>` : '<div class="small muted">Nothing that can be counted (it may need an item no recipe makes).</div>'}</div>`;
 }
+function planText(nd, pad){ const it = I[nd.id]; const st = nd.r ? `${verb(nd.r).toLowerCase()} ${fmt(nd.n)}×` : nd.short ? (isRaw(nd.id) ? `gather ${fmt(nd.short)}` : `short ${fmt(nd.short)}`) : 'have it';
+  return `${pad}- ${fmt(nd.q)}× ${it.n} (${st})\n` + nd.kids.map(k => planText(k, pad + '  ')).join(''); }
+document.addEventListener('click', async e => { const b = e.target.closest('[data-mkcopy]'); if(!b) return; const r = ALL.get(b.dataset.mkcopy); const c = makeCounts(r); const shown = Math.max(1, c.all||1);
+  const tree = plan(r.out[0], r.out[1]*shown, 9, new Map(HAVE), new Set(), r); const steps = planSteps(tree);
+  const txt = `${I[r.out[0]].n}: can make ${c.now} now, ${c.sub} with sub-crafts, ${c.all} from scratch\n\n` + planText(tree, '') + (steps.length ? '\nSteps:\n' + steps.map((x,i) => `${i+1}. ${verb(x.r)} ${fmt(x.n)}× → ${fmt(x.n*x.r.out[1])} ${I[x.r.out[0]].n}`).join('\n') : '') + '\n(from NMS Save Tracker)';
+  const ok = await copyText(txt); b.textContent = ok ? 'Copied' : 'Copy blocked'; setTimeout(() => { b.textContent = 'Copy as text'; }, 1800); uCount('mk-copy'); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-mk]'); if(!b) return; e.stopPropagation(); const rec = b.closest('.rec'); const open = rec.nextElementSibling && rec.nextElementSibling.classList.contains('mkwrap');
   if(open){ rec.nextElementSibling.remove(); return; } const w = document.createElement('div'); w.className = 'mkwrap'; w.innerHTML = mkDetail(b.dataset.mk); rec.after(w); uCount('mk-detail'); }, true);
 function renderPlanner(){
@@ -2966,7 +3030,7 @@ function setGalaxy(g){
   if(!sel) sel = SY.find(isCur) || null;
   renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); draw();
   if(current==='inventory') renderInventory();
-  renderPlanner(); if(current==='recipes' && !R.can) itemCard();
+  renderPlanner(); if(current==='recipes' && !R.can) itemCard(); if(typeof renderSide==='function') renderSide();
 }
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw); } catch(e) {}
 
@@ -3184,7 +3248,7 @@ async function syncNow(manual){
     if(!list.length || !list[0]){ throw new Error('No No Man\'s Sky saves found on this PC.'); }
     list.sort((a,b) => b.mtime - a.mtime);
     const s = list[0];
-    if(!manual && S.lastSync && S.lastSync.name===s.name && S.lastSync.dir===s.dir && S.lastSync.mtime===s.mtime && S.galaxy && S.galaxy.v===3){ syncing = false; renderSync(); return; }
+    if(!manual && S.lastSync && S.lastSync.name===s.name && S.lastSync.dir===s.dir && S.lastSync.mtime===s.mtime && S.galaxy && S.galaxy.v===4){ syncing = false; renderSync(); return; }
     if(!MAPPING){ const m = await (await fetch('mapping.json')).json(); MAPPING = {}; m.Mapping.forEach(e => MAPPING[e.Key] = e.Value); }
     const r = await api(`/api/save?dir=${encodeURIComponent(s.dir)}&name=${encodeURIComponent(s.name)}`);
     if(!r.ok) throw new Error('Could not read the save file (helper answered ' + r.status + ').');
@@ -3215,7 +3279,7 @@ if(DESK){
   $('#mkshortcut').addEventListener('click', async e => { const bn = e.currentTarget; try { const r = await api('/api/shortcut', {method:'POST'}); bn.textContent = r.ok ? 'Shortcut added to desktop' : 'Could not add shortcut'; } catch(err) { bn.textContent = 'Could not add shortcut'; } });
   schedSync();
   // A first sync, or a refresh when this app version reads more from the save than the stored copy has.
-  if(!S.lastSync || ST.autosync || !(S.galaxy && S.galaxy.v===3)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===3)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
+  if(!S.lastSync || ST.autosync || !(S.galaxy && S.galaxy.v===4)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===4)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
 }
 renderSync();
 
@@ -3517,7 +3581,8 @@ function edSpan(path){ const sp = SaveTools.locate(ED.cur.text, path); if(!sp) t
 function edPut(path, text, label, newVal){
   const sp = edSpan(path); const key = sp.s + ':' + sp.e;
   for(const [k, e] of ED.edits){ if(k===key) continue; if(sp.s < e.e && e.s < sp.e) throw new Error('This overlaps a change already waiting ("' + e.label + '"). Write that first, then make this one.'); }
-  ED.edits.set(key, { s: sp.s, e: sp.e, text, label, path });
+  const prevE = ED.edits.get(key); if(prevE && prevE.label!==label && !prevE.label.includes(label)) label = prevE.label + '; ' + label.replace(/^[^:]+: /,'');
+  ED.edits.set(key, { s: sp.s, e: sp.e, text, label, path, risk: /experimental|raw entry|: remove|removed|empty all|building states|unlock \d+ tech|perks/i.test(label) });
   if(newVal !== undefined) setAt(ED.cur.obj, path, newVal);
 }
 // v is a normal value; text is stored in the save's raw (byte) form
@@ -3531,9 +3596,10 @@ function edRenderBar(){
     <span class="tag ${list.length?'nan':'cat'}">${list.length} change${list.length===1?'':'s'} waiting</span>
     <button type="button" class="btn primary" id="edwrite" ${list.length && !ED.busy ? '' : 'disabled'}>Write to save</button>
     <button type="button" class="btn ghost" id="eddiscard" ${list.length ? '' : 'disabled'}>Discard changes</button>
-    <button type="button" class="btn ghost" id="edreload">Reload from disk</button>
+    <button type="button" class="btn ghost" id="edreload">Reload from disk</button>${lastToolBackup() ? `<button type="button" class="btn ghost" id="edundo" title="Put ${esc(c.name)} back as it was before the last write">Undo last write</button>` : ''}
     <label class="toggle" for="edact" title="Hide finished timers, quests you haven't started, empty slots and idle plots"><input type="checkbox" id="edact" ${edActive()?'checked':''}> Show only what's active</label></div>
     ${list.length ? `<details><summary class="small">See what will change</summary><ul class="small edlist">${list.map(e => `<li>${esc(e.label)}</li>`).join('')}</ul></details>` : ''}
+    ${ED.askMenu ? `<div class="edmenu"><b>Near-live mode:</b> in game, save, then choose <b>Quit to Main Menu</b> (not Quit to Desktop). When you see the main menu, press: <button type="button" class="btn primary" id="edwritemenu">I'm at the main menu, write it</button> Then load the save in game to see the change.${ST.nearLive==='no' ? ' <span style="color:var(--bad)">Last test said the game didn\'t pick changes up this way.</span>' : ''}</div>` : ''}
     <div class="small" id="edmsg">${ED.msg ? `<span style="color:${ED.bad?'var(--bad)':'var(--good)'}">${esc(ED.msg)}</span>` : ''}</div>`;
 }
 async function edWrite(opts){
@@ -3541,14 +3607,15 @@ async function edWrite(opts){
   ED.busy = true; edMsg('Writing…'); edRenderBar();
   try {
     const run = await (await api('/api/gamerunning')).json();
-    if(run.running) throw new Error('No Man\'s Sky is running. Save and quit the game first, then press Write to save again.');
+    if(run.running && !opts.menu){ ED.busy = false; ED.askMenu = true; throw new Error('No Man\'s Sky is running. Either quit the game, or use near-live mode: save in game, choose Quit to Main Menu, then press "I\'m at the main menu, write it".'); }
+    if(run.running && opts.menu && HELPER && HELPER < 7) throw new Error('Near-live mode needs the updated helper. Close the app fully, wait a minute and reopen it.');
     let packed, raw;
     if(ED.edits.size){ const nt = SaveTools.applyEdits(c.text, [...ED.edits.values()]); raw = SaveTools.textToBytes(nt); SaveTools.parse(nt); packed = SaveTools.pack(raw); }
     else { raw = c.raw; packed = c.packed; }
     const mf = SaveTools.mfUpdate(c.mf, raw.length, packed.length, opts.stamp ? nowS() : 0);
     const body = new Uint8Array(4 + packed.length + mf.length); new DataView(body.buffer).setUint32(0, packed.length, true); body.set(packed, 4); body.set(mf, 4 + packed.length);
     const label = opts.label || `Before ${ED.edits.size} change${ED.edits.size===1?'':'s'} from the save tools`;
-    const r = await api(`/api/savewrite?dir=${encodeURIComponent(c.dir)}&name=${encodeURIComponent(c.name)}&expect=${c.mtime||0}&label=${encodeURIComponent(label)}`, {method:'POST', headers:{'Content-Type':'application/octet-stream'}, body});
+    const r = await api(`/api/savewrite?dir=${encodeURIComponent(c.dir)}&name=${encodeURIComponent(c.name)}&expect=${c.mtime||0}&label=${encodeURIComponent(label)}${opts.menu ? '&menu=1' : ''}`, {method:'POST', headers:{'Content-Type':'application/octet-stream'}, body});
     const j = await r.json().catch(() => ({}));
     if(!r.ok) throw new Error(j.error || ('The helper said no (' + r.status + ')'));
     // read it back and check it byte for byte, then that it unpacks and parses
@@ -3558,16 +3625,23 @@ async function edWrite(opts){
     SaveTools.parse(SaveTools.bytesToText(SaveTools.unpack(back).raw));
     const n = ED.edits.size; ED.edits = new Map();
     vcLog('tools', `wrote ${c.name}: ${n} changes${opts.stamp ? ', made newest' : ''}`); uCount('tools-write');
-    await edFiles(); ED.busy = false;
+    await edFiles(); await edBackups(); ED.busy = false;
     const name = c.name; ED.cur = null; await edLoad(name);
-    edMsg(`Written and checked${n ? ` (${n} change${n===1?'':'s'})` : ''}. The old save is backed up as ${j.backup}.`);
+    ED.askMenu = false;
+    edMsg(`Written and checked${n ? ` (${n} change${n===1?'':'s'})` : ''}. The old save is backed up as ${j.backup}.${opts.menu ? ' Now load this save from the main menu in game.' : ''}`);
     S.lastSync = null; save(); syncNow(true);
   } catch(e){ edMsg(e.message, true); vcLog('tools', 'write failed: ' + e.message); }
   ED.busy = false; edRender();
 }
 
 /* ---------- section: saves & backups ---------- */
-async function edBackups(){ try { const j = await (await api('/api/backups')).json(); ED.backups = (Array.isArray(j) ? j : [j]).filter(b => b && b.id).sort((a,b) => b.at - a.at); } catch(e){ ED.backups = []; } }
+async function edBackups(){ try { const j = await (await api('/api/backups')).json(); ED.backups = (Array.isArray(j) ? j : [j]).filter(b => b && b.id).sort((a,b) => b.at - a.at); } catch(e){ ED.backups = []; }
+  // auto-clean: keep the newest N backups of each save file
+  const keep = ST.bkKeep===undefined ? 40 : +ST.bkKeep; if(!keep) return; const per = new Map(); const extra = [];
+  ED.backups.forEach(b => { const n = (per.get(b.name)||0) + 1; per.set(b.name, n); if(n > keep && !/by hand/i.test(b.label||'')) extra.push(b.id); });
+  for(const id of extra.slice(0, 20)){ try { await api(`/api/backups?action=delete&id=${encodeURIComponent(id)}`, {method:'POST'}); } catch(e){} }
+  if(extra.length){ ED.backups = ED.backups.filter(b => !extra.includes(b.id)); vcLog('tools', `auto-clean removed ${Math.min(extra.length,20)} old backups`); } }
+function lastToolBackup(){ if(!ED.cur) return null; return ED.backups.find(b => b.name===ED.cur.name && b.dir===ED.dir && /^Before/.test(b.label||'')) || null; }
 function secSaves(){
   const dirs = ED.dirs || [];
   return `<div class="card"><h2>Your saves</h2>
@@ -3577,8 +3651,11 @@ function secSaves(){
     ${ED.files.map(f => `<tr${ED.cur && ED.cur.name===f.name ? ' class="sel"' : ''}><td><code>${esc(f.name)}</code></td><td>${f.name==='accountdata.hg' ? 'Account (expeditions, unlocks)' : slotName(f.name)}</td><td>${new Date(f.mtime).toLocaleString()}<br><span class="muted small">${ago(f.mtime)}</span></td><td>${fmt(f.size/1024)} KB</td>
       <td class="row"><button type="button" class="btn" data-edload="${esc(f.name)}">Edit</button><button type="button" class="btn ghost" data-edbk="${esc(f.name)}">Back up</button>${f.name!=='accountdata.hg' ? `<button type="button" class="btn ghost" data-ednewest="${esc(f.name)}" title="Stamps this save as the newest so the game loads it">Make the game load this</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">No saves found.</td></tr>'}
     </tbody></table></div>
+    <div class="card"><h2>Near-live mode</h2><p class="muted small" style="margin:0">Edit without closing the game: save in game, choose <b>Quit to Main Menu</b>, write your changes here, then load the save again in game. ${ST.nearLive==='ok' ? '<b style="color:var(--good)">Tested and working on your PC.</b>' : ST.nearLive==='no' ? '<b style="color:var(--bad)">The last test didn\'t work; quit the game fully instead.</b>' : 'Not tested yet: run the test once to be sure the game picks changes up this way.'}</p>
+      ${ED.nlExpect ? `<div class="edmenu">Now load your save in game and check your nanites. You should have <b>${fmt(ED.nlExpect)}</b>. Did it work? <button type="button" class="btn primary" data-ednl="ok">Yes, it worked</button> <button type="button" class="btn ghost" data-ednl="no">No, it didn't</button></div>` : `<div class="row"><button type="button" class="btn" id="ednltest">Run the near-live test (+1 nanite)</button></div>`}</div>
     <div class="card"><div class="row" style="justify-content:space-between"><h2>Backups</h2><div class="row"><button type="button" class="btn ghost" id="edbkopen">Open backups folder</button></div></div>
-    <p class="muted small" style="margin:0">Made automatically before every write, and whenever you press Back up. They're kept in the app's data\\backups folder until you delete them.</p>
+    <p class="muted small" style="margin:0">Made automatically before every write, and whenever you press Back up. They're kept in the app's data\\backups folder. Backups you make by hand are never cleaned up automatically.</p>
+    <div class="row"><label class="lbl" for="edkeep">Keep the newest</label><select id="edkeep">${[[20,'20'],[40,'40'],[100,'100'],[0,'all (never clean up)']].map(([v,l]) => `<option value="${v}" ${+(ST.bkKeep===undefined?40:ST.bkKeep)===v?'selected':''}>${l}</option>`).join('')}</select><span class="muted small">automatic backups of each save</span></div>
     <table class="edt"><thead><tr><th>Backup</th><th>Of</th><th>Made</th><th></th></tr></thead><tbody>
     ${ED.backups.map(b => `<tr><td>${esc(b.label||'')}<br><code class="small muted">${esc(b.id)}</code></td><td><code>${esc(b.name)}</code><br><span class="muted small">${fmt((b.size||0)/1024)} KB</span></td><td>${new Date(b.at).toLocaleString()}<br><span class="muted small">${ago(b.at)}</span></td>
       <td class="row"><button type="button" class="btn" data-edrestore="${esc(b.id)}">Restore</button><button type="button" class="btn ghost" data-edrename="${esc(b.id)}">Rename</button><button type="button" class="btn ghost" data-eddel="${esc(b.id)}">Delete</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">No backups yet.</td></tr>'}
@@ -3613,16 +3690,17 @@ function edContainers(){
   Object.keys(ps).forEach(k => {
     const v = ps[k], n = KN(k);
     if(isInv(v)) out.push({ label: n==='Inventory' ? 'Exosuit' : n==='Inventory_TechOnly' ? 'Exosuit technology' : n==='Inventory_Cargo' ? 'Exosuit cargo' : n==='CorvetteStorageInventory' ? 'Corvette workshop storage' : nice(n), path: PSP.concat([k]) });
-    else if(Array.isArray(v)) v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const who = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`; out.push({ label: `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); });
+    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const who = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`; out.push({ label: `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
   });
   return out.filter(c => edActive() ? getAt(ED.cur.obj, c.path)[SL].length : ((getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length));
 }
 function invModel(path){
   const inv = getAt(ED.cur.obj, path); const K = n => KO(n);
-  const slots = inv[K('Slots')].map(s => ({ id: s[K('Id')], amt: s[K('Amount')], max: s[K('MaxAmount')], type: (s[K('Type')]||{})[K('InventoryType')], x: (s[K('Index')]||{})[K('X')]|0, y: (s[K('Index')]||{})[K('Y')]|0, dmg: s[K('DamageFactor')] }));
+  const slots = inv[K('Slots')].map(s => ({ id: s[K('Id')], amt: s[K('Amount')], max: s[K('MaxAmount')], type: (s[K('Type')]||{})[K('InventoryType')], x: (s[K('Index')]||{})[K('X')]|0, y: (s[K('Index')]||{})[K('Y')]|0, dmg: s[K('DamageFactor')], fi: s[K('FullyInstalled')] }));
+  const special = (inv[K('SpecialSlots')]||[]).map(p => { const ix = p[K('Index')]||{}; return [ix[K('X')]|0, ix[K('Y')]|0]; });
   const valid = (inv[K('ValidSlotIndices')]||[]).map(p => [p[K('X')]|0, p[K('Y')]|0]);
   let w = inv[K('Width')]|0, h = inv[K('Height')]|0; valid.concat(slots.map(s => [s.x, s.y])).forEach(([x,y]) => { w = Math.max(w, x+1); h = Math.max(h, y+1); });
-  return { path, inv, slots, valid, w: Math.max(w,1), h: Math.max(h,1) };
+  return { path, inv, slots, valid, special, w: Math.max(w,1), h: Math.max(h,1) };
 }
 function slotTemplate(){ // a real slot from this save, used as the shape for new slots
   const ps = getAt(ED.cur.obj, PSP); const SL = KO('Slots');
@@ -3634,6 +3712,8 @@ function slotText(base, s){
   rep([K('Type'), K('InventoryType')], JSON.stringify(s.type)); rep([K('Id')], SaveTools.strToRaw(JSON.stringify(s.id)));
   rep([K('Amount')], String(Math.round(s.amt))); rep([K('MaxAmount')], String(Math.round(s.max)));
   rep([K('Index'), K('X')], String(s.x)); rep([K('Index'), K('Y')], String(s.y));
+  if(s.dmg!==undefined) rep([K('DamageFactor')], Number.isInteger(+s.dmg) ? (+s.dmg).toFixed(1) : String(+s.dmg));
+  if(s.fi!==undefined) rep([K('FullyInstalled')], s.fi ? 'true' : 'false');
   return t;
 }
 // Rebuilds the Slots array: untouched slots keep their exact text.
@@ -3642,7 +3722,7 @@ function invCommit(m, label){
   const tpl = slotTemplate();
   const parts = m.slots.map(s => { const base = s.src!=null && els[s.src] ? ED.cur.text.slice(els[s.src].s, els[s.src].e) : tpl; return s.src!=null && !s.dirty ? base : slotText(base, s); });
   const K = n => KO(n);
-  const newObjs = m.slots.map(s => ({ [K('Type')]: {[K('InventoryType')]: s.type}, [K('Id')]: s.id, [K('Amount')]: s.amt, [K('MaxAmount')]: s.max, [K('DamageFactor')]: s.dmg||0, [K('Index')]: {[K('X')]: s.x, [K('Y')]: s.y} }));
+  const newObjs = m.slots.map(s => ({ [K('Type')]: {[K('InventoryType')]: s.type}, [K('Id')]: s.id, [K('Amount')]: s.amt, [K('MaxAmount')]: s.max, [K('DamageFactor')]: s.dmg||0, [K('FullyInstalled')]: s.fi!==false, [K('Index')]: {[K('X')]: s.x, [K('Y')]: s.y} }));
   edPut(SLp, '[' + parts.join(',') + ']', label, newObjs);
 }
 let INVM = null;
@@ -3687,13 +3767,22 @@ function secInv(){
       ${pid ? `<div class="row edamt"><label class="lbl" for="edi-amt">Amount</label><input class="txt" id="edi-amt" type="number" min="0" max="${lim}" value="${Math.min(amt0, lim)}"><span class="edlim">/ ${fmt(lim)}</span>
         <button type="button" class="btn ghost" data-edamt="-1">−1</button><button type="button" class="btn ghost" data-edamt="+1">+1</button><button type="button" class="btn ghost" data-edamt="q">¼ stack</button><button type="button" class="btn ghost" data-edamt="h">½ stack</button><button type="button" class="btn ghost" data-edamt="f">Full stack</button></div>
       <p class="small muted" style="margin:0">${fmt(lim)} is this item's stack limit in this inventory${ED.limSrc ? ' (' + ED.limSrc + ')' : ''}. Amounts can't go over it, so the game won't trim or reject the stack.</p>` : ''}
-      <div class="row">${pid ? `<button type="button" class="btn primary" id="edi-set">${s ? 'Change slot' : 'Put it in this slot'}</button>` : ''}${s ? '<button type="button" class="btn ghost" id="edi-clear">Empty slot</button>' : ''}
+      <div class="row">${pid ? `<button type="button" class="btn primary" id="edi-set">${s ? 'Change slot' : 'Put it in this slot'}</button>` : ''}${s ? '<button type="button" class="btn ghost" id="edi-clear">Empty slot</button>' + (s.type!=='Technology' && s.amt > 1 ? '<button type="button" class="btn ghost" id="edi-split">Split stack</button>' : '') + (s.type!=='Technology' ? '<button type="button" class="btn ghost" id="edi-dup">Duplicate stack</button>' : '') : ''}
         <button type="button" class="btn ghost" id="edi-lock">${ok.has(ED.invCell) ? 'Lock this slot' : 'Unlock this slot'}</button></div></div>` : '<p class="muted small">Click a slot to change it.</p>';
   return `<div class="card"><div class="row"><label class="lbl" for="edinv">Inventory</label><select id="edinv">${cs.map((c,i) => `<option value="${i}" ${i===ED.invSel?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
       <span class="muted small">${m.slots.length} items · ${m.valid.length} unlocked slots${m.inv[KO('Width')] ? ` · ${m.inv[KO('Width')]}×${m.inv[KO('Height')]}` : ''}</span></div>
-    <div class="row"><button type="button" class="btn" id="edi-fillall">Fill every stack to its stack size</button><button type="button" class="btn ghost" id="edi-unlockall">Unlock every slot (${m.w}×${m.h})</button><button type="button" class="btn ghost" id="edi-clearall">Empty this inventory</button></div>
+    <div class="row"><button type="button" class="btn" id="edi-fillall">Fill every stack to its stack size</button><button type="button" class="btn ghost" id="edi-unlockall">Unlock every slot (${m.w}×${m.h})</button><button type="button" class="btn ghost" id="edi-clearall">Empty this inventory</button>
+      <span class="lbl">Sort</span><button type="button" class="btn ghost" data-edisort="name">A–Z</button><button type="button" class="btn ghost" data-edisort="kind">By kind</button><button type="button" class="btn ghost" data-edisort="value">By value</button></div>
+    <div class="row"><input class="txt" id="edfind" placeholder="Find an item in every inventory, e.g. Storm Crystal" value="${esc(ED.find||'')}" style="flex:1 1 260px"></div>
+    ${ED.find ? invFindHTML(ED.find) : ''}
     <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}${ED.picking ? pickerHTML() : ''}`;
 }
+function invFindHTML(q){
+  q = q.trim().toLowerCase(); if(q.length < 2) return ''; const cs = edContainers(); const out = [];
+  cs.forEach((c, ci) => { const inv = getAt(ED.cur.obj, c.path); (inv[KO('Slots')]||[]).forEach(sl => { const id = cleanTid(sl[KO('Id')]); const n = itemInfo(id).n; if(n.toLowerCase().includes(q) || id.toLowerCase().includes(q)){ const ix = sl[KO('Index')]||{}; out.push({ ci, c, n, id, a: sl[KO('Amount')], x: ix[KO('X')]|0, y: ix[KO('Y')]|0 }); } }); });
+  return `<div class="edfind">${out.length ? out.slice(0, 60).map(r => `<button type="button" class="linkbtn" data-edgo="${r.ci}:${r.x},${r.y}">${itemIconHTML(r.id,'sm')} ${esc(r.n)} ×${fmt(r.a)} <span class="muted small">· ${esc(r.c.label)}, slot ${r.x+1}, ${r.y+1}</span></button>`).join('') : '<span class="muted small">Not in any inventory.</span>'}${out.length > 60 ? `<span class="muted small">and ${out.length-60} more</span>` : ''}</div>`;
+}
+function freeCell(m){ return m.valid.find(([vx,vy]) => !m.slots.some(s => s.x===vx && s.y===vy)); }
 function invValidCommit(m, label){
   const K = n => KO(n); const VP = m.path.concat([K('ValidSlotIndices')]); const els = SaveTools.elements(ED.cur.text, VP) || [];
   const tpl = els.length ? ED.cur.text.slice(els[0].s, els[0].e) : `{"${K('X')}":0,"${K('Y')}":0}`;
@@ -3708,14 +3797,14 @@ function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), ou
   const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
   Object.keys(IX).forEach(add); Object.keys(XI).forEach(add);
   return PICKITEMS = out.sort((a,b) => a.n.localeCompare(b.n)); }
-function pickerHTML(){
-  const all = pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cat = ED.pc || 'raw';
+function pickerHTML(only){
+  const all = only || pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cat = ED.pc || 'raw';
   const cnt = {}; all.forEach(x => cnt[x.c] = (cnt[x.c]||0)+1);
-  const list = all.filter(x => q ? x.l.includes(q) : x.c===cat); const show = list.slice(0, 300);
+  const list = all.filter(x => q ? x.l.includes(q) : only ? true : x.c===cat); const show = list.slice(0, 300);
   return `<div class="edpick" role="dialog" aria-modal="true" aria-label="Choose an item"><div class="edpickin">
     <div class="row" style="justify-content:space-between"><h3>Choose an item</h3><button type="button" class="btn ghost" id="edpx">Close</button></div>
     <input class="txt" id="edpq" placeholder="Search every item by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
-    <div class="fchips">${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
+    ${only ? '<p class="small muted" style="margin:0">Only modules that fit this inventory are listed.</p>' : ''}<div class="fchips"${only ? ' hidden' : ''}>${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
     <div class="edpgrid">${show.map(x => `<button type="button" class="edpi" data-edpi="${esc(x.id)}" title="${esc(x.n)} (${esc(x.id)})">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span></button>`).join('') || '<div class="muted">Nothing found.</div>'}</div>
     ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}</div></div>`;
 }
@@ -3782,6 +3871,123 @@ function questGroup(raw){ const id = String(raw).replace(/^\^/,'').replace(/^\?/
 const natKey = s => String(s).replace(/\d+/g, d => d.padStart(6,'0'));
 function questState(p, id, cur){ if(id===cur) return 'tracking'; if(p===-1) return 'notstarted'; if(p===2147483647) return 'done'; return 'started'; }
 
+/* ---------- section: technology ---------- */
+const TPLAT = { suit:['ENGY','HAZ','JET','COLD','HOT','RAD','TOX','UNW','SHLD','SNSUIT','RBSUIT'], ship:['HYP','LAUN','PULSE','S_SHL','SGUN','SLASR','SSHOT','SMINI','SBLOB'],
+  weapon:['LASER','SCAN','BOLT','SHOT','SMG','CANN','GREN','TGREN','RAIL','SENGUN'], freighter:['FRHYP','FRCOM','FREXP','FRFUE','FRMIN','FRSPE','FRTRA'], exocraft:['EXENG','EXGUN','EXLAS','EXSUB','BOOST','SUGUN','MCENG','MCGUN','MCLAS','MFIRE'] };
+const TPRIO = { ship:['HYP','PULSE','SBLOB','SGUN','SSHOT','SLASR','SMINI','S_SHL','LAUN'], suit:['JET','HAZ','ENGY','SHLD','UNW','SNSUIT','RBSUIT','COLD','HOT','RAD','TOX'], weapon:['LASER','SCAN','BOLT','SHOT','SMG','CANN','RAIL','GREN','TGREN','SENGUN'], freighter:['FRHYP'], exocraft:['EXENG','BOOST','EXGUN','EXLAS','EXSUB'] };
+const TBASE = [[/^(HYPERDRIVE|HDRIVEBOOST\d|UT_QUICKWARP)$/,'HYP'],[/^(SHIPJUMP\d|UT_PULSE\w*)$/,'PULSE'],[/^(LAUNCHER|UT_LAUNCH\w*)$/,'LAUN'],[/^(SHIPSHIELD|UT_SHIPSHIELD)$/,'S_SHL'],[/^SHIPGUN\d$/,'SGUN'],[/^SHIPLAS\d$/,'SLASR'],
+  [/^(ENERGY|UT_ENERGY)$/,'ENGY'],[/^(PROTECT|UT_PROTECT)$/,'HAZ'],[/^(JET\d|UT_JET|UT_MIDAIR)$/,'JET'],[/^(LASER|STRONGLASER|UT_MINER)$/,'LASER'],[/^(SCAN\d|UT_SCAN\w*|SCANBINOC\d)$/,'SCAN'],[/^BOLT$/,'BOLT'],[/^SHOTGUN$/,'SHOT'],[/^(F_HYPERDRIVE|F_HDRIVEBOOST\d)$/,'FRHYP']];
+const TCORE = new Set(['HYPERDRIVE','LAUNCHER','SHIPJUMP1','SHIPSHIELD','ENERGY','PROTECT','JET1','LASER','SCAN1','F_HYPERDRIVE']);
+const cleanTid = id => String(id).replace(/^\^/,'').replace(/#.*$/,'');
+function techFam(id){ const c = cleanTid(id); let m = /^UP_(.+?)(\d|X)?$/.exec(c); if(m) return m[1]; for(const [re,f] of TBASE) if(re.test(c)) return f; m = /^CV_([A-Z]+)\d*$/.exec(c); if(m) return 'CV_' + m[1]; return c; }
+function techGrade(id){ const n = itemInfo(cleanTid(id)).n || ''; if(/S-Class/.test(n)) return 5; if(/Illegal|Banned|X-Class/.test(n) || /X$/.test(cleanTid(id))) return 4.5; if(/A-Class/.test(n)) return 4; if(/B-Class/.test(n)) return 3; if(/C-Class/.test(n)) return 2; if(/SeaTrash/.test(n)) return 1; return 0; }
+const isUpg = id => /^UP_|^CV_/.test(cleanTid(id));
+function techPlat(c){ const n = c.label + ' ' + c.path.map(KN).join(' '); if(/Freighter/i.test(n)) return 'freighter'; if(/Weapon|Multi.?tool/i.test(n)) return 'weapon'; if(/Vehicle|Exocraft/i.test(n)) return 'exocraft'; if(/Ship/i.test(n)) return 'ship'; return 'suit'; }
+function techContainers(){ const cs = edContainers(); return cs.map((c,i) => ({ c, i })).filter(({c}) => { if(/Maintenance|RefinerBuffer/.test(c.path.map(KN).join(' '))) return false; const inv = getAt(ED.cur.obj, c.path); return /TechOnly|Weapon/.test(c.path.map(KN).join(' ')) || (inv[KO('Slots')]||[]).some(s => (s[KO('Type')]||{})[KO('InventoryType')]==='Technology'); }); }
+function techModules(plat){ return pickItems().filter(x => { const m = /^UP_(.+?)(\d|X)?$/.exec(x.id); return m && TPLAT[plat].includes(m[1]); }).concat(plat==='ship' ? pickItems().filter(x => /^CV_/.test(x.id)) : []); }
+// Adjacency score: touching pairs of the same family, plus upgrade modules on supercharged slots.
+function techScore(m){ const at = new Map(m.slots.filter(s => s.type==='Technology').map(s => [s.x+','+s.y, s])); let adj = 0, sc = 0; const sp = new Set(m.special.map(([x,y]) => x+','+y));
+  at.forEach((s, k) => { const [x,y] = k.split(',').map(Number); [[1,0],[0,1]].forEach(([dx,dy]) => { const o = at.get((x+dx)+','+(y+dy)); if(o && techFam(o.id)===techFam(s.id)) adj++; }); if(sp.has(k) && isUpg(s.id)) sc++; });
+  return { adj, sc, total: adj + sc*2 }; }
+function techArrange(m, plat){
+  const tech = m.slots.filter(s => s.type==='Technology'); const valid = m.valid.map(([x,y]) => x+','+y); const vset = new Set(valid);
+  const nonTech = new Set(m.slots.filter(s => s.type!=='Technology').map(s => s.x+','+s.y)); const free = new Set(valid.filter(k => !nonTech.has(k)));
+  const sc = m.special.map(([x,y]) => x+','+y).filter(k => free.has(k));
+  const fams = new Map(); tech.forEach(s => { const f = techFam(s.id); if(!fams.has(f)) fams.set(f, []); fams.get(f).push(s); });
+  const prio = TPRIO[plat] || []; const order = [...fams.entries()].sort((a,b) => { const ua = a[1].filter(s => isUpg(s.id)).length, ub = b[1].filter(s => isUpg(s.id)).length; const pa = prio.indexOf(a[0]), pb = prio.indexOf(b[0]);
+    return (ub>0) - (ua>0) || (pa<0?99:pa) - (pb<0?99:pb) || b[1].length - a[1].length; });
+  const place = new Map(); const nb = k => { const [x,y] = k.split(',').map(Number); return [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => (x+dx)+','+(y+dy)).filter(n => free.has(n) && !place.has(n)); };
+  const dist = (a,b) => { const [ax,ay] = a.split(',').map(Number), [bx,by] = b.split(',').map(Number); return Math.abs(ax-bx) + Math.abs(ay-by); };
+  order.forEach(([f, items]) => {
+    items.sort((a,b) => techGrade(b.id) - techGrade(a.id));
+    const hasUp = items.some(s => isUpg(s.id)); let seed = hasUp ? sc.find(k => !place.has(k)) : null;
+    if(!seed) seed = valid.find(k => free.has(k) && !place.has(k) && !sc.includes(k)) || valid.find(k => free.has(k) && !place.has(k)); if(!seed) return;
+    const cl = [seed]; const seen = new Set([seed]); let qi = 0;
+    while(cl.length < items.length && qi < cl.length){ nb(cl[qi++]).forEach(n => { if(!seen.has(n) && cl.length < items.length && (!sc.includes(n) || n===seed)){ seen.add(n); cl.push(n); } }); }
+    while(cl.length < items.length){ const rest = valid.filter(k => free.has(k) && !place.has(k) && !cl.includes(k)); if(!rest.length) break; rest.sort((a,b) => dist(a,seed) - dist(b,seed)); cl.push(rest[0]); }
+    cl.forEach((k, i) => place.set(k, items[i]));
+  });
+  return place; // cell -> slot
+}
+let TECHSEL = null;
+function secTech(){
+  const tcs = techContainers(); if(!tcs.length) return '<div class="empty">No technology found in this save.</div>';
+  if(ED.techSel==null || !tcs.some(t => t.i===ED.techSel)) ED.techSel = tcs[0].i;
+  const cs = edContainers(); const c = cs[ED.techSel]; ED.invSel = ED.techSel; if(!INVM || INVM.label!==c.label) invLoad(ED.techSel); const m = INVM; const plat = techPlat(c);
+  const sp = new Set(m.special.map(([x,y]) => x+','+y)); const at = new Map(m.slots.map((s,k) => [s.x+','+s.y, k])); const ok = new Set(m.valid.map(([x,y]) => x+','+y));
+  const broken = m.slots.filter(s => s.type==='Technology' && (+s.dmg > 0 || s.fi===false)).length; const charge = m.slots.filter(s => s.type==='Technology' && s.amt >= 0 && s.amt < s.max).length;
+  const sc = techScore(m); const prev = ED.techPrev ? techScore(Object.assign({}, m, { slots: ED.techPrev })) : null;
+  let cells = '';
+  for(let y=0; y<m.h; y++) for(let x=0; x<m.w; x++){
+    const key = x+','+y, k = at.get(key), on = ok.has(key), sel = TECHSEL===key, star = sp.has(key) ? '<span class="sc" title="Supercharged slot">★</span>' : '';
+    if(k===undefined){ cells += `<button type="button" class="gc ${on?'empty':'off'} edc${sel?' sel':''}${sp.has(key)?' scslot':''}" data-edtc="${key}" title="${on?'Empty slot':'Locked slot'}${sp.has(key)?' · supercharged':''}">${star}${on?'':'<span class="small muted">locked</span>'}</button>`; continue; }
+    const s = m.slots[k]; const id = cleanTid(s.id); const bad = +s.dmg > 0 || s.fi===false; const g = techGrade(s.id); const gl = g===5?'S':g===4.5?'X':g===4?'A':g===3?'B':g===2?'C':g===1?'ST':'';
+    cells += `<button type="button" class="gc edc${sel?' sel':''}${s.dirty?' dirty':''}${bad?' broken':''}${sp.has(key)?' scslot':''}" data-edtc="${key}" title="${esc(itemInfo(id).n)}${bad?' · broken':''}${s.amt>=0?` · charge ${s.amt}/${s.max}`:''}" style="--fam:${'#'+((Math.abs([...techFam(s.id)].reduce((a,ch) => a*31 + ch.charCodeAt(0), 7)) % 0xFFFFFF) | 0x404040).toString(16).slice(-6)}">${star}${giImg(id,'gpic') || `<span class="gnm">${esc(itemInfo(id).n)}</span>`}${gl ? `<span class="tgr">${gl}</span>` : ''}${bad ? '<span class="tbad">broken</span>' : ''}</button>`;
+  }
+  const selS = TECHSEL && at.has(TECHSEL) ? m.slots[at.get(TECHSEL)] : null;
+  return `<div class="card"><div class="row"><label class="lbl" for="edtech">Technology of</label><select id="edtech">${tcs.map(({c,i}) => `<option value="${i}" ${i===ED.techSel?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
+      <span class="muted small">${m.slots.filter(s => s.type==='Technology').length} installed · ${m.valid.length} slots · ${m.special.length} supercharged · layout score ${sc.total}${prev ? ` (was ${prev.total})` : ''}</span></div>
+    <div class="row"><button type="button" class="btn" id="edt-repair" ${broken?'':'disabled'}>Repair broken tech${broken?` (${broken})`:''}</button><button type="button" class="btn" id="edt-charge" ${charge?'':'disabled'}>Fill all charge${charge?` (${charge})`:''}</button>
+      <button type="button" class="btn" id="edt-install">Install a module…</button><button type="button" class="btn primary" id="edt-arrange">Best layout</button><button type="button" class="btn" id="edt-max">Max it out (S-class)</button><button type="button" class="btn ghost" id="edt-unlock">Unlock every tech slot</button></div>
+    <p class="small muted" style="margin:0">Click a module, then click another slot to move it there (or swap). ★ marks supercharged slots. <b>Best layout</b> groups matching tech so they touch and puts your best upgrades on supercharged slots. <b>Max it out</b> adds S-class upgrades up to the game's limit of 3 per technology, into empty slots.</p>
+    <div class="igridwrap"><div class="igrid edgrid techgrid" style="--cols:${m.w}">${cells}</div></div>
+    ${selS ? `<div class="row"><b>${esc(itemInfo(cleanTid(selS.id)).n)}</b><span class="muted small">${selS.amt>=0?`charge ${selS.amt} / ${selS.max}`:'no charge needed'}${+selS.dmg>0||selS.fi===false?' · broken':''}</span><button type="button" class="btn ghost" id="edt-remove">Remove this module</button></div>` : ''}</div>${ED.picking ? pickerHTML(techModules(plat)) : ''}`;
+}
+function techMax(m, plat){
+  const fams = new Map(); m.slots.filter(s => s.type==='Technology').forEach(s => { const f = techFam(s.id); fams.set(f, (fams.get(f)||[]).concat([s])); });
+  const free = m.valid.filter(([x,y]) => !m.slots.some(s => s.x===x && s.y===y)); const added = [];
+  (TPLAT[plat]||[]).forEach(f => { const have = fams.get(f); if(!have) return; const ups = have.filter(s => isUpg(s.id)).length; let need = 3 - ups;
+    const best = techModules(plat).filter(x => techFam(x.id)===f).sort((a,b) => techGrade(b.id) - techGrade(a.id))[0]; if(!best || techGrade(best.id) < 5) return;
+    while(need-- > 0 && free.length){ const [x,y] = free.shift(); const s = { id: '^' + best.id + '#' + String(Math.floor(Math.random()*90000)+10000), amt: -1, max: 100, type: 'Technology', x, y, dmg: 0, fi: true, dirty: true, src: null }; m.slots.push(s); added.push(best.n); } });
+  return added;
+}
+
+
+/* ---------- section: compare two saves ---------- */
+async function cmpLoad(src){ // 'f:<name>' a save file, 'b:<id>' a backup
+  await edMapping();
+  if(src.startsWith('f:')){ const n = src.slice(2); const b = await edFetch(`/api/savefile?dir=${encodeURIComponent(ED.dir)}&name=${encodeURIComponent(n)}`); return { label: n, obj: SaveTools.parse(SaveTools.bytesToText(SaveTools.unpack(b).raw)) }; }
+  const id = src.slice(2); const bk = ED.backups.find(x => x.id===id); const b = await edFetch(`/api/backupfile?id=${encodeURIComponent(id)}&name=${encodeURIComponent(bk.name)}`);
+  return { label: `${bk.name} backup ${new Date(bk.at).toLocaleString()}`, obj: SaveTools.parse(SaveTools.bytesToText(SaveTools.unpack(b).raw)) };
+}
+function cmpDiff(A, B){
+  const da = SaveSync.deob(A, MAPPING), db = SaveSync.deob(B, MAPPING); const pa = da.BaseContext.PlayerStateData, pb = db.BaseContext.PlayerStateData; const out = [];
+  const num = v => (typeof v==='number' && v < 0) ? v + 4294967296 : v; const sign = d => (d>0?'+':'−') + fmt(Math.abs(d));
+  [['Units','Units'],['Nanites','Nanites'],['Specials','Quicksilver']].forEach(([k,l]) => { const a = num(pa[k]||0), b = num(pb[k]||0); if(a!==b) out.push(['Currencies', `${l}: ${fmt(a)} → ${fmt(b)} (${sign(b-a)})`]); });
+  const ia = SaveSync.inventories(pa), ib = SaveSync.inventories(pb); const tot = inv => { const m = new Map(); Object.values(inv).forEach(l => l.forEach(c => c.it.forEach(([id,a]) => m.set(id, (m.get(id)||0) + a)))); return m; };
+  const ta = tot(ia), tb = tot(ib); new Set([...ta.keys(), ...tb.keys()]).forEach(id => { const a = ta.get(id)||0, b = tb.get(id)||0; if(a!==b) out.push(['Items (all inventories)', `${itemInfo(id).n}: ${fmt(a)} → ${fmt(b)} (${sign(b-a)})`]); });
+  const names = inv => new Set(Object.values(inv).flatMap(l => l.map(c => c.n))); const na = names(ia), nb = names(ib);
+  nb.forEach(n => { if(!na.has(n)) out.push(['Ships, storage and vehicles', `New: ${SaveTools.rawToStr(n)}`]); }); na.forEach(n => { if(!nb.has(n)) out.push(['Ships, storage and vehicles', `Gone: ${SaveTools.rawToStr(n)}`]); });
+  const qa = new Map((pa.MissionProgress||[]).map(m => [m.Mission, m.Progress])), qb = new Map((pb.MissionProgress||[]).map(m => [m.Mission, m.Progress]));
+  new Set([...qa.keys(), ...qb.keys()]).forEach(id => { const a = qa.get(id), b = qb.get(id); if(a!==b){ const st = v => v===undefined ? 'not in save' : v===-1 ? 'not started' : v===2147483647 ? 'finished' : 'step ' + v; out.push(['Quests', `${questName(id)} (${questGroup(id)}): ${st(a)} → ${st(b)}`]); } });
+  const sa = pa.SettlementStatesV2||[], sb = pb.SettlementStatesV2||[]; sb.forEach((x, i) => { const y = sa[i]; if(!x || !y || JSON.stringify(x)===JSON.stringify(y)) return; const nm = SaveTools.rawToStr(x.Name || y.Name || 'Settlement');
+    if(x.Name!==y.Name) out.push(['Settlements', `Renamed: ${SaveTools.rawToStr(y.Name)} → ${SaveTools.rawToStr(x.Name)}`]);
+    (x.Stats||[]).forEach((v, k) => { const w = (y.Stats||[])[k]; if(v!==w) out.push(['Settlements', `${nm}: ${SSTAT[k]||'stat '+(k+1)} ${fmt(w||0)} → ${fmt(v)}`]); });
+    (x.BuildingStates||[]).forEach((v, k) => { const w = (y.BuildingStates||[])[k]; if(v!==w) out.push(['Settlements', `${nm}: plot ${k+1} changed`]); }); });
+  const cnt = o => ((o.DiscoveryManagerData||{})['DiscoveryData-v1']||{}).Store ? (((o.DiscoveryManagerData||{})['DiscoveryData-v1'].Store.Record)||[]).length : 0; const dA = cnt(da), dB = cnt(db); if(dA!==dB) out.push(['Exploring', `Discoveries: ${fmt(dA)} → ${fmt(dB)} (${sign(dB-dA)})`]);
+  const vA = (pa.VisitedSystems||[]).length, vB = (pb.VisitedSystems||[]).length; if(vA!==vB) out.push(['Exploring', `Systems visited: ${fmt(vA)} → ${fmt(vB)} (${sign(vB-vA)})`]);
+  const ba = (pa.PersistentPlayerBases||[]).length, bb = (pb.PersistentPlayerBases||[]).length; if(ba!==bb) out.push(['Bases', `Bases: ${ba} → ${bb}`]);
+  const tA = pa.TotalPlayTime||0, tB = pb.TotalPlayTime||0; if(tA!==tB) out.push(['Time', `Play time: ${Math.round(tA/3600)} h → ${Math.round(tB/3600)} h`]);
+  // everything else, by where it lives in the save (technology, timers, settings and so on)
+  const skip = /^(Units|Nanites|Specials|MissionProgress|SettlementStatesV2|VisitedSystems|PersistentPlayerBases|TotalPlayTime|TimeStamp|SaveSummary|DiscoveryManagerData)$/; let budget = 200000, n = 0; const other = new Map();
+  const walk = (a, b, path) => { if(--budget < 0 || n > 400) return; if(a===b) return;
+    if(a && b && typeof a==='object' && typeof b==='object'){ if(Array.isArray(a)!==Array.isArray(b)){ n++; other.set(path, (other.get(path)||0)+1); return; } const ks = new Set([...Object.keys(a), ...Object.keys(b)]); ks.forEach(k => walk(a[k], b[k], path)); return; }
+    n++; other.set(path, (other.get(path)||0)+1); };
+  Object.keys(Object.assign({}, pa, pb)).forEach(k => { if(skip.test(k)) return; const top = ({ Inventory:'Exosuit', Inventory_TechOnly:'Exosuit technology', Inventory_Cargo:'Exosuit cargo', ShipOwnership:'Ship', VehicleOwnership:'Exocraft', FreighterInventory:'Freighter', FreighterInventory_TechOnly:'Freighter technology', CorvetteStorageInventory:'Corvette workshop storage', WeaponInventory:'Multi-tool' })[k] || words(k); if(/Inventory|Ownership|Fleet|Multitools/.test(k)){ const a = pa[k], b = pb[k]; if(Array.isArray(a) && Array.isArray(b)) b.forEach((e, i) => walk(a[i], e, `${top} ${i+1}${e && e.Name ? ' (' + SaveTools.rawToStr(e.Name) + ')' : ''}`)); else walk(a, b, top); } else walk(pa[k], pb[k], top); });
+  other.forEach((c, path) => out.push(['Other changes', `${path}: ${c} value${c===1?'':'s'} changed`]));
+  return out;
+}
+function secCmp(){
+  const opts = ED.files.filter(f => /^save\d*\.hg$/.test(f.name)).map(f => [`f:${f.name}`, `${f.name} · ${slotName(f.name)} · ${ago(f.mtime)}`]).concat(ED.backups.map(b => [`b:${b.id}`, `Backup of ${b.name} · ${new Date(b.at).toLocaleString()} · ${b.label||''}`]));
+  const sel = (id, v) => `<select id="${id}" style="max-width:100%">${opts.map(([k,l]) => `<option value="${esc(k)}" ${k===v?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+  const a = ED.cmpA || (opts[1]||opts[0]||[''])[0], b = ED.cmpB || (opts[0]||[''])[0];
+  const R2 = ED.cmpRes; const groups = new Map(); (R2 ? R2.list : []).forEach(([g, t]) => { if(!groups.has(g)) groups.set(g, []); groups.get(g).push(t); });
+  return `<div class="card"><h2>Compare two saves</h2><p class="muted small" style="margin:0">See what changed between any two saves or backups, in plain words: money, items, quests, settlements, exploring and more.</p>
+    <div class="edgrid2"><label class="lbl" for="edcmpa">Before</label>${sel('edcmpa', a)}<label class="lbl" for="edcmpb">After</label>${sel('edcmpb', b)}</div>
+    <div class="row"><button type="button" class="btn primary" id="edcmpgo" ${opts.length < 2 ? 'disabled' : ''}>Compare</button>${opts.length < 2 ? '<span class="muted small">You need at least two saves or backups to compare. Press Back up in Saves &amp; backups to make one.</span>' : ''}${ED.cmpErr ? `<span class="small" style="color:var(--bad)">${esc(ED.cmpErr)}</span>` : ''}</div>
+    ${R2 ? (R2.list.length ? [...groups.entries()].map(([g, l]) => `<details class="qgrp" open><summary><b>${esc(g)}</b> <span class="muted small">${l.length}</span></summary><ul class="small edlist">${l.slice(0,300).map(t => `<li>${esc(t)}</li>`).join('')}</ul>${l.length>300?`<p class="small muted">and ${l.length-300} more</p>`:''}</details>`).join('') : '<p class="muted">No differences in the things this checks.</p>') : ''}</div>`;
+}
+
 /* ---------- section: currencies ---------- */
 const CURR = [['Units','wGS','Units'],['Nanites','7QL','Nanites'],['Specials','kN;','Quicksilver']];
 function secCur(){
@@ -3791,6 +3997,8 @@ function secCur(){
 }
 
 /* ---------- section: settlements ---------- */
+const bldBuilt = v => ((v >>> 0) & 0x0400007F) === 0x0400007F || ((v >>> 20) & 0x3FF) > 0x40;
+const bldLevel = v => { let n = 0, b = (v >>> 20) & 0x3FF; while(b){ n += b & 1; b >>>= 1; } return n; };
 const SSTAT = ['Max population','Happiness','Production','Upkeep','Sentinels','Debt','Alert','Bug attack'];
 const SKEY = { name:'NKm', owner:'3?K', bstate:'d3x', btime:'3@T', stats:'gUR', perks:'OEf', judge:'HMQ', prod:'abj', nextIdx:'hiD', nextCls:':Qn', race:'SS2' };
 function myUid(){ const c = ED.cur.obj[KO('CommonStateData')] || ED.cur.obj['<h0'] || {}; const a = (c[KO('UsedDiscoveryOwnersV2')] || c['F=J'] || [])[0] || {}; return a[KO('UID')] || a.K7E || ''; }
@@ -3817,8 +4025,8 @@ function secSet(){
    <div class="card"><h3>Stats</h3><div class="edgrid2">${stats.map((v,i) => `<label class="lbl" for="edss-${i}">${SSTAT[i]||'Stat '+(i+1)}</label><input class="txt" type="number" id="edss-${i}" data-edss="${i}" value="${v}">`).join('')}</div>
      <div class="row"><button type="button" class="btn" id="edssset">Save stats</button><span class="muted small">Stat names follow the game's order; if one looks swapped, the raw editor below shows the exact numbers.</span></div></div>
    <div class="card"><h3>Buildings</h3><table class="edt"><thead><tr><th>Plot</th><th>State</th><th>Building started</th><th></th></tr></thead><tbody>
-     ${bs.map((v,i) => edActive() && !(bt[i] > now - 6.9*86400) ? '' : `<tr><td>${i+1}</td><td><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:140px"> <code class="small muted">0x${(v>>>0).toString(16).toUpperCase()}</code></td><td>${bt[i] ? `${fmtWhen(bt[i])}<br><span class="muted small">${fmtAgo(bt[i])}</span>` : '<span class="muted">—</span>'}</td><td>${bt[i] ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}</td></tr>`).join('')}
-     ${edActive() && !building.length ? '<tr><td colspan="4" class="muted">Nothing is being built right now. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table><div class="row"><button type="button" class="btn" id="edsbset">Save building states</button><span class="muted small">State numbers are the game's own codes (type, class and stage packed together). Only change them if you know what you're after.</span></div></div>
+     ${bs.map((v,i) => edActive() && !(bt[i] > now - 6.9*86400) ? '' : `<tr><td>${i+1}</td><td><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:140px"> <code class="small muted">0x${(v>>>0).toString(16).toUpperCase()}</code>${bldBuilt(v) ? `<br><span class="small">upgrade marks ${bldLevel(v)} / 10${bldLevel(v)===10 ? ' · fully upgraded' : ''}</span>` : ''}</td><td>${bt[i] ? `${fmtWhen(bt[i])}<br><span class="muted small">${fmtAgo(bt[i])}</span>` : '<span class="muted">—</span>'}</td><td class="row">${bt[i] ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}${bldBuilt(v) && bldLevel(v) < 10 ? `<button type="button" class="btn ghost" data-edsmax="${i}" title="Experimental: sets this plot to the pattern fully upgraded buildings use">Max out (experimental)</button>` : ''}</td></tr>`).join('')}
+     ${edActive() && !building.length ? '<tr><td colspan="4" class="muted">Nothing is being built right now. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table><div class="row"><button type="button" class="btn" id="edsbset">Save building states</button><span class="muted small">State numbers are the game's own codes. Built plots carry up to 10 "upgrade marks" (the bits above 0x100000); fully upgraded buildings in saves show all 10. <b>Max out (experimental)</b> sets a plot to that pattern. It isn't confirmed yet, so check the building in game afterwards, and restore the backup if it looks wrong.</span></div></div>
    <div class="card"><h3>Perks</h3><textarea id="edsperks" rows="4" class="txt" style="width:100%">${esc((s[SKEY.perks]||[]).map(p => String(p).replace(/^\^/,'')).join('\n'))}</textarea><div class="row"><button type="button" class="btn" id="edsperkset">Save perks</button><span class="muted small">One perk ID per line, e.g. STARTING_NEG1. Remove a line to drop that perk.</span></div></div>
    <div class="card"><h3>Production</h3><table class="edt"><thead><tr><th>Item</th><th>Stored</th><th>Cap</th><th>Amount ×</th><th>Speed ×</th></tr></thead><tbody>
      ${(s[SKEY.prod]||[]).map((p,i) => `<tr><td>${esc(idName(p.CZw))}</td><td><input class="txt" type="number" data-edsp="${i}:1o9" value="${p['1o9']}" style="width:90px"></td><td><input class="txt" type="number" data-edsp="${i}:T=R" value="${p['T=R']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}:5a3" value="${p['5a3']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}::aM" value="${p[':aM']}" style="width:90px"></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nothing produced.</td></tr>'}
@@ -3949,17 +4157,27 @@ async function edRender(){
   if(!edOn()){ b.innerHTML = '<div class="empty">Turn on Save tools in Settings &amp; help, Game files, Advanced.</div>'; return; }
   if(HELPER && HELPER < 6){ b.innerHTML = '<div class="empty">Close the app fully, wait a minute, then reopen it. The helper needs restarting to turn on the save tools.</div>'; return; }
   if(!ED.files.length && !ED.loadedList){ ED.loadedList = true; b.innerHTML = '<div class="empty">Looking for your saves…</div>'; try { await edFiles(); await edBackups(); } catch(e){ edMsg('Could not list your saves: ' + e.message, true); } return edRender(); }
-  if(ED.sec!=='saves' && !ED.cur){ b.innerHTML = `<div class="empty">Pick a save to edit first. ${ED.files[0] ? `<button type="button" class="btn primary" data-edload="${esc(ED.files[0].name)}">Edit the newest save (${esc(ED.files[0].name)})</button>` : ''}</div>`; return; }
+  if(ED.sec!=='saves' && ED.sec!=='cmp' && !ED.cur){ b.innerHTML = `<div class="empty">Pick a save to edit first. ${ED.files[0] ? `<button type="button" class="btn primary" data-edload="${esc(ED.files[0].name)}">Edit the newest save (${esc(ED.files[0].name)})</button>` : ''}</div>`; return; }
   if(ED.busy){ b.innerHTML = '<div class="empty">Working…</div>'; return; }
   try {
-    b.innerHTML = ED.sec==='saves' ? secSaves() : ED.sec==='inv' ? secInv() : ED.sec==='cur' ? secCur() : ED.sec==='set' ? secSet() : ED.sec==='quest' ? secQuest() : ED.sec==='time' ? secTime() : secRaw();
+    b.innerHTML = ED.sec==='saves' ? secSaves() : ED.sec==='inv' ? secInv() : ED.sec==='tech' ? secTech() : ED.sec==='cur' ? secCur() : ED.sec==='set' ? secSet() : ED.sec==='quest' ? secQuest() : ED.sec==='time' ? secTime() : ED.sec==='cmp' ? secCmp() : secRaw();
   } catch(e){ b.innerHTML = `<div class="empty">Something in this part of the save wasn't what the app expected: ${esc(e.message)}. The raw editor still works.</div>`; vcLog('error', 'save tools: ' + e.message); }
 }
 $('#p-tools').addEventListener('click', async e => {
   const t = e.target; const q = sel => t.closest(sel);
   let x;
-  if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest') await edBackups(); edRender(); return; }
-  if(q('#edwrite')){ if(confirm(`Write ${ED.edits.size} change${ED.edits.size===1?'':'s'} to ${ED.cur.name}?\n\nThe save is backed up first. Make sure No Man's Sky is closed.`)) edWrite(); return; }
+  if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest' || ED.sec==='cmp'){ await edFiles().catch(()=>{}); await edBackups(); } edRender(); return; }
+  if(q('#edwritemenu')){ edWrite({ menu: true }); uCount('tools-nearlive'); return; }
+  if(q('#ednltest')){ const f = ED.files[0]; if(!f) return; if(ED.edits.size){ edMsg('Write or discard the waiting changes first.', true); return; }
+    if(!confirm(`Near-live test: this adds 1 nanite to ${f.name} while the game sits at its main menu.\n\nIn game: save, choose Quit to Main Menu, then press OK here.`)) return;
+    ED.cur = null; await edLoad(f.name); if(!ED.cur) return; const ps = getAt(ED.cur.obj, PSP); const k = KO('Nanites') in ps ? KO('Nanites') : '7QL'; const v = u32(ps[k]) + 1;
+    ED.nlExpect = v; edTry(() => edSetVal(PSP.concat([k]), v > 2147483647 ? v - 4294967296 : v, 'Near-live test: +1 nanite')); await edWrite({ menu: true, label: 'Before the near-live test' }); ED.sec = 'saves'; edRender(); return; }
+  if((x = q('[data-ednl]'))){ ST.nearLive = x.dataset.ednl; save(); ED.nlExpect = null; edMsg(ST.nearLive==='ok' ? 'Great: near-live mode works on your PC.' : 'Noted. Quit the game fully before writing instead; near-live mode stays available if you want to try again.', ST.nearLive!=='ok'); edRender(); return; }
+  if(q('#edwrite')){ const risky = [...ED.edits.values()].filter(e2 => e2.risk).map(e2 => '• ' + e2.label);
+    if(confirm(`Write ${ED.edits.size} change${ED.edits.size===1?'':'s'} to ${ED.cur.name}?\n\nThe save is backed up first. Make sure No Man's Sky is closed.${risky.length ? '\n\nHeads up, these can change how the game behaves:\n' + risky.join('\n') : ''}`)) edWrite(); return; }
+  if(q('#edcmpgo')){ ED.cmpA = $('#edcmpa').value; ED.cmpB = $('#edcmpb').value; ED.cmpErr = ''; if(ED.cmpA===ED.cmpB){ ED.cmpErr = 'Pick two different saves.'; edRender(); return; }
+    ED.busy = true; edRender(); try { const A = await cmpLoad(ED.cmpA), B = await cmpLoad(ED.cmpB); ED.cmpRes = { list: cmpDiff(A.obj, B.obj) }; uCount('tools-compare'); } catch(err){ ED.cmpErr = 'Could not compare: ' + err.message; } ED.busy = false; edRender(); return; }
+  if(q('#edundo')){ await edBackups(); const b = lastToolBackup(); if(b) edRestore(b.id); return; }
   if(q('#eddiscard')){ if(confirm('Throw away the waiting changes?')){ const n = ED.cur.name; ED.edits = new Map(); ED.cur = null; await edLoad(n); } return; }
   if(q('#edreload')){ if(ED.cur){ const n = ED.cur.name; await edFiles(); await edLoad(n); } return; }
   if((x = q('[data-edload]'))){ await edFiles(); await edLoad(x.dataset.edload); if(ED.sec==='saves') ED.sec = 'inv'; INVM = null; ED.timers = null; edRender(); return; }
@@ -3974,6 +4192,32 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edi-pick')){ ED.picking = true; edRender(); setTimeout(() => { const i = $('#edpq'); if(i) i.focus(); }, 30); return; }
   if(q('#edpx') || (t.classList && t.classList.contains('edpick'))){ ED.picking = false; edRender(); return; }
   if((x = q('[data-edpc]'))){ ED.pc = x.dataset.edpc; ED.pq = ''; edRender(); return; }
+  if((x = q('[data-edpi]')) && ED.sec==='tech'){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
+      const fam = techFam(id); const same = m.slots.filter(s2 => s2.type==='Technology' && techFam(s2.id)===fam && isUpg(s2.id)).length;
+      if(isUpg(id) && /^UP_/.test(id) && same >= 3) throw new Error('The game allows 3 upgrades of one kind per inventory, and this one already has 3. Remove one first.');
+      let cell = TECHSEL && !m.slots.some(s2 => s2.x+','+s2.y===TECHSEL) ? TECHSEL.split(',').map(Number) : m.valid.find(([vx,vy]) => !m.slots.some(s2 => s2.x===vx && s2.y===vy));
+      if(!cell) throw new Error('No empty tech slot. Unlock more slots or remove a module first.');
+      if(!m.valid.some(([vx,vy]) => vx===cell[0] && vy===cell[1])){ m.valid.push(cell); invValidCommit(m, `${m.label}: unlock slot ${cell[0]+1}, ${cell[1]+1}`); }
+      const tpl = m.slots.find(s2 => cleanTid(s2.id)===id);
+      m.slots.push({ id: '^' + id + (/^UP_|^CV_/.test(id) ? '#' + String(Math.floor(Math.random()*90000)+10000) : ''), amt: tpl ? tpl.max : -1, max: tpl ? tpl.max : 100, type: 'Technology', x: cell[0], y: cell[1], dmg: 0, fi: true, dirty: true, src: null });
+      invCommit(m, `${m.label}: install ${itemInfo(id).n}`); TECHSEL = null; }); uCount('tools-tech-install'); return; }
+  if((x = q('[data-edtc]'))){ const k = x.dataset.edtc; const m = INVM; const at = s2 => s2.x+','+s2.y;
+    if(TECHSEL && TECHSEL!==k && m.slots.some(s2 => at(s2)===TECHSEL) && m.valid.some(([vx,vy]) => vx+','+vy===k)){
+      return invAction(m => { const a = m.slots.find(s2 => at(s2)===TECHSEL), b = m.slots.find(s2 => at(s2)===k); const [ax,ay] = [a.x,a.y]; const [kx,ky] = k.split(',').map(Number);
+        a.x = kx; a.y = ky; a.dirty = true; if(b){ b.x = ax; b.y = ay; b.dirty = true; } invCommit(m, `${m.label}: move ${itemInfo(cleanTid(a.id)).n}${b ? ' (swapped)' : ''}`); TECHSEL = null; }); }
+    TECHSEL = TECHSEL===k ? null : k; edRender(); return; }
+  if(q('#edt-repair')) return invAction(m => { let n = 0; m.slots.forEach(s2 => { if(s2.type==='Technology' && (+s2.dmg > 0 || s2.fi===false)){ s2.dmg = 0; s2.fi = true; s2.dirty = true; n++; } }); invCommit(m, `${m.label}: repair ${n} broken module${n===1?'':'s'}`); });
+  if(q('#edt-charge')) return invAction(m => { let n = 0; m.slots.forEach(s2 => { if(s2.type==='Technology' && s2.amt >= 0 && s2.amt < s2.max){ s2.amt = s2.max; s2.dirty = true; n++; } }); invCommit(m, `${m.label}: fill charge on ${n} module${n===1?'':'s'}`); });
+  if(q('#edt-install')){ ED.picking = true; ED.pq = ''; edRender(); return; }
+  if(q('#edt-remove')) return invAction(m => { const i = m.slots.findIndex(s2 => s2.x+','+s2.y===TECHSEL); if(i<0) return; const s2 = m.slots[i]; const id = cleanTid(s2.id);
+    if(TCORE.has(id) && !confirm(`${itemInfo(id).n} is core technology. Removing it can leave you unable to fly, warp or survive. Remove anyway?`)) return;
+    m.slots.splice(i,1); invCommit(m, `${m.label}: remove ${itemInfo(id).n}`); TECHSEL = null; });
+  if(q('#edt-arrange')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const before = techScore(m).total; const keep = m.slots.map(s2 => Object.assign({}, s2));
+    const place = techArrange(m, plat); place.forEach((s2, k) => { const [nx,ny] = k.split(',').map(Number); if(s2.x!==nx || s2.y!==ny){ s2.x = nx; s2.y = ny; s2.dirty = true; } });
+    const after = techScore(m).total; if(after < before){ m.slots = keep; throw new Error(`Your current layout already scores ${before}; the best layout found scores ${after}, so nothing was changed.`); }
+    ED.techPrev = keep; invCommit(m, `${m.label}: best layout (score ${before} → ${after})`); uCount('tools-tech-arrange'); });
+  if(q('#edt-max')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const added = techMax(m, plat); if(!added.length) throw new Error('Nothing to add: every technology already has 3 upgrades, or there are no empty slots. Try Unlock every tech slot first.'); invCommit(m, `${m.label}: add ${added.length} S-class upgrade${added.length===1?'':'s'}`); });
+  if(q('#edt-unlock')) return invAction(m => { const have = new Set(m.valid.map(([a,b]) => a+','+b)); let n = 0; const W = m.inv[KO('Width')] || m.w, H = m.inv[KO('Height')] || m.h; for(let y=0; y<H; y++) for(let x2=0; x2<W; x2++) if(!have.has(x2+','+y)){ m.valid.push([x2,y]); n++; } if(!n) throw new Error('Every slot is already unlocked.'); invValidCommit(m, `${m.label}: unlock ${n} tech slots`); });
   if((x = q('[data-edpi]'))){ ED.pick = x.dataset.edpi; ED.picking = false; const lim = stackLimit(ED.pick, INVM, null); ED.pickAmt = lim; edRender(); uCount('tools-pick'); return; }
   if((x = q('[data-edamt]'))){ const inp = $('#edi-amt'); const lim = +inp.max; let v = Math.round(+inp.value||0); const k = x.dataset.edamt;
     v = k==='-1' ? v-1 : k==='+1' ? v+1 : k==='q' ? Math.max(1, Math.floor(lim/4)) : k==='h' ? Math.max(1, Math.floor(lim/2)) : lim; inp.value = Math.max(0, Math.min(lim, v)); ED.pickAmt = +inp.value; return; }
@@ -3993,6 +4237,15 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edi-lock')) return invAction(m => { const [cx, cy] = ED.invCell.split(',').map(Number); const i = m.valid.findIndex(([vx,vy]) => vx===cx && vy===cy);
     if(i>=0){ if(m.slots.some(s => s.x===cx && s.y===cy)) throw new Error('Empty the slot before locking it.'); m.valid.splice(i,1); } else m.valid.push([cx, cy]);
     invValidCommit(m, `${m.label}: ${i>=0 ? 'lock' : 'unlock'} slot ${cx+1}, ${cy+1}`); });
+  if(q('#edi-split')) return invAction(m => { const s2 = m.slots[cellK()]; const cell = freeCell(m); if(!cell) throw new Error('No empty slot to split into.'); const half = Math.floor(s2.amt/2); s2.amt -= half; s2.dirty = true;
+    m.slots.push(Object.assign({}, s2, { amt: half, x: cell[0], y: cell[1], src: null, dirty: true })); invCommit(m, `${m.label}: split ${idName(s2.id)} into ${fmt(s2.amt)} + ${fmt(half)}`); });
+  if(q('#edi-dup')) return invAction(m => { const s2 = m.slots[cellK()]; const cell = freeCell(m); if(!cell) throw new Error('No empty slot to copy into.'); m.slots.push(Object.assign({}, s2, { x: cell[0], y: cell[1], src: null, dirty: true })); invCommit(m, `${m.label}: duplicate ${idName(s2.id)} ×${fmt(s2.amt)}`); });
+  if((x = q('[data-edisort]'))){ const how = x.dataset.edisort; return invAction(m => { const items = m.slots.filter(s2 => s2.type!=='Technology'); const techCells = new Set(m.slots.filter(s2 => s2.type==='Technology').map(s2 => s2.x+','+s2.y));
+    const cells = m.valid.slice().sort((a,b) => a[1]-b[1] || a[0]-b[0]).filter(([vx,vy]) => !techCells.has(vx+','+vy));
+    const key = s2 => { const f = itemInfo(cleanTid(s2.id)); return how==='value' ? -f.v*s2.amt : how==='kind' ? IVCATS.findIndex(c => c[0]===itemCat(cleanTid(s2.id)))*1e6 + f.n.charCodeAt(0) : 0; };
+    items.sort((a,b) => (how==='name' ? 0 : key(a)-key(b)) || idName(a.id).localeCompare(idName(b.id)));
+    items.forEach((s2, i) => { if(!cells[i]) return; if(s2.x!==cells[i][0] || s2.y!==cells[i][1]){ s2.x = cells[i][0]; s2.y = cells[i][1]; s2.dirty = true; } }); invCommit(m, `${m.label}: sort ${how==='name' ? 'A–Z' : 'by ' + how}`); }); }
+  if((x = q('[data-edgo]'))){ const [ci, cell] = x.dataset.edgo.split(':'); ED.invSel = +ci; INVM = null; ED.invCell = cell; ED.pick = null; edRender(); return; }
   if(q('#edi-fillall')) return invAction(m => { let n = 0; m.slots.forEach(s => { if(s.type!=='Technology' && s.amt < s.max){ s.amt = s.max; s.dirty = true; n++; } }); if(!n) throw new Error('Every stack is already full.'); invCommit(m, `${m.label}: fill ${n} stacks to their stack size`); });
   if(q('#edi-unlockall')) return invAction(m => { const have = new Set(m.valid.map(([a,b]) => a+','+b)); let n = 0; for(let y=0; y<m.h; y++) for(let x2=0; x2<m.w; x2++) if(!have.has(x2+','+y)){ m.valid.push([x2,y]); n++; } if(!n) throw new Error('Every slot is already unlocked.'); invValidCommit(m, `${m.label}: unlock ${n} slots`); });
   if(q('#edi-clearall')) return invAction(m => { if(!confirm(`Empty all ${m.slots.length} slots in ${m.label}? Technology is removed too.`)) return; const n = m.slots.length; m.slots = []; invCommit(m, `${m.label}: empty all ${n} slots`); });
@@ -4011,6 +4264,8 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edsnameset')){ const v = $('#edsname').value.trim(); if(!v) return; edTry(() => edSetVal(P.concat([SKEY.name]), v, `${sName}: rename to ${v}`)); edRender(); return; }
   if(q('#edssset')){ const st = $$('[data-edss]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.stats, st, `${sName}: stats`)); edRender(); return; }
   if(q('#edsbset')){ const bs = $$('[data-edsb]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: building states`)); edRender(); return; }
+  if((x = q('[data-edsmax]'))){ const i = +x.dataset.edsmax; if(!confirm('Experimental: set this plot to the fully upgraded pattern? The save is backed up first; check the building in game and restore the backup if it looks wrong.')) return;
+    const bs = sObj[SKEY.bstate].slice(); bs[i] = (((bs[i] >>> 0) & 0x000FFFFF) | 0x3FF00000) >>> 0; if(bs[i] > 2147483647) bs[i] -= 4294967296; edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: max out plot ${i+1} (experimental)`)); uCount('tools-set-max'); edRender(); return; }
   if((x = q('[data-edsfin]'))){ const i = +x.dataset.edsfin; const bt = sObj[SKEY.btime].slice(); bt[i] = bt[i] - 604800; edTry(() => setArrEdit(SKEY.btime, bt, `${sName}: finish plot ${i+1}`)); edRender(); return; }
   if(q('#edsperkset')){ const list = $('#edsperks').value.split(/\n/).map(l => l.trim()).filter(Boolean).map(l => l.startsWith('^') ? l : '^' + l); edTry(() => setArrEdit(SKEY.perks, list, `${sName}: perks`)); edRender(); return; }
   if(q('#edspset')){ edTry(() => { $$('[data-edsp]').forEach(inp => { const [i, k] = [inp.dataset.edsp.split(':')[0], inp.dataset.edsp.split(':').slice(1).join(':')]; const v = +inp.value; const cur = sObj[SKEY.prod][+i][k]; if(v !== cur) edSetVal(P.concat([SKEY.prod, +i, k]), v, `${sName}: production ${+i+1} ${k}`); }); }); edRender(); return; }
@@ -4035,6 +4290,8 @@ $('#p-tools').addEventListener('change', async e => {
   const t = e.target;
   if(t.id==='edact'){ ST.edAll = t.checked ? 0 : 1; save(); INVM = null; ED.invSel = 0; ED.invCell = null; edRender(); uCount('tools-active-'+(t.checked?'on':'off')); return; }
   if(t.id==='eddir'){ ED.dir = t.value; ED.cur = null; ED.edits = new Map(); await edFiles(); edRender(); return; }
+  if(t.id==='edkeep'){ ST.bkKeep = +t.value; save(); await edBackups(); edRender(); return; }
+  if(t.id==='edtech'){ ED.techSel = +t.value; TECHSEL = null; ED.techPrev = null; INVM = null; edRender(); return; }
   if(t.id==='edinv'){ ED.invSel = +t.value; ED.invCell = null; INVM = null; edRender(); return; }
   if(t.id==='edset'){ ED.setSel = +t.value; edRender(); return; }
   if(t.id==='edsmine'){ ED.setMine = t.checked; edRender(); return; }
@@ -4042,6 +4299,7 @@ $('#p-tools').addEventListener('change', async e => {
 $('#p-tools').addEventListener('input', e => {
   const t = e.target;
   if(t.id==='edqf'){ ED.qf = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edqf'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); }
+  if(t.id==='edfind'){ ED.find = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edfind'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 300); }
   if(t.id==='edpq'){ ED.pq = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edpq'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 200); }
   if(t.id==='edi-amt'){ const lim = +t.max; if(+t.value > lim) t.value = lim; ED.pickAmt = +t.value; }
   if(t.id==='edtf'){ ED.tf = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edtf'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); }
@@ -4049,6 +4307,119 @@ $('#p-tools').addEventListener('input', e => {
 $('#p-tools').addEventListener('keydown', e => { if(e.key==='Enter' && e.target.id==='edrf'){ ED.rawFind = e.target.value.trim(); edRender(); } });
 window.addEventListener('beforeunload', e => { if(ED.edits.size){ e.preventDefault(); e.returnValue = ''; } });
 applyTools();
+
+/* ---------- GOALS SIDEBAR (pinned recipes + auto-tracked custom goals) ---------- */
+S.goals = S.goals || [];
+const GT = { item:'Item', cur:'Currency', recipe:'Make a recipe', quest:'Quest' };
+const CURN = { units:'Units', nanites:'Nanites', quicksilver:'Quicksilver' };
+function ownCount(id){ const D = GX.inv; if(!D) return 0; let n = 0; Object.values(D).forEach(l => (l||[]).forEach(c => c.it.forEach(([x,a]) => { if(x===id) n += a; }))); return n; }
+function goalRow(r){
+  if(r.t==='item'){ const have = ownCount(r.id); return { label: itemInfo(r.id).n, icon: itemIconHTML(r.id,'sm'), have, need: r.q, done: have >= r.q, short: Math.max(0, r.q - have) }; }
+  if(r.t==='cur'){ const st = GX.stats || {}; const have = st[r.id]||0; return { label: CURN[r.id], icon: '', have, need: r.q, done: have >= r.q, money: 1 }; }
+  if(r.t==='recipe'){ const rc = ALL.get(r.id); if(!rc) return { label: 'Recipe not found', have: 0, need: r.q, done: false }; const c = HAVE.size ? makeCounts(rc) : { all: 0 }; return { label: `Make ${I[rc.out[0]].n}`, icon: itemIconHTML(idOf(rc.out[0]),'sm'), have: c.all, need: r.q, done: c.all >= r.q, sub: 'how many you could make from scratch' }; }
+  if(r.t==='quest'){ const ms = GX.ms || {}; const p = ms[r.id]; const fin = p===2147483647; const done = r.q ? (p!==undefined && (fin || p >= r.q)) : fin; return { label: questName(r.id), icon: '', have: r.q ? (p===undefined || p<0 ? 0 : fin ? r.q : Math.min(p, r.q)) : (done ? 1 : p > 0 ? 0.5 : 0), need: r.q || 1, done, sub: p===undefined ? 'not in your save yet' : p<0 ? 'not started' : fin ? 'finished' : `at step ${p}${r.q ? '' : ', not finished yet'}`, status: !r.q }; }
+  return { label: '?', have: 0, need: 1, done: false };
+}
+function renderSide(){
+  const el = $('#sidebody'); if(!el || $('#side').hidden) return;
+  const pins = S.pins.map(k => ALL.get(k)).filter(Boolean);
+  const pinHTML = pins.length ? pins.map(r => { const c = HAVE.size ? makeCounts(r) : null; return `<button type="button" class="sgpin" data-item="${esc(I[r.out[0]].n)}">${itemIconHTML(idOf(r.out[0]),'sm')}<span>${esc(I[r.out[0]].n)}</span>${c ? `<span class="small muted">${fmt(c.now)} now · ${fmt(c.all)} from scratch</span>` : ''}</button>`; }).join('') : '<p class="small muted" style="margin:0">Star ☆ a recipe to keep it here.</p>';
+  const short = new Map();
+  const goals = S.goals.map((g, gi) => { const rows = g.rows.map(goalRow); const done = rows.filter(x => x.done).length;
+    if(done < rows.length) g.rows.forEach((r, i) => { if(r.t==='item' && rows[i].short) short.set(r.id, (short.get(r.id)||0) + rows[i].short); });
+    return `<div class="goal${rows.length && done===rows.length ? ' complete' : ''}" draggable="true" data-goal="${gi}">
+      <div class="ghead"><button type="button" class="linkbtn" data-gfold="${gi}" aria-expanded="${!g.fold}">${g.fold ? '▸' : '▾'}</button><input class="gname" data-gname="${gi}" value="${esc(g.n)}" aria-label="Goal name"><span class="small muted">${done}/${rows.length}</span>${rows.length && done===rows.length ? '<span class="qst done">done</span>' : ''}<button type="button" class="linkbtn" data-gdel="${gi}" title="Delete goal">✕</button></div>
+      ${g.fold ? '' : `<div class="grows">${rows.map((x, ri) => { const pct = Math.min(100, Math.round(x.have / Math.max(1, x.need) * 100));
+        return `<div class="grow${x.done?' done':''}">${x.icon||''}<div class="gmain"><div class="row" style="gap:6px; justify-content:space-between"><span>${esc(x.label)}</span><span class="small">${x.status ? (x.done ? '<b>done</b> ✓' : '') : `<b>${x.money ? fmtBig(x.have) : fmt(x.have)}</b> / ${x.money ? fmtBig(x.need) : fmt(x.need)}${x.done ? ' ✓' : ''}`}</span></div><div class="ivbar"><span style="width:${pct}%"></span></div>${x.sub ? `<div class="small muted">${esc(x.sub)}</div>` : ''}</div><button type="button" class="linkbtn" data-grdel="${gi}:${ri}" title="Remove">✕</button></div>`; }).join('')}
+        <details class="gadd"><summary class="small">+ Add to this goal</summary>${goalAddForm(gi)}</details></div>`}</div>`; }).join('');
+  el.innerHTML = `<div class="sgsec"><div class="lbl">Pinned recipes</div>${pinHTML}</div>
+    <div class="sgsec"><div class="row" style="justify-content:space-between"><div class="lbl">Goals</div><span class="small muted">${GX.inv ? (S.lastSync ? 'updated ' + ago(S.lastSync.at) : 'from your last sync') : 'sync to track'}</span></div>
+      ${goals || '<p class="small muted" style="margin:0">Make a goal, like "Corvette parts farm", then add the items, money, recipes or quests it needs. It ticks itself off as you play.</p>'}
+      <div class="row"><input class="txt" id="gnew" placeholder="New goal name" style="flex:1 1 140px"><button type="button" class="btn" id="gnewbtn">Add goal</button></div></div>
+    ${short.size ? `<div class="sgsec"><div class="lbl">Still needed for your goals</div><div class="row">${[...short.entries()].map(([id,q]) => `<span class="chip">${giImg(id,'cimg')}<span class="q">${fmt(q)}×</span><span>${esc(itemInfo(id).n)}</span></span>`).join('')}</div></div>` : ''}`;
+}
+function goalAddForm(gi){
+  return `<div class="gform" data-gform="${gi}"><select data-gft>${Object.entries(GT).map(([k,l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+    <input class="txt" data-gfv list="gitems" placeholder="Item name" style="flex:1 1 140px"><select data-gfc hidden>${Object.entries(CURN).map(([k,l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+    <input class="txt" data-gfq type="number" min="1" value="1" style="width:90px" aria-label="Amount"><button type="button" class="btn" data-gfadd="${gi}">Add</button></div>`;
+}
+function goalOptions(t){ // what the name box suggests for each kind of row
+  if(t==='item') return pickItems().map(x => x.n + ' (' + x.id + ')');
+  if(t==='recipe') return [...CRAFT, ...REF, ...COOK].map(r => `${I[r.out[0]].n} [${r.type==='craft'?'craft':r.type==='cook'?'cook':'refine'} ${r.key}]`);
+  if(t==='quest') return Object.keys(GX.ms||{}).map(id => `${questName(id)} {${id}}`);
+  return [];
+}
+function sideOpen(on){ $('#side').hidden = !on; document.body.classList.toggle('side-open', on); $('#sidebtn').setAttribute('aria-pressed', String(on)); ST.side = on ? 1 : 0; save(); if(on) renderSide(); }
+
+$('#sidebtn').addEventListener('click', () => sideOpen($('#side').hidden));
+$('#sideclose').addEventListener('click', () => sideOpen(false));
+$('#side').addEventListener('click', e => {
+  const t = e.target; let x;
+  if(t.closest('#gnewbtn')){ const n = $('#gnew').value.trim() || 'New goal'; S.goals.push({ n, rows: [] }); save(); renderSide(); uCount('goal-new'); const f = $$('.goal').pop(); if(f){ const d = f.querySelector('.gadd'); if(d) d.open = true; } return; }
+  if((x = t.closest('[data-gdel]'))){ const g = S.goals[+x.dataset.gdel]; if(g && (!g.rows.length || confirm(`Delete the goal "${g.n}"?`))){ S.goals.splice(+x.dataset.gdel, 1); save(); renderSide(); } return; }
+  if((x = t.closest('[data-gfold]'))){ const g = S.goals[+x.dataset.gfold]; g.fold = !g.fold; save(); renderSide(); return; }
+  if((x = t.closest('[data-grdel]'))){ const [gi, ri] = x.dataset.grdel.split(':').map(Number); S.goals[gi].rows.splice(ri, 1); save(); renderSide(); return; }
+  if((x = t.closest('[data-gfadd]'))){ const gi = +x.dataset.gfadd; const f = x.closest('[data-gform]'); const ty = f.querySelector('[data-gft]').value; const v = f.querySelector('[data-gfv]').value.trim(); const q = Math.max(0, Math.round(+f.querySelector('[data-gfq]').value||0));
+    let row = null;
+    if(ty==='item'){ const id = itemIdFromInput(v); if(!id){ f.querySelector('[data-gfv]').setCustomValidity('Pick an item from the list'); f.querySelector('[data-gfv]').reportValidity(); return; } row = { t:'item', id, q: q||1 }; }
+    if(ty==='cur'){ row = { t:'cur', id: f.querySelector('[data-gfc]').value, q: q||1 }; }
+    if(ty==='recipe'){ const m = /\[(?:craft|cook|refine) ([a-z]:\d+)\]$/.exec(v); let key = m && m[1]; if(!key){ const i = byName.get(v.toLowerCase()); const r = i!==undefined && [...CRAFT, ...REF, ...COOK].find(r2 => r2.out[0]===i); key = r && r.key; } if(!key){ f.querySelector('[data-gfv]').setCustomValidity('Pick a recipe from the list'); f.querySelector('[data-gfv]').reportValidity(); return; } row = { t:'recipe', id: key, q: q||1 }; }
+    if(ty==='quest'){ const m = /\{([A-Z0-9_]+)\}$/.exec(v); const id = m ? m[1] : v.toUpperCase().replace(/\s+/g,'_'); if(!id) return; row = { t:'quest', id, q: q > 1 ? q : 0 }; }
+    S.goals[gi].rows.push(row); save(); renderSide(); uCount('goal-row-'+ty); const d = $$('.goal')[gi]; if(d){ const dd = d.querySelector('.gadd'); if(dd) dd.open = true; } return; }
+});
+$('#side').addEventListener('change', e => { const t = e.target;
+  if(t.dataset.gname!==undefined){ S.goals[+t.dataset.gname].n = t.value.trim() || 'Goal'; save(); return; }
+  if(t.matches('[data-gft]')){ const f = t.closest('[data-gform]'); const ty = t.value; f.querySelector('[data-gfc]').hidden = ty!=='cur'; const v = f.querySelector('[data-gfv]'); v.hidden = ty==='cur'; v.value = ''; v.placeholder = ty==='item' ? 'Item name' : ty==='recipe' ? 'Recipe (what it makes)' : 'Quest name'; f.querySelector('[data-gfq]').placeholder = ty==='quest' ? 'step (optional)' : '';
+    if(ty==='quest') f.querySelector('[data-gfq]').value = ''; $('#gitems').innerHTML = goalOptions(ty).slice(0, 3000).map(o => `<option value="${esc(o)}">`).join(''); }
+});
+$('#side').addEventListener('focusin', e => { if(e.target.matches('[data-gfv]')){ const ty = e.target.closest('[data-gform]').querySelector('[data-gft]').value; if($('#gitems').dataset.t!==ty){ $('#gitems').dataset.t = ty; $('#gitems').innerHTML = goalOptions(ty).slice(0, 3000).map(o => `<option value="${esc(o)}">`).join(''); } } });
+$('#side').addEventListener('input', e => { if(e.target.matches('[data-gfv]')) e.target.setCustomValidity(''); });
+let gDrag = null;
+$('#side').addEventListener('dragstart', e => { const g = e.target.closest && e.target.closest('[data-goal]'); if(!g || e.target.matches('input')) return; gDrag = +g.dataset.goal; e.dataTransfer.effectAllowed = 'move'; });
+$('#side').addEventListener('dragover', e => { if(gDrag!==null && e.target.closest('[data-goal]')) e.preventDefault(); });
+$('#side').addEventListener('drop', e => { const g = e.target.closest('[data-goal]'); if(gDrag===null || !g) return; e.preventDefault(); const to = +g.dataset.goal; const [it] = S.goals.splice(gDrag, 1); S.goals.splice(to, 0, it); gDrag = null; save(); renderSide(); });
+if(ST.side) setTimeout(() => sideOpen(true), 0);
+
+
+/* ---------- GLOBAL SEARCH (Ctrl+K) ---------- */
+const TABN = { recipes:'Recipes', inventory:'Inventory', resources:'Where to find', portals:'Portals', galaxy:'My galaxy', quests:'Quests', pinned:'Pinned', tools:'Save tools' };
+function gsResults(q){
+  q = q.trim().toLowerCase(); if(!q) return [];
+  const out = [];
+  Object.entries(TABN).forEach(([k,l]) => { if(l.toLowerCase().includes(q) && (k!=='tools' || edOn())) out.push({ t:'Tab', l, go: () => showTab(k) }); });
+  [['look','Look and themes'],['disp','Display options'],['map','Map colours'],['sync','Sync settings'],['files','Game files and save tools'],['bug','Report a bug'],['help','Help']].forEach(([k,l]) => { if(l.toLowerCase().includes(q)) out.push({ t:'Setting', l, go: () => openDrawer(k) }); });
+  let n = 0; for(const it of I){ if(n >= 40) break; if(it.n.toLowerCase().includes(q)){ n++; const i = I.indexOf(it); out.push({ t:'Item', l: it.n, ic: idOf(i), sub: it.g, go: () => { showTab('recipes'); R.mode = 'any'; sync('mode','any'); setQuery(it.n); } }); } }
+  (GX.sys||[]).forEach((sy, i) => { const nm = sy.n || sy.dn; if(nm && nm.toLowerCase().includes(q) && out.length < 120) out.push({ t:'System', l: nm, sub: sy.g ? galName(sy.g) : 'Euclid', go: () => { showTab('galaxy'); if((sy.g||0)!==galView){ const gs = $('#ggal'); if(gs){ gs.value = String(sy.g||0); gs.dispatchEvent(new Event('change')); } } const t2 = SY.find(z => z.x===sy.x && z.y===sy.y && z.z===sy.z && z.s===sy.s); if(t2){ sel = t2; focusOn(t2, 3); draw(); renderInfo(); } } });
+    (sy.b||[]).forEach(bs => { if(String(bs[0]).toLowerCase().includes(q)) out.push({ t:'Base', l: bs[0], sub: nm || 'Unnamed system', go: () => { showTab('galaxy'); const t2 = SY.find(z => z.x===sy.x && z.y===sy.y && z.z===sy.z && z.s===sy.s); if(t2){ sel = t2; focusOn(t2, 3); draw(); renderInfo(); } } }); }); });
+  (S.goals||[]).forEach(g => { if(g.n.toLowerCase().includes(q)) out.push({ t:'Goal', l: g.n, go: () => sideOpen(true) }); });
+  return out.slice(0, 80);
+}
+let GS = { open: false, i: 0, res: [] };
+function gsRender(){ const box = $('#gsbox'); box.hidden = !GS.open; if(!GS.open) return; const q = $('#gsq').value; GS.res = gsResults(q);
+  $('#gsres').innerHTML = GS.res.length ? GS.res.map((r, i) => `<button type="button" class="gsr${i===GS.i?' on':''}" data-gs="${i}">${r.ic ? itemIconHTML(r.ic,'sm') : `<span class="tag cat">${esc(r.t)}</span>`}<span>${esc(r.l)}</span>${r.sub ? `<span class="small muted">${esc(r.sub)}</span>` : ''}</button>`).join('') : `<p class="small muted">${q ? 'Nothing found.' : 'Type to search items, systems, bases, goals, tabs and settings.'}</p>`; }
+function gsOpen(on){ GS.open = on; GS.i = 0; if(on){ $('#gsq').value = ''; } gsRender(); if(on) setTimeout(() => $('#gsq').focus(), 20); }
+function gsGo(i){ const r = GS.res[i]; if(!r) return; gsOpen(false); r.go(); uCount('global-search'); }
+$('#gsq').addEventListener('input', () => { GS.i = 0; gsRender(); });
+$('#gsq').addEventListener('keydown', e => { if(e.key==='ArrowDown'){ GS.i = Math.min(GS.res.length-1, GS.i+1); gsRender(); e.preventDefault(); } else if(e.key==='ArrowUp'){ GS.i = Math.max(0, GS.i-1); gsRender(); e.preventDefault(); } else if(e.key==='Enter'){ gsGo(GS.i); } else if(e.key==='Escape'){ gsOpen(false); } });
+$('#gsres').addEventListener('click', e => { const b = e.target.closest('[data-gs]'); if(b) gsGo(+b.dataset.gs); });
+$('#gsbox').addEventListener('click', e => { if(e.target.id==='gsbox') gsOpen(false); });
+$('#gsbtn').addEventListener('click', () => gsOpen(true));
+/* ---------- KEYBOARD SHORTCUTS ---------- */
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && (e.key==='k' || e.key==='K')){ e.preventDefault(); gsOpen(!GS.open); return; }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'') || (document.activeElement||{}).isContentEditable;
+  if(typing || e.ctrlKey || e.metaKey || e.altKey || GS.open || !$('#drawer').hidden) return;
+  const tabs = TABS.filter(t => t!=='tools' || edOn());
+  if(/^[1-8]$/.test(e.key) && tabs[+e.key-1]){ showTab(tabs[+e.key-1]); e.preventDefault(); return; }
+  if(e.key==='/'){ const f = current==='recipes' ? $('#q') : current==='inventory' ? $('#ivq') : null; if(f){ f.focus(); e.preventDefault(); } return; }
+  if(e.key==='g' || e.key==='G'){ sideOpen($('#side').hidden); return; }
+  if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
+});
+/* ---------- WHAT'S NEW ---------- */
+const NEWS = { '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
+$('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
+if(S.seenVer !== APPVER){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }
 
 /* ---------- boot ---------- */
 renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderQuests();

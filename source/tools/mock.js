@@ -17,7 +17,7 @@ function backup(name,label){ fs.mkdirSync(BK,{recursive:true}); const d=new Date
   const info={id,label,dir:'st_0',name,at:Date.now(),mtime:ms(path.join(SDIR,name)),size:fs.statSync(path.join(SDIR,name)).size}; fs.writeFileSync(path.join(dst,'info.json'),JSON.stringify(info)); return info; }
 http.createServer((q,r)=>{const u=new URL(q.url,'http://x'); const qs=k=>u.searchParams.get(k);
  if(u.pathname.startsWith('/api/')){ if(q.headers['x-vc']!=='1'){r.writeHead(403);return r.end();}
-  if(u.pathname==='/api/ping'){r.end('{"ok":true,"helper":6}');return;}
+  if(u.pathname==='/api/ping'){r.end('{"ok":true,"helper":7}');return;}
   if(u.pathname==='/api/gamerunning'){r.end(JSON.stringify({running:process.env.NMS_RUNNING==='1'}));return;}
   if(u.pathname==='/api/paks'){ const b=path.join(GAME,'GAMEDATA','PCBANKS'); if(!GAME||!fs.existsSync(b)){r.end('{"ok":false,"detail":"No game folder (set NMS_GAME)."}');return;}
     r.end(JSON.stringify({ok:true,paks:fs.readdirSync(b).filter(n=>/^NMSARC\.[A-Za-z0-9_]+\.pak$/.test(n)).map(n=>{const st=fs.statSync(path.join(b,n));return {name:n,size:st.size,mtime:st.mtimeMs|0};})}));return;}
@@ -37,7 +37,7 @@ http.createServer((q,r)=>{const u=new URL(q.url,'http://x'); const qs=k=>u.searc
   if(u.pathname==='/api/savefiles'){r.end(JSON.stringify({dir:'st_0',files:fs.readdirSync(SDIR).filter(okName).map(n=>({name:n,size:fs.statSync(path.join(SDIR,n)).size,mtime:ms(path.join(SDIR,n))}))}));return;}
   if(u.pathname==='/api/savefile'){const n=qs('name'); if(!okName(n)||!fs.existsSync(path.join(SDIR,n))){r.writeHead(404);return r.end('{}');} r.end(fs.readFileSync(path.join(SDIR,n)));return;}
   if(u.pathname==='/api/savewrite'){ const n=qs('name'); if(!/^(save\d*|accountdata)\.hg$/.test(n||'')){r.writeHead(400);return r.end('{"error":"bad save name"}');}
-    if(process.env.NMS_RUNNING==='1'){r.writeHead(409);return r.end(JSON.stringify({error:"No Man's Sky is running. Save and quit the game first, then try again."}));}
+    if(process.env.NMS_RUNNING==='1' && qs('menu')!=='1'){r.writeHead(409);return r.end(JSON.stringify({error:"No Man's Sky is running. Save and quit the game first, then try again."}));}
     const p=path.join(SDIR,n), mp=path.join(SDIR,'mf_'+n); const ex=+qs('expect');
     if(ex && Math.abs(ms(p)-ex)>1500){r.writeHead(409);return r.end(JSON.stringify({error:'The save changed since it was loaded (the game saved again). Reload it in the save tools and make the change again.'}));}
     body(q,b=>{ const len=b.readUInt32LE(0); const sv=b.subarray(4,4+len), mf=b.subarray(4+len);
