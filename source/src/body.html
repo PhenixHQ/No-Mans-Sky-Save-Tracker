@@ -883,6 +883,10 @@ const KIND_SVG = {
 const IC = G.ic || {};
 /* ---------- GAME ICONS (read from the player's own install, never shipped with the app) ---------- */
 const IP = G.ip || {};
+// Economy symbols from the galaxy map (METADATA/UI/GALAXYINFOICONS: EconomyIcons, plus the pirate conflict icon for outlaw systems)
+const ICONSET = 2; // bump when icons that aren't items are added, so existing installs fetch them once
+Object.entries({ trading:'trading', adv:'fusion', sci:'scientific', mining:'mining', manu:'manufacturing', tech:'hightech', power:'powergeneration' }).forEach(([k, f]) => IP['ECON_' + k] = '/textures/ui/frontend/systeminfo/economy.' + f + '.dds');
+IP.ECON_outlaw = '/textures/ui/frontend/systeminfo/conflict.pirate.dds';
 const GI = { map: new Map(), state: 'idle', done: 0, total: 0, found: 0, msg: '', sig: '', ran: false };
 function giFull(rel){ return rel.charAt(0)==='/' ? rel.slice(1) : 'textures/ui/frontend/icons/' + rel; }
 function giUrl(id){ if(DSP.gameIcons===0 || !id) return null; const p = IP[id]; return p ? (GI.map.get(p) || null) : null; }
@@ -1420,6 +1424,7 @@ const sysKey = s => `${s.g||0}:${s.x},${s.y},${s.z},${s.s}`;
 const sysName = s => s.n || s.dn || ((s.b||[])[0] ? (s.b[0][1]==='Freighter' ? 'Freighter base system' : s.b[0][0] + ' system') : (s.t||[])[0] ? s.t[0][0] : `System ${s.x},${s.y},${s.z}`);
 // Regions are about 400 light years apart; systems in the same region count as next door.
 const lyBetween = (a, b) => (a.g||0)!==(b.g||0) ? Infinity : Math.round(Math.hypot(a.x-b.x, a.y-b.y, a.z-b.z) * 400);
+const econIcon = (k, cls) => giImg('ECON_' + k, cls || 'econic') || '';
 function econOf(s){ return (S.econ||{})[sysKey(s)] || ''; }
 function tradeAnchors(){ const out = []; const sys = (GX && GX.sys) || [];
   if(GX && GX.cur && GX.cur.x !== undefined) out.push({ k:'cur', l:'Where I am now', a:GX.cur });
@@ -1436,12 +1441,12 @@ function renderTrade(){
   const goods = TRADE.goods.filter(g => !q || (g.n + ' ' + ECON.get(g.e).n + ' ' + ECON.get(g.e).alt).toLowerCase().includes(q));
   $('#rcount').textContent = `${goods.length} of ${TRADE.goods.length}`;
   $('#reslist').innerHTML = `<div class="card tradenear"><div class="row" style="justify-content:space-between"><h3>Places you know near</h3><select id="tnear" aria-label="Near which place">${anchors.map(a => `<option value="${esc(a.k)}" ${a.k===ak?'selected':''}>${esc(a.l)}</option>`).join('') || '<option>Sync first</option>'}</select></div>
-      ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Distance</th></tr></thead><tbody>${near.map(x => `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${esc(ECON.get(x.e).n)}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`).join('')}</tbody></table>`
+      ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Distance</th></tr></thead><tbody>${near.map(x => `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${econIcon(x.e)} ${esc(ECON.get(x.e).n)}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`).join('')}</tbody></table>`
         : '<p class="muted small" style="margin:0">No systems with a known economy yet. When you see a system\'s economy in game (galaxy map or station), tag it here or in My galaxy and it shows up.</p>'}
-      ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span><select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select></div>` : ''}
+      ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span>${econIcon(econOf(curSys))}<select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select></div>` : ''}
       <p class="muted small" style="margin:0">Strong (wealthy) economies stock all five tiers; weak ones only the cheaper goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
     ${TRADE.econ.map(e => { const gs = goods.filter(g => g.e===e.k); if(!gs.length) return ''; const c = closest(e.k);
-      return `<div class="card econ"><div class="row" style="justify-content:space-between"><h3>${esc(e.n)}</h3><span class="muted small">${esc(e.alt)}</span></div>
+      return `<div class="card econ"><div class="row" style="justify-content:space-between"><h3>${econIcon(e.k, 'econic lg')} ${esc(e.n)}</h3><span class="muted small">${esc(e.alt)}</span></div>
         ${c ? `<p class="small" style="margin:0">Closest you know: <b>${esc(sysName(c.s))}</b> · ${c.d < 400 ? 'same region' : '≈ ' + fmt(c.d) + ' ly'}</p>` : ''}
         <div class="tgoods">${gs.map(g => `<div class="tgood" title="${esc(g.d)}">${itemIconHTML(g.id,'sm')}<span><b>${esc(g.n)}</b><br><span class="muted small">tier ${g.t} · ~${fmt(g.v)} u</span></span></div>`).join('')}</div></div>`; }).join('')}`;
 }
@@ -1725,12 +1730,12 @@ function renderInfo(){
   const nameNote = s.n ? '' : s.dn ? '<p class="muted small" style="margin:0">Name taken from this system\'s space station.</p>' : `<p class="muted small" style="margin:0">${(s.b||s.t) ? 'Shown by the name of your base or teleporter here. ' : ''}The game makes up system names as you arrive and doesn't store them in your save.</p>`;
   el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${sysHead(s)}</h2>${isCur(s)?'<span class="tag nan">You are here</span>':''}</div>${nameNote}
     <div class="kv">${DSP.loc!=='game' ? `<span><b>To core</b>≈ ${fmt(dist(s))} ly</span>` : ''}<span><b>Discovered by</b>${esc(byLabel(s.by))}</span>${DSP.loc!=='ly' ? `<span><b>Coords</b>X ${s.x} · Y ${s.y} · Z ${s.z}</span><span><b>System</b>#${s.s}</span>` : ''}${DSP.loc!=='game' ? `<span><b>Height</b>${s.y ? '≈ '+fmt(Math.abs(s.y)*LY)+' ly '+(s.y>0?'above':'below')+' the plane' : 'on the plane'}</span>` : ''}</div>
-    <div class="row"><label class="lbl" for="gecon">Economy</label><select id="gecon"><option value="">Not tagged</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(s)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select>${s.tr ? `<span class="muted small">you've traded here</span>` : ''}</div>
+    <div class="row"><label class="lbl" for="gecon">Economy</label><span id="geconic">${econIcon(econOf(s))}</span><select id="gecon"><option value="">Not tagged</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(s)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select>${s.tr ? `<span class="muted small">you've traded here</span>` : ''}</div>
     ${bases?`<div><div class="lbl" style="margin-bottom:4px">Your bases</div><ul style="margin:0; padding-left:18px">${bases}</ul></div>`:''}
     ${tele?`<div><div class="lbl" style="margin-bottom:4px">Teleporter stops</div><ul style="margin:0; padding-left:18px">${tele}</ul></div>`:''}
     <div class="row"><button class="btn primary" type="button" id="gsysbtn" aria-pressed="${showSystem}">${showSystem?'Hide system view':'Open system view'}${np?` (${np} planet${np>1?'s':''})`:''}</button>
     <button class="btn" type="button" id="gsend">Planet 1 address → Portals</button></div>`;
-  $('#gecon').addEventListener('change', e => { setEcon(s, e.target.value); });
+  $('#gecon').addEventListener('change', e => { setEcon(s, e.target.value); $('#geconic').innerHTML = econIcon(e.target.value); });
   $('#gsend').addEventListener('click', () => { addr = portalHex(1,s).split('').map(c=>parseInt(c,16)); renderAddr(); showTab('portals'); });
   $('#gsysbtn').addEventListener('click', () => { showSystem = !showSystem; renderInfo(); if(showSystem) $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
   renderSystem();
@@ -2325,9 +2330,9 @@ async function giBuild(force){
         GI.done++; if(GI.done % 8 === 0){ giRender(); await new Promise(res => setTimeout(res, 0)); }
       }
     }
-    await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files})});
+    await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files, iv: ICONSET})});
     GI.sig = sig; GI.state = 'done';
-    try { GI.msg = 'Packing icons into one file for quick start-up…'; giRender(); await giMakePack(sig, files); } catch(e){ vcLog('icons', 'pack: ' + e.message); }
+    try { GI.msg = 'Packing icons into one file for quick start-up…'; giRender(); await giMakePack(sig, files, ICONSET); } catch(e){ vcLog('icons', 'pack: ' + e.message); }
     const missing = [...want.values()].filter(rel => !GI.map.has(rel)).length;
     GI.msg = missing ? `${fmt(missing)} items have no icon in your game files and keep the drawn icon.` : '';
     vcLog('icons', `made ${made}, failed ${failed}, missing ${missing}, ${Math.round((performance.now()-t0)/1000)} s`); uCount('icons-built');
@@ -2346,7 +2351,7 @@ async function giLoadPack(idx){
   const map = new Map(); ents.forEach(([name, size]) => { map.set(name, URL.createObjectURL(new Blob([b.subarray(p, p+size)], {type:'image/webp'}))); p += size; });
   GI.map.forEach(u => { if(/^blob:/.test(u)) URL.revokeObjectURL(u); }); GI.map = map; return map.size;
 }
-async function giMakePack(sig, files){
+async function giMakePack(sig, files, iv){
   const names = Object.keys(files); if(!names.length) return;
   const parts = new Array(names.length); let k = 0;
   const work = async () => { while(k < names.length){ const i = k++; try { const r = await fetch('icons/' + files[names[i]]); parts[i] = r.ok ? new Uint8Array(await r.arrayBuffer()) : null; } catch(e){ parts[i] = null; } } };
@@ -2359,7 +2364,7 @@ async function giMakePack(sig, files){
   const up = await api('/api/iconpack', {method:'POST', headers:{'Content-Type':'application/octet-stream'}, body: out});
   if(!up.ok) throw new Error('pack save failed (' + up.status + ')');
   const stamp = Date.now().toString(36);
-  await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files, pack: stamp})});
+  await api('/api/icons?file=index.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:1, sig, files, pack: stamp, iv: iv||0})});
   vcLog('icons', `pack made: ${keep.length} icons, ${Math.round(size/1024)} KB`);
 }
 async function giPreload(){
@@ -2369,11 +2374,12 @@ async function giPreload(){
   BOOT.icons = true; bootCheck(); giRender(); if(GI.map.size) giRefresh();
   if(DSP.gameIcons===0) return;
   try { const r = await api('/api/paks'); const pk = r.ok ? await r.json() : {};
-    if(!pk.ok || !pk.paks || !pk.paks.length){ if(idx && idx.files && !idx.pack) await giMakePack(idx.sig||'', idx.files); return; }
+    if(!pk.ok || !pk.paks || !pk.paks.length){ if(idx && idx.files && !idx.pack) await giMakePack(idx.sig||'', idx.files, idx.iv); return; }
     const sig = pk.paks.map(p => p.name + ':' + p.size + ':' + p.mtime).join('|');
     if(!idx || !idx.files || !Object.keys(idx.files).length) giBuild(false);
     else if(idx.sig !== sig){ GI.msg = 'Your game was updated, so the icons are being refreshed.'; giBuild(true); }
-    else if(!idx.pack) await giMakePack(idx.sig, idx.files);
+    else if((idx.iv||0) < ICONSET){ GI.msg = 'Adding new icons from your game files…'; giBuild(false); }
+    else if(!idx.pack) await giMakePack(idx.sig, idx.files, idx.iv);
   } catch(e){ vcLog('icons', 'start-up: ' + e.message); }
 }
 if(DESK) giPreload();
