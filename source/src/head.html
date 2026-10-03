@@ -575,4 +575,43 @@ footer{border-top:1px solid var(--line); padding-top:16px}
 .edcrumb{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
 textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
 @media (max-width:640px){ .edgrid{grid-template-columns:repeat(var(--cols), 44px)} .edgrid .edc{width:44px; height:44px} .edgrid .edc .gpic{width:28px; height:28px; margin:-14px 0 0 -14px} .edt{font-size:12.5px} }
+/* crafting tree */
+.ctree, .ctree ul{list-style:none; margin:0; padding:0}
+.ctree ul{padding-left:26px; position:relative}
+.ctree li{position:relative; padding:4px 0 0 0}
+.ctree ul > li::before{content:''; position:absolute; left:-16px; top:0; height:100%; border-left:2px solid var(--line)}
+.ctree ul > li:last-child::before{height:20px}
+.ctree ul > li::after{content:''; position:absolute; left:-16px; top:20px; width:14px; border-top:2px solid var(--line)}
+.ctree details{border:0; padding:0; margin:0; background:none; border-radius:0; display:block}
+.ctree details > summary{list-style:none; cursor:pointer}
+.ctree details > summary::-webkit-details-marker{display:none}
+.ctree details > summary .tn::before{content:'▾'; color:var(--muted); font-size:11px; margin-right:2px}
+.ctree details:not([open]) > summary .tn::before{content:'▸'}
+.tn{display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); font-size:13.5px}
+.tn.top{border-width:2px; border-color:var(--teal)}
+.tn .tq{font-family:var(--mono); color:var(--muted)}
+.tn .tt{font:600 11.5px var(--body); padding:1px 7px; border-radius:999px}
+.tn.have{border-left:4px solid var(--good)} .tn.have .tt{background:var(--good-soft); color:var(--good)}
+.tn.make{border-left:4px solid var(--teal)} .tn.make .tt{background:var(--teal-soft); color:var(--ink)}
+.tn.gather{border-left:4px solid var(--accent)} .tn.gather .tt{background:var(--accent-soft); color:var(--ink)}
+.tn.short{border-left:4px solid var(--bad)} .tn.short .tt{background:var(--bad-soft); color:var(--bad)}
+.row.small .tn{padding:2px 8px; font-size:12px}
+.mksteps{margin:0; padding-left:22px; display:grid; gap:4px; font-size:13.5px}
+/* save tools: picker, quests */
+.edpick{position:fixed; inset:0; z-index:150; background:rgba(0,0,0,.55); display:grid; place-items:center; padding:16px}
+.edpickin{width:min(860px, 100%); max-height:min(86vh, 900px); overflow:auto; background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:16px; display:grid; gap:10px; align-content:start}
+.edpickin h3{margin:0}
+.edpgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:8px}
+.edpi{display:grid; justify-items:center; gap:6px; padding:10px 6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; cursor:pointer; font:500 12px/1.25 var(--body); text-align:center; min-height:100px}
+.edpi:hover, .edpi:focus-visible{border-color:var(--accent)}
+.edpicked{display:inline-flex; align-items:center; gap:10px; flex:1 1 220px}
+.edamt input{width:110px} .edlim{font:600 15px var(--mono); color:var(--muted)}
+.edqwarn{background:var(--bad-soft); border:1px solid var(--bad); border-radius:8px; padding:8px 10px; font-size:13.5px}
+.qgrp{border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--surface)}
+.qgrp > summary{cursor:pointer; padding:2px 0}
+.qpast > summary{cursor:pointer; color:var(--muted); margin-top:6px}
+.qst{font:600 11px var(--body); padding:2px 8px; border-radius:999px; white-space:nowrap; background:var(--surface-2); color:var(--muted)}
+.qst.tracking{background:var(--accent-soft); color:var(--ink)} .qst.started{background:var(--teal-soft); color:var(--ink)} .qst.done{background:var(--good-soft); color:var(--good)}
+tr.q-tracking td{background:var(--accent-soft)}
+@media (max-width:640px){ .edpgrid{grid-template-columns:repeat(auto-fill, minmax(84px, 1fr))} .edpi{min-height:88px; font-size:11px} }
 </style>

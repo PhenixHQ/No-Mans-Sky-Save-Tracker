@@ -579,6 +579,45 @@ footer{border-top:1px solid var(--line); padding-top:16px}
 .edcrumb{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
 textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
 @media (max-width:640px){ .edgrid{grid-template-columns:repeat(var(--cols), 44px)} .edgrid .edc{width:44px; height:44px} .edgrid .edc .gpic{width:28px; height:28px; margin:-14px 0 0 -14px} .edt{font-size:12.5px} }
+/* crafting tree */
+.ctree, .ctree ul{list-style:none; margin:0; padding:0}
+.ctree ul{padding-left:26px; position:relative}
+.ctree li{position:relative; padding:4px 0 0 0}
+.ctree ul > li::before{content:''; position:absolute; left:-16px; top:0; height:100%; border-left:2px solid var(--line)}
+.ctree ul > li:last-child::before{height:20px}
+.ctree ul > li::after{content:''; position:absolute; left:-16px; top:20px; width:14px; border-top:2px solid var(--line)}
+.ctree details{border:0; padding:0; margin:0; background:none; border-radius:0; display:block}
+.ctree details > summary{list-style:none; cursor:pointer}
+.ctree details > summary::-webkit-details-marker{display:none}
+.ctree details > summary .tn::before{content:'▾'; color:var(--muted); font-size:11px; margin-right:2px}
+.ctree details:not([open]) > summary .tn::before{content:'▸'}
+.tn{display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); font-size:13.5px}
+.tn.top{border-width:2px; border-color:var(--teal)}
+.tn .tq{font-family:var(--mono); color:var(--muted)}
+.tn .tt{font:600 11.5px var(--body); padding:1px 7px; border-radius:999px}
+.tn.have{border-left:4px solid var(--good)} .tn.have .tt{background:var(--good-soft); color:var(--good)}
+.tn.make{border-left:4px solid var(--teal)} .tn.make .tt{background:var(--teal-soft); color:var(--ink)}
+.tn.gather{border-left:4px solid var(--accent)} .tn.gather .tt{background:var(--accent-soft); color:var(--ink)}
+.tn.short{border-left:4px solid var(--bad)} .tn.short .tt{background:var(--bad-soft); color:var(--bad)}
+.row.small .tn{padding:2px 8px; font-size:12px}
+.mksteps{margin:0; padding-left:22px; display:grid; gap:4px; font-size:13.5px}
+/* save tools: picker, quests */
+.edpick{position:fixed; inset:0; z-index:150; background:rgba(0,0,0,.55); display:grid; place-items:center; padding:16px}
+.edpickin{width:min(860px, 100%); max-height:min(86vh, 900px); overflow:auto; background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:16px; display:grid; gap:10px; align-content:start}
+.edpickin h3{margin:0}
+.edpgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:8px}
+.edpi{display:grid; justify-items:center; gap:6px; padding:10px 6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; cursor:pointer; font:500 12px/1.25 var(--body); text-align:center; min-height:100px}
+.edpi:hover, .edpi:focus-visible{border-color:var(--accent)}
+.edpicked{display:inline-flex; align-items:center; gap:10px; flex:1 1 220px}
+.edamt input{width:110px} .edlim{font:600 15px var(--mono); color:var(--muted)}
+.edqwarn{background:var(--bad-soft); border:1px solid var(--bad); border-radius:8px; padding:8px 10px; font-size:13.5px}
+.qgrp{border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--surface)}
+.qgrp > summary{cursor:pointer; padding:2px 0}
+.qpast > summary{cursor:pointer; color:var(--muted); margin-top:6px}
+.qst{font:600 11px var(--body); padding:2px 8px; border-radius:999px; white-space:nowrap; background:var(--surface-2); color:var(--muted)}
+.qst.tracking{background:var(--accent-soft); color:var(--ink)} .qst.started{background:var(--teal-soft); color:var(--ink)} .qst.done{background:var(--good-soft); color:var(--good)}
+tr.q-tracking td{background:var(--accent-soft)}
+@media (max-width:640px){ .edpgrid{grid-template-columns:repeat(auto-fill, minmax(84px, 1fr))} .edpi{min-height:88px; font-size:11px} }
 </style>
 
 <div class="boot" id="boot" role="status" aria-live="polite">
@@ -1799,7 +1838,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '1.8.0';
+const APPVER = '1.9.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -2354,32 +2393,41 @@ function makeCounts(r){
   const now = runs(r.ins, HAVE), sub = maxMake(r, 1), all = maxMake(r, 8);
   const v = { now, sub: Math.max(now, sub), all: Math.max(now, sub, all) }; MK.set(r.key, v); return v;
 }
-// The recipe the counting would use for this item: the first one that works with what's in the pool.
+const isRaw = id => { const it = I[id]; return !!it && (it.c==='Raw' || it.c==='Fish'); };
+// The recipe the counting would use for this item: the first one that works with what's in the pool,
+// never one that loops back to something already being made. Raw materials with no working recipe are gathered.
 function pickRecipe(item, short, depth, pool, path){
-  const rs = MAKERS.get(item); if(!rs) return null;
+  const rs = (MAKERS.get(item)||[]).filter(r => !r.ins.some(([id]) => id===item || path.has(id))); if(!rs.length) return null;
   for(const r of rs.slice(0, 4)){ const n = Math.ceil(short / r.out[1]); const trial = new Map(pool); OPS = 0; const p2 = new Set(path); p2.add(item);
     if(r.ins.every(([id,q]) => obtain(id, q*n, depth-1, trial, p2))) return r; }
-  return rs[0];
+  return isRaw(item) ? null : rs[0];
 }
-// What's missing to make n more, going all the way down to raw materials.
-function shortfall(item, qty, depth, pool, path, miss, steps){
-  const h = pool.get(item)||0; if(h >= qty){ pool.set(item, h-qty); return; }
-  pool.set(item, 0); const short = qty - h;
-  const rs = MAKERS.get(item);
-  if(depth <= 0 || path.has(item) || !rs){ miss.set(item, (miss.get(item)||0) + short); return; }
-  const r = pickRecipe(item, short, depth, pool, path); const n = Math.ceil(short / r.out[1]); path.add(item); steps.push([r, n]);
-  r.ins.forEach(([id,q]) => shortfall(id, q*n, depth-1, pool, path, miss, steps));
-  pool.set(item, (pool.get(item)||0) + n*r.out[1] - short); path.delete(item);
+// A crafting plan: what you have, what's short, and how each short item gets made.
+function plan(id, q, depth, pool, path, force){
+  const h = pool.get(id)||0, take = force ? 0 : Math.min(h, q); pool.set(id, h-take);
+  const node = { id, q, take, short: q-take, r: null, n: 0, kids: [] };
+  if(!node.short || depth <= 0 || path.has(id)) return node;
+  const r = force || pickRecipe(id, node.short, depth, pool, path); if(!r) return node;
+  node.r = r; node.n = Math.ceil(node.short / r.out[1]); path.add(id);
+  node.kids = r.ins.map(([x,qq]) => plan(x, qq*node.n, depth-1, pool, path));
+  pool.set(id, (pool.get(id)||0) + node.n*r.out[1] - node.short); path.delete(id);
+  return node;
 }
-function treeHTML(id, q, depth, pool, path){
-  const h = pool.get(id)||0, take = Math.min(h, q); pool.set(id, h-take); const short = q - take;
-  const it = I[id]; const rs = MAKERS.get(id);
-  let line = `<li><span class="tq">${fmt(q)}×</span> <button type="button" class="linkbtn" data-item="${esc(it.n)}">${esc(it.n)}</button> <span class="small ${short?'bad':'good'}">${short ? `have ${fmt(take)}, short ${fmt(short)}` : 'have it'}</span>`;
-  if(short && rs && depth > 0 && !path.has(id)){ const r = pickRecipe(id, short, depth, pool, path); const n = Math.ceil(short / r.out[1]); path.add(id);
-    line += ` <span class="small muted">→ ${r.type==='craft' ? 'craft' : r.type==='cook' ? 'cook' : 'refine'} ${fmt(n)}×</span><ul>${r.ins.map(([x,qq]) => treeHTML(x, qq*n, depth-1, pool, path)).join('')}</ul>`;
-    pool.set(id, (pool.get(id)||0) + n*r.out[1] - short); path.delete(id); }
-  return line + '</li>';
+const verb = r => r.type==='craft' ? 'Craft' : r.type==='cook' ? 'Cook' : 'Refine';
+function nodeHTML(nd, top){
+  const it = I[nd.id]; const st = nd.r ? 'make' : nd.short ? (isRaw(nd.id) ? 'gather' : 'short') : 'have';
+  const tag = st==='have' ? 'have it' : st==='make' ? `${verb(nd.r).toLowerCase()} ${fmt(nd.n)}×${nd.take ? `, have ${fmt(nd.take)}` : ''}` : st==='gather' ? `gather ${fmt(nd.short)}${nd.take ? ` more (have ${fmt(nd.take)})` : ''}` : `short ${fmt(nd.short)}${nd.take ? ` (have ${fmt(nd.take)})` : ''}`;
+  const card = `<span class="tn ${st}${top?' top':''}">${giImg(idOf(nd.id),'cimg')}<span class="tq">${fmt(nd.q)}×</span><button type="button" class="linkbtn" data-item="${esc(it.n)}">${esc(it.n)}</button><span class="tt">${tag}</span>${nd.r && nd.r.type==='refine' ? `<span class="small muted">${esc(nd.r.op||'')}</span>` : ''}</span>`;
+  if(!nd.kids.length) return `<li>${card}</li>`;
+  return `<li><details open><summary>${card}</summary><ul>${nd.kids.map(k => nodeHTML(k)).join('')}</ul></details></li>`;
 }
+// Steps in the order you'd do them: deepest first, same recipe merged.
+function planSteps(root){
+  const out = [], idx = new Map();
+  const walk = nd => { nd.kids.forEach(walk); if(nd.r){ const k = nd.r.key; if(idx.has(k)) out[idx.get(k)].n += nd.n; else { idx.set(k, out.length); out.push({ r: nd.r, n: nd.n }); } } };
+  walk(root); return out;
+}
+function planGather(root){ const m = new Map(); const walk = nd => { if(!nd.r && nd.short) m.set(nd.id, (m.get(nd.id)||0) + nd.short); nd.kids.forEach(walk); }; walk(root); return m; }
 function canMakeHTML(r){
   if(!S.pl.mk || !HAVE.size) return '';
   const c = makeCounts(r);
@@ -2387,16 +2435,18 @@ function canMakeHTML(r){
 }
 function mkDetail(key){
   const r = ALL.get(key); if(!r) return '';
-  const c = makeCounts(r); const target = c.all + 1;
-  const miss = new Map(), steps = []; const pool = new Map(HAVE);
-  r.ins.forEach(([id,q]) => shortfall(id, q*target, 8, pool, new Set(), miss, steps));
-  const tpool = new Map(HAVE); const tree = r.ins.map(([id,q]) => treeHTML(id, q*Math.max(1,c.all||1), 8, tpool, new Set())).join('');
-  const where = id => { const D = GX.inv; if(!D || plSrc()!=='sync') return ''; const out = []; IVG.forEach(([k]) => { if(!S.pl.groups[k]) return; (D[k]||[]).forEach(cn => { let n = 0; cn.it.forEach(([x,a]) => { if(IX[x]===id) n += a; }); if(n) out.push(`${esc(ivContLabel(k,cn))} ${fmt(n)}`); }); }); return out.length ? `<div class="small muted">${out.slice(0,5).join(' · ')}${out.length>5?' · …':''}</div>` : ''; };
+  const c = makeCounts(r); const shown = Math.max(1, c.all||1), target = c.all + 1;
+  const tree = plan(r.out[0], r.out[1]*shown, 9, new Map(HAVE), new Set(), r);
+  const more = plan(r.out[0], r.out[1]*target, 9, new Map(HAVE), new Set(), r); const miss = planGather(more);
+  const steps = planSteps(tree);
+  const where = id => { const D = GX.inv; if(!D || plSrc()!=='sync') return ''; const out = []; IVG.forEach(([k]) => { if(!S.pl.groups[k]) return; (D[k]||[]).forEach(cn => { let n = 0; cn.it.forEach(([x,a]) => { if(IX[x]===id) n += a; }); if(n) out.push(`${esc(ivContLabel(k,cn))} ${fmt(n)}`); }); }); return out.length ? ` <span class="small muted">· ${out.slice(0,4).join(' · ')}${out.length>4?' · …':''}</span>` : ''; };
   return `<div class="mkdet"><div class="kv"><span><b>Now</b>${fmt(c.now)}</span><span><b>With sub-crafts</b>${fmt(c.sub)}</span><span><b>From scratch</b>${fmt(c.all)}</span></div>
     <p class="small muted" style="margin:0"><b>Now</b> uses only the ingredients you already have. <b>With sub-crafts</b> also makes missing ingredients from what you have, one step down. <b>From scratch</b> goes all the way down to raw materials. Shared materials are only counted once.</p>
-    <div class="lbl">Ingredients for ${fmt(Math.max(1,c.all||1))}</div><ul class="mktree">${tree}</ul>
-    <div class="lbl">Where your ingredients are</div>${r.ins.map(([id]) => `<div class="small"><b>${esc(I[id].n)}</b>: ${fmt(HAVE.get(id)||0)}</div>${where(id)}`).join('')}
-    <div class="lbl">To make ${fmt(target)}${c.all ? ' (one more)' : ''} you're short</div>${miss.size ? `<div class="row">${[...miss.entries()].map(([id,q]) => chip(id, q, false)).join('')}</div>` : '<div class="small muted">Nothing that can be counted (it may need an item no recipe makes).</div>'}</div>`;
+    <div class="lbl">Crafting tree for ${fmt(shown)}${c.all ? '' : ' (you can\'t make one yet)'}</div><ul class="ctree">${nodeHTML(tree, true)}</ul>
+    <div class="row small"><span class="tn have">have it</span><span class="tn make">make it</span><span class="tn gather">gather more</span><span class="tn short">short, nothing makes it</span></div>
+    ${steps.length ? `<div class="lbl">Steps, in order</div><ol class="mksteps">${steps.map(x => `<li>${verb(x.r)} ${fmt(x.n)}× (${x.r.ins.map(([id,q]) => `${fmt(q*x.n)} ${esc(I[id].n)}`).join(' + ')}) <span class="muted">→</span> <b>${fmt(x.n*x.r.out[1])} ${esc(I[x.r.out[0]].n)}</b>${x.r.type==='refine' && x.r.ins.length>1 ? ` <span class="small muted">(${x.r.ins.length}-slot refiner)</span>` : ''}</li>`).join('')}</ol>` : ''}
+    <div class="lbl">Where your ingredients are</div>${r.ins.map(([id]) => `<div class="small"><b>${esc(I[id].n)}</b>: ${fmt(HAVE.get(id)||0)}${where(id)}</div>`).join('')}
+    <div class="lbl">To make ${fmt(target)}${c.all ? ' (one more)' : ''} you'd need to gather</div>${miss.size ? `<div class="row">${[...miss.entries()].map(([id,q]) => chip(id, q, false)).join('')}</div>` : '<div class="small muted">Nothing that can be counted (it may need an item no recipe makes).</div>'}</div>`;
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-mk]'); if(!b) return; e.stopPropagation(); const rec = b.closest('.rec'); const open = rec.nextElementSibling && rec.nextElementSibling.classList.contains('mkwrap');
   if(open){ rec.nextElementSibling.remove(); return; } const w = document.createElement('div'); w.className = 'mkwrap'; w.innerHTML = mkDetail(b.dataset.mk); rec.after(w); uCount('mk-detail'); }, true);
@@ -3101,7 +3151,7 @@ function closeDrawer(){ closeEditor(); $('#drawer').hidden = true; $('#scrim').h
 $('#menubtn').addEventListener('click', () => openDrawer());
 $('#drawerclose').addEventListener('click', closeDrawer);
 $('#scrim').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); if(e.key==='Escape' && typeof ED!=='undefined' && ED.picking){ ED.picking = false; edRender(); } });
 $('#navselect').addEventListener('change', e => showTab(e.target.value));
 applyTheme(); applyNav(); applySize(); applyMap();
 
@@ -3415,6 +3465,7 @@ async function edMapping(){ if(!MAPPING){ const m = await (await fetch('mapping.
 const KN = k => (MAPPING && MAPPING[k]) || k;   // readable name of an obfuscated key
 const KO = n => (RMAP && RMAP[n]) || n;         // obfuscated key for a readable name
 function edOn(){ return DESK && !!ST.tools; }
+function edActive(){ return ST.edAll ? false : true; }
 function applyTools(){
   const on = edOn(); $('#t-tools').hidden = !on; const o = $('#navtools'); if(o){ o.hidden = !on; o.disabled = !on; }
   $('#edon').checked = !!ST.tools; $('#edon').disabled = !DESK;
@@ -3480,7 +3531,8 @@ function edRenderBar(){
     <span class="tag ${list.length?'nan':'cat'}">${list.length} change${list.length===1?'':'s'} waiting</span>
     <button type="button" class="btn primary" id="edwrite" ${list.length && !ED.busy ? '' : 'disabled'}>Write to save</button>
     <button type="button" class="btn ghost" id="eddiscard" ${list.length ? '' : 'disabled'}>Discard changes</button>
-    <button type="button" class="btn ghost" id="edreload">Reload from disk</button></div>
+    <button type="button" class="btn ghost" id="edreload">Reload from disk</button>
+    <label class="toggle" for="edact" title="Hide finished timers, quests you haven't started, empty slots and idle plots"><input type="checkbox" id="edact" ${edActive()?'checked':''}> Show only what's active</label></div>
     ${list.length ? `<details><summary class="small">See what will change</summary><ul class="small edlist">${list.map(e => `<li>${esc(e.label)}</li>`).join('')}</ul></details>` : ''}
     <div class="small" id="edmsg">${ED.msg ? `<span style="color:${ED.bad?'var(--bad)':'var(--good)'}">${esc(ED.msg)}</span>` : ''}</div>`;
 }
@@ -3563,7 +3615,7 @@ function edContainers(){
     if(isInv(v)) out.push({ label: n==='Inventory' ? 'Exosuit' : n==='Inventory_TechOnly' ? 'Exosuit technology' : n==='Inventory_Cargo' ? 'Exosuit cargo' : n==='CorvetteStorageInventory' ? 'Corvette workshop storage' : nice(n), path: PSP.concat([k]) });
     else if(Array.isArray(v)) v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const who = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`; out.push({ label: `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); });
   });
-  return out.filter(c => (getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length);
+  return out.filter(c => edActive() ? getAt(ED.cur.obj, c.path)[SL].length : ((getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length));
 }
 function invModel(path){
   const inv = getAt(ED.cur.obj, path); const K = n => KO(n);
@@ -3625,18 +3677,22 @@ function secInv(){
   }
   const cell = ED.invCell ? at.get(ED.invCell) : undefined; const s = cell!==undefined ? m.slots[cell] : null;
   const [cx, cy] = ED.invCell ? ED.invCell.split(',').map(Number) : [0,0];
+  const pid = ED.pick ? ED.pick : s ? String(s.id).replace(/^\^/,'') : null;
+  const lim = pid ? stackLimit(pid, m, s) : 0; const amt0 = ED.pickAmt!=null ? ED.pickAmt : s ? s.amt : 0;
+  const qw = pid ? questWarn(pid) : '';
   const form = ED.invCell ? `<div class="card edform"><h3>Slot ${cx+1}, ${cy+1}${ok.has(ED.invCell) ? '' : ' <span class="tag cat">locked</span>'}</h3>
-      <div class="row"><label class="lbl" for="edi-id">Item</label><input class="txt" id="edi-id" list="edilist" style="flex:1 1 260px" value="${s ? esc(idName(s.id) + ' (' + String(s.id).replace(/^\^/,'') + ')') : ''}" placeholder="Name or ID, e.g. Storm Crystal or STORM_CRYSTAL" autocomplete="off"></div>
-      <div class="row"><label class="lbl" for="edi-amt">Amount</label><input class="txt" id="edi-amt" type="number" min="0" style="width:120px" value="${s ? s.amt : 1}">
-        <label class="lbl" for="edi-max">Stack size</label><input class="txt" id="edi-max" type="number" min="1" style="width:120px" value="${s ? s.max : ''}" placeholder="auto">
-        <label class="lbl" for="edi-type">Kind</label><select id="edi-type">${['Product','Substance','Technology'].map(t => `<option ${s && s.type===t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-      <p class="small muted" style="margin:0" id="edi-hint">Stack size is taken from the same item elsewhere in your save when you leave it on auto. Exosuit stacks are smaller than ship and storage stacks; the game may trim anything over its own limit.</p>
-      <div class="row"><button type="button" class="btn primary" id="edi-set">${s ? 'Change slot' : 'Put item here'}</button>${s ? '<button type="button" class="btn" id="edi-full">Fill to stack size</button><button type="button" class="btn ghost" id="edi-clear">Empty slot</button>' : ''}
+      <div class="row"><span class="edpicked">${pid ? `${itemIconHTML(pid,'md')}<b>${esc(itemInfo(pid).n)}</b><span class="muted small">${esc(IVCATS.find(c => c[0]===itemCat(pid))[1])}</span>` : '<span class="muted">Empty slot</span>'}</span>
+        <button type="button" class="btn${pid ? '' : ' primary'}" id="edi-pick">${pid ? 'Change item…' : 'Choose an item…'}</button></div>
+      ${qw ? `<div class="edqwarn">⚠ ${esc(qw)}</div>` : ''}
+      ${pid ? `<div class="row edamt"><label class="lbl" for="edi-amt">Amount</label><input class="txt" id="edi-amt" type="number" min="0" max="${lim}" value="${Math.min(amt0, lim)}"><span class="edlim">/ ${fmt(lim)}</span>
+        <button type="button" class="btn ghost" data-edamt="-1">−1</button><button type="button" class="btn ghost" data-edamt="+1">+1</button><button type="button" class="btn ghost" data-edamt="q">¼ stack</button><button type="button" class="btn ghost" data-edamt="h">½ stack</button><button type="button" class="btn ghost" data-edamt="f">Full stack</button></div>
+      <p class="small muted" style="margin:0">${fmt(lim)} is this item's stack limit in this inventory${ED.limSrc ? ' (' + ED.limSrc + ')' : ''}. Amounts can't go over it, so the game won't trim or reject the stack.</p>` : ''}
+      <div class="row">${pid ? `<button type="button" class="btn primary" id="edi-set">${s ? 'Change slot' : 'Put it in this slot'}</button>` : ''}${s ? '<button type="button" class="btn ghost" id="edi-clear">Empty slot</button>' : ''}
         <button type="button" class="btn ghost" id="edi-lock">${ok.has(ED.invCell) ? 'Lock this slot' : 'Unlock this slot'}</button></div></div>` : '<p class="muted small">Click a slot to change it.</p>';
   return `<div class="card"><div class="row"><label class="lbl" for="edinv">Inventory</label><select id="edinv">${cs.map((c,i) => `<option value="${i}" ${i===ED.invSel?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
       <span class="muted small">${m.slots.length} items · ${m.valid.length} unlocked slots${m.inv[KO('Width')] ? ` · ${m.inv[KO('Width')]}×${m.inv[KO('Height')]}` : ''}</span></div>
     <div class="row"><button type="button" class="btn" id="edi-fillall">Fill every stack to its stack size</button><button type="button" class="btn ghost" id="edi-unlockall">Unlock every slot (${m.w}×${m.h})</button><button type="button" class="btn ghost" id="edi-clearall">Empty this inventory</button></div>
-    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}<datalist id="edilist">${edItemList().map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}${ED.picking ? pickerHTML() : ''}`;
 }
 function invValidCommit(m, label){
   const K = n => KO(n); const VP = m.path.concat([K('ValidSlotIndices')]); const els = SaveTools.elements(ED.cur.text, VP) || [];
@@ -3645,6 +3701,86 @@ function invValidCommit(m, label){
   edPut(VP, '[' + txt.join(',') + ']', label, m.valid.map(([x,y]) => ({[K('X')]: x, [K('Y')]: y})));
 }
 function invAction(fn){ edTry(() => { fn(INVM); }); edRender(); }
+
+/* ---------- item picker (creative-menu style) ---------- */
+let PICKITEMS = null;
+function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), out = [];
+  const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
+  Object.keys(IX).forEach(add); Object.keys(XI).forEach(add);
+  return PICKITEMS = out.sort((a,b) => a.n.localeCompare(b.n)); }
+function pickerHTML(){
+  const all = pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cat = ED.pc || 'raw';
+  const cnt = {}; all.forEach(x => cnt[x.c] = (cnt[x.c]||0)+1);
+  const list = all.filter(x => q ? x.l.includes(q) : x.c===cat); const show = list.slice(0, 300);
+  return `<div class="edpick" role="dialog" aria-modal="true" aria-label="Choose an item"><div class="edpickin">
+    <div class="row" style="justify-content:space-between"><h3>Choose an item</h3><button type="button" class="btn ghost" id="edpx">Close</button></div>
+    <input class="txt" id="edpq" placeholder="Search every item by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
+    <div class="fchips">${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
+    <div class="edpgrid">${show.map(x => `<button type="button" class="edpi" data-edpi="${esc(x.id)}" title="${esc(x.n)} (${esc(x.id)})">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span></button>`).join('') || '<div class="muted">Nothing found.</div>'}</div>
+    ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}</div></div>`;
+}
+// Stack limit for an item in this inventory: the biggest stack the save already uses for it in the same kind of inventory.
+function stackLimit(id, m, s){
+  const K = n => KO(n); const grpOf = inv => ((inv && inv[K('StackSizeGroup')])||{}).rri || ''; const want = grpOf(m.inv);
+  let same = 0, any = 0, anyGrp = '';
+  const walkInv = inv => { if(!inv || !Array.isArray(inv[K('Slots')])) return; const g = grpOf(inv); inv[K('Slots')].forEach(sl => { if(String(sl[K('Id')]).replace(/^\^/,'').replace(/#.*$/,'')===id){ const mx = sl[K('MaxAmount')]|0; if(g===want) same = Math.max(same, mx); if(mx > any){ any = mx; anyGrp = g; } } }); };
+  const walk = o => { if(!o || typeof o!=='object') return; if(Array.isArray(o)){ o.forEach(walk); return; } if(Array.isArray(o[K('Slots')])) walkInv(o); else Object.values(o).forEach(walk); };
+  walk(getAt(ED.cur.obj, PSP));
+  const type = guessType(id);
+  if(type==='Technology'){ ED.limSrc = 'technology fills one slot'; return 1; }
+  if(same){ ED.limSrc = 'from the same item elsewhere in your save'; return same; }
+  const personal = /Personal/i.test(want);
+  if(any){ ED.limSrc = 'from the same item in another inventory' + (personal && !/Personal/i.test(anyGrp) ? ', halved for the exosuit' : ''); return personal && !/Personal/i.test(anyGrp) ? Math.max(1, Math.floor(any/2)) : any; }
+  if(s && s.max){ ED.limSrc = 'from this slot'; return s.max; }
+  ED.limSrc = 'a safe default; the game may allow more'; return type==='Substance' ? 9999 : personal ? 10 : 20;
+}
+// Items tied to quests: adding them can skip or confuse a quest step.
+const QITEMS = [[/^ATLAS_SEED|STARSEED|^ATLAS|AP_SEED/,'the Atlas Path'],[/^BIOSHIP|^BIO_|EGG_?SHIP|STEM|GROWTH/,'Starbirth (the Living Ship quest)'],[/^MECH_|BUGMECH|^DRONE_|SENT_|^WP\d|RADIANT|BRAIN/,'A Trace of Metal (the Sentinel robot quests)'],[/^ROBO|AUTOPH|STAFF|^AF_/,'They Who Returned (the Autophage quests)'],[/^PURPM|REALITY|SCAFFOLD|ANCHOR/,'In Stellar Multitudes (purple systems)'],[/^ARTEMIS|^ACT\d|^A\dS|WORDSTONE|^PORTAL|GLYPH|HEPTA|ATLASPASS/,'the Artemis Path (main story)'],[/^S\d+_|^EXP_|SEASON|EXPED/,'an Expedition'],[/^SETTLE/,'Settlements'],[/MISSION|QUEST|^MYSTERY|^STORY/,'a quest']];
+function questWarn(id){
+  const f = itemInfo(id); const g = (f.g||'') + ' ' + (XI[id] ? XI[id][3] : '');
+  for(const [re, q] of QITEMS) if(re.test(id)) return `This item is used by ${q}. Adding it may skip or confuse a step of that quest if you're on it. You can still add it.`;
+  if(/Reward Item|Mission|Quest|Fragment of Life|Living Starship|Ancient Technology|Expedition/i.test(g)) return 'This looks like a quest or reward item. Adding it may skip or confuse a quest step that expects you to earn it. You can still add it.';
+  return '';
+}
+
+/* ---------- friendly quest names ---------- */
+const QG = [
+  [/^(ACT\d|A\dS\d+|A\d_|A2S|A3_|STORY_|EPILOGUE|ART_SIM|APOLLO|TUT_TRANSITION)/,'The Artemis Path (main story)'],
+  [/^(ATLAS|AP\d|AP_|ATLAS_LOOP|AUTO_REVEAL)/,'The Atlas Path'],
+  [/^(BIO_SHIP|BIOSHIP|BIO(COMP|STEM|GROW|EGG)|EGG\d|BIO_HATCH|BIO_FRIG|BIO_REPEAT)/,'Starbirth (Living Ship)'],
+  [/^(ROBOMISS|ROBOM|ROBO_|ROBOT_INTRO|S10BRIDGE)/,'They Who Returned (Autophage)'],
+  [/^(SENTINELS_|SENT1|SENT_PRE|DRONE_|WP\d|SENTMISS_(ATLAS|W_|D_))/,'Sentinel story & A Trace of Metal'],
+  [/^(PURPM|WORLDSM)/,'In Stellar Multitudes (purple systems)'],
+  [/^(NEXUS\d|NEXUS1A|NEXUS6A|NEXUS7|NEXUS_|NEXUS1_)/,'Space Anomaly: Nada & Polo'],
+  [/^(DM_|D_|COMM_|WM_|ENABLE_NEXUS|MP_)/,'Space Anomaly missions & rewards'],
+  [/^(OVERSEER|WEAPGUY|SCIENTIST|SCI_|FARMER|EXOTUT|BASE_UPGRADE|START_BASE|BASECOMP|TUT_BASEBUILD|BASE_SAFETY|RECOVER_BASE)/,'Base Computer & specialists'],
+  [/^(SETTLE|SETTLEMENT)/,'Settlements'],
+  [/^(PIRATE|PIR_|SMUGGLE|REP_TOKEN|PP_NEW_PIRATES)/,'Outlaws & pirates'],
+  [/^(FLEET|FREI|FREIGHT|FRE_|F_TELE|WEEKLY_FREI|FRIGFUEL|FREIGHTER_DIG)/,'Freighter & frigates'],
+  [/^(ABAND|HULK|SCRAP|YARD|SALVAGE)/,'Derelict freighters & salvage'],
+  [/^(BIGGS|CV_|SPACEDOCK|SPACEWALK|HAUL|SO_COLLECT|ASTBELT|CLAIM_STAT|SPACEBASE|STATIONOWN|OUTPOST|SYSMAP|MINIPORTAL|PB_)/,'Corvettes & space stations'],
+  [/^(S\d+_|BEYOND_|SEASON|NEW_EXPED|HINT_EXPED|EXPED)/,'Expeditions'],
+  [/^(WATERSTORY|FIX_DIVE)/,'Underwater story'],
+  [/^(WORMHIDE)/,'Worm story'],
+  [/^POI_/,'Points of interest'],
+  [/_LORE_?$/,'Lore logs'],
+  [/^(KILL_|BOUNTY|DELIVER|DEPOT|FACT_RAID|GO_FISH|REPAIR_|PHOTO_|DIGGING|SCAN_(MIN|TREE)|ROBOT_(MONO|CAMP)|SENTINEL_CRASH|SENTSHIP|DROPPDOD|PP_|HIDE_SEEK)/,'Mission board jobs'],
+  [/(TUT|HINT|WIKI|GUIDE|TUTORIAL|_HELP$|^VR_|LAUNCHFUEL|INVENTORY_TUT|TERRAINEDIT|BINOCS|SURVEY_TUT|POWER_TUT)/,'Tutorials & hints'],
+];
+const QWORDS = { ACT:'Part', STEP:'step', NEXUS:'Anomaly', TUT:'tutorial', HINT:'hint', WIKI:'guide', LORE:'lore', DM:'', D:'', COMM:'community', SETTLE:'settlement', BIO:'bio', OVERSEER:'Overseer task', WEAPGUY:'Armourer task', SCIENTIST:'Scientist task', FARMER:'Farmer task', EXOTUT:'Exocraft Technician task', BASE:'base', UPGRADE:'upgrade', ROBOMISS:'Part', PURPM:'Part', SENTINELS:'Part', ATLAS:'Atlas station', BIO_SHIP:'Starbirth part', ABAND:'derelict', FREI:'freighter', POI:'', KILL:'kill', BOUNTY:'bounty', DELIVER:'delivery', MP:'multiplayer', SO:'salvage', BIGGS:'corvette', PB:'pet battle', EGG:'egg', S:'S', SENT:'sentinel', SENT1:'sentinel', WP:'patrol', DID:'did', AP:'Atlas path' };
+const QHELPER = /(RECOVER|RECOVERY|SAFETY|SAFE$|_FIX|FIX_|DUMMY|CLEANUP|CATCHUP|_DIAG|_RESET|NOT_RESET|_CHECK|^DEV_)/;
+function questName(raw){
+  const id = String(raw).replace(/^\^/,'').replace(/^\?/,'');
+  let n = id.replace(/^BIO_SHIP(\d+)$/,'Starbirth part $1').replace(/^ACT(\d)_STEP(\d+)$/,'Part $1, step $2').replace(/^(ROBOMISS|PURPM|SENTINELS)_?(\d+\w?)$/,'Part $2').replace(/^ATLAS(\d+)$/,'Atlas station $1').replace(/^NEXUS(\d+)$/,'Anomaly chapter $1').replace(/^BASE_UPGRADE(\d+)$/,'Base upgrade $1')
+    .replace(/^(OVERSEER|WEAPGUY|SCIENTIST|FARMER|EXOTUT)(\d+)$/, (m, w, d) => `${QWORDS[w]} ${d}`);
+  if(n===id) n = id.split('_').map(w => w in QWORDS ? QWORDS[w] : w.charAt(0) + w.slice(1).toLowerCase()).filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+  n = n.charAt(0).toUpperCase() + n.slice(1);
+  if(QHELPER.test(id)) n += ' (game repair helper)';
+  return n || id;
+}
+function questGroup(raw){ const id = String(raw).replace(/^\^/,'').replace(/^\?/,''); for(const [re, g] of QG) if(re.test(id)) return g; return 'Other'; }
+const natKey = s => String(s).replace(/\d+/g, d => d.padStart(6,'0'));
+function questState(p, id, cur){ if(id===cur) return 'tracking'; if(p===-1) return 'notstarted'; if(p===2147483647) return 'done'; return 'started'; }
 
 /* ---------- section: currencies ---------- */
 const CURR = [['Units','wGS','Units'],['Nanites','7QL','Nanites'],['Specials','kN;','Quicksilver']];
@@ -3681,8 +3817,8 @@ function secSet(){
    <div class="card"><h3>Stats</h3><div class="edgrid2">${stats.map((v,i) => `<label class="lbl" for="edss-${i}">${SSTAT[i]||'Stat '+(i+1)}</label><input class="txt" type="number" id="edss-${i}" data-edss="${i}" value="${v}">`).join('')}</div>
      <div class="row"><button type="button" class="btn" id="edssset">Save stats</button><span class="muted small">Stat names follow the game's order; if one looks swapped, the raw editor below shows the exact numbers.</span></div></div>
    <div class="card"><h3>Buildings</h3><table class="edt"><thead><tr><th>Plot</th><th>State</th><th>Building started</th><th></th></tr></thead><tbody>
-     ${bs.map((v,i) => `<tr><td>${i+1}</td><td><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:140px"> <code class="small muted">0x${(v>>>0).toString(16).toUpperCase()}</code></td><td>${bt[i] ? `${fmtWhen(bt[i])}<br><span class="muted small">${fmtAgo(bt[i])}</span>` : '<span class="muted">—</span>'}</td><td>${bt[i] ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}</td></tr>`).join('')}
-     </tbody></table><div class="row"><button type="button" class="btn" id="edsbset">Save building states</button><span class="muted small">State numbers are the game's own codes (type, class and stage packed together). Only change them if you know what you're after.</span></div></div>
+     ${bs.map((v,i) => edActive() && !(bt[i] > now - 6.9*86400) ? '' : `<tr><td>${i+1}</td><td><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:140px"> <code class="small muted">0x${(v>>>0).toString(16).toUpperCase()}</code></td><td>${bt[i] ? `${fmtWhen(bt[i])}<br><span class="muted small">${fmtAgo(bt[i])}</span>` : '<span class="muted">—</span>'}</td><td>${bt[i] ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}</td></tr>`).join('')}
+     ${edActive() && !building.length ? '<tr><td colspan="4" class="muted">Nothing is being built right now. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table><div class="row"><button type="button" class="btn" id="edsbset">Save building states</button><span class="muted small">State numbers are the game's own codes (type, class and stage packed together). Only change them if you know what you're after.</span></div></div>
    <div class="card"><h3>Perks</h3><textarea id="edsperks" rows="4" class="txt" style="width:100%">${esc((s[SKEY.perks]||[]).map(p => String(p).replace(/^\^/,'')).join('\n'))}</textarea><div class="row"><button type="button" class="btn" id="edsperkset">Save perks</button><span class="muted small">One perk ID per line, e.g. STARTING_NEG1. Remove a line to drop that perk.</span></div></div>
    <div class="card"><h3>Production</h3><table class="edt"><thead><tr><th>Item</th><th>Stored</th><th>Cap</th><th>Amount ×</th><th>Speed ×</th></tr></thead><tbody>
      ${(s[SKEY.prod]||[]).map((p,i) => `<tr><td>${esc(idName(p.CZw))}</td><td><input class="txt" type="number" data-edsp="${i}:1o9" value="${p['1o9']}" style="width:90px"></td><td><input class="txt" type="number" data-edsp="${i}:T=R" value="${p['T=R']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}:5a3" value="${p['5a3']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}::aM" value="${p[':aM']}" style="width:90px"></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nothing produced.</td></tr>'}
@@ -3699,17 +3835,29 @@ function setArrEdit(sub, vals, label){ const P = setPath(); const sp = edSpan(P.
 /* ---------- section: quests ---------- */
 function questArr(o){ return getAt(o, PSP.concat([KO('MissionProgress')])) || []; }
 function secQuest(){
-  const arr = questArr(ED.cur.obj); const f = ED.qf.trim().toUpperCase(); const MI = KO('Mission'), PR = KO('Progress'), SE = KO('Seed');
-  const rows = arr.map((m,i) => [m,i]).filter(([m]) => !f || String(m[MI]).toUpperCase().includes(f)).slice(0, 300);
+  const arr = questArr(ED.cur.obj); const f = ED.qf.trim().toLowerCase(); const MI = KO('Mission'), PR = KO('Progress'), SE = KO('Seed');
+  const ps = getAt(ED.cur.obj, PSP); const cur = String(ps[KO('CurrentMissionID')]||'').replace(/^\^/,'');
+  const rows = arr.map((m,i) => { const id = String(m[MI]).replace(/^\^/,''); return { m, i, id, name: questName(id), g: questGroup(id), st: questState(m[PR], id, cur), p: m[PR] }; })
+    .filter(x => !f || x.name.toLowerCase().includes(f) || x.id.toLowerCase().includes(f) || x.g.toLowerCase().includes(f));
+  const act = edActive(); const STL = { tracking:'Tracking now', started:'Has progress', done:'Finished', notstarted:'Not started' };
+  const groups = new Map(); rows.forEach(x => { if(act && (x.st==='notstarted' || x.g==='Tutorials & hints' || / \(game repair helper\)$/.test(x.name))) return; if(!groups.has(x.g)) groups.set(x.g, []); groups.get(x.g).push(x); });
+  const order = [...groups.keys()].sort((a,b) => (a==='Other') - (b==='Other') || (a==='Tutorials & hints') - (b==='Tutorials & hints') || a.localeCompare(b));
+  const rowHTML = x => `<tr class="q-${x.st}"><td>${esc(x.name)}<br><code class="small muted">${esc(x.id)}</code></td><td><span class="qst ${x.st}">${STL[x.st]}</span></td>
+      <td>${x.st==='done' ? '<span class="muted small">—</span>' : `<input class="txt" type="number" data-edqp="${x.i}" value="${x.p}" style="width:80px" title="Step number (-1 = not started)">`}</td><td class="small muted">${x.m[SE] > 1.4e9 && x.m[SE] < 4e9 ? 'timer ' + fmtAgo(x.m[SE]) : ''}</td>
+      <td class="row">${x.st==='done' ? '' : `<button type="button" class="btn ghost" data-edqset="${x.i}">Set step</button>`}<button type="button" class="btn ghost" data-edqdel="${x.i}">Reset</button></td></tr>`;
+  const groupHTML = g => { const list = groups.get(g).sort((a,b) => natKey(a.id).localeCompare(natKey(b.id)));
+    const live = list.filter(x => x.st==='tracking' || x.st==='started'), past = list.filter(x => x.st==='done' || x.st==='notstarted');
+    const tracking = list.some(x => x.st==='tracking');
+    return `<details class="qgrp"${tracking || f ? ' open' : ''}><summary><b>${esc(g)}</b> <span class="muted small">${live.length} with progress${past.length ? ` · ${past.length} finished${act ? '' : ' or not started'}` : ''}</span>${tracking ? ' <span class="qst tracking">tracking</span>' : ''}</summary>
+      ${live.length ? `<table class="edt"><tbody>${live.map(rowHTML).join('')}</tbody></table>` : '<p class="muted small">Nothing in progress here.</p>'}
+      ${past.length ? `<details class="qpast"><summary class="small">Finished${act ? '' : ' and not started'} (${past.length})</summary><table class="edt"><tbody>${past.map(rowHTML).join('')}</tbody></table></details>` : ''}</details>`; };
   const bk = ED.backups.filter(b => b.name===ED.cur.name);
-  return `<div class="card"><h2>Quests</h2><p class="muted small" style="margin:0">Every mission the save is tracking, with its step number (Progress). Lower the step to replay part of a quest, or remove a mission so the game starts it fresh. <b>Restore from a backup</b> puts quests back exactly as they were in that backup.</p>
-    <div class="row"><input class="txt" id="edqf" placeholder="Filter by mission ID, e.g. ATLAS or SETTLE" value="${esc(ED.qf)}" style="flex:1 1 220px"><span class="muted small">${fmt(arr.length)} missions${f ? `, ${rows.length} shown` : ''}</span></div>
-    <table class="edt"><thead><tr><th>Mission</th><th>Step</th><th>Seed / time</th><th></th></tr></thead><tbody>
-    ${rows.map(([m,i]) => `<tr><td><code>${esc(String(m[MI]).replace(/^\^/,''))}</code></td><td><input class="txt" type="number" data-edqp="${i}" value="${m[PR]}" style="width:90px"></td><td class="small muted">${m[SE] > 1.4e9 && m[SE] < 4e9 ? fmtWhen(m[SE]) : esc(String(m[SE]))}</td><td class="row"><button type="button" class="btn ghost" data-edqset="${i}">Set step</button><button type="button" class="btn ghost" data-edqdel="${i}">Remove</button></td></tr>`).join('')}
-    </tbody></table></div>
+  return `<div class="card"><h2>Quests</h2><p class="muted small" style="margin:0">Grouped by questline, in order. <b>Step</b> is how far into a mission the game is; lower it to replay part of it. <b>Reset</b> removes the mission so the game starts it fresh. The save keeps a step number for every quest you've begun, finished or not, so <b>Has progress</b> can also mean done; repeatable jobs show as Finished. <b>Restore from a backup</b> below puts quests back exactly as they were.${cur ? ` The quest you're tracking: <b>${esc(questName(cur))}</b>.` : ''}</p>
+    <div class="row"><input class="txt" id="edqf" placeholder="Filter, e.g. Atlas, Starbirth, Settlement" value="${esc(ED.qf)}" style="flex:1 1 220px"><span class="muted small">${fmt(arr.length)} missions in the save</span></div>
+    ${order.length ? order.map(groupHTML).join('') : `<div class="empty">${act ? 'No quests in progress.' : 'Nothing matches.'}</div>`}</div>
     <div class="card"><h3>Restore quests from a backup</h3>
       <div class="row"><select id="edqb"><option value="">Pick a backup of ${esc(ED.cur.name)}…</option>${bk.map(b => `<option value="${esc(b.id)}" ${ED.qb && ED.qb.id===b.id ? 'selected' : ''}>${esc(new Date(b.at).toLocaleString())} · ${esc(b.label||'')}</option>`).join('')}</select><button type="button" class="btn" id="edqbload">Compare</button></div>
-      ${ED.qbMiss ? (ED.qbMiss.length ? `<table class="edt"><thead><tr><th>Mission</th><th>Now</th><th>In backup</th><th></th></tr></thead><tbody>${ED.qbMiss.slice(0,200).map(([id, now, then]) => `<tr><td><code>${esc(id.replace(/^\^/,''))}</code></td><td>${now===null ? '<span class="muted">not in save</span>' : now}</td><td>${then===null ? '<span class="muted">not in backup</span>' : then}</td><td><button type="button" class="btn ghost" data-edqrest="${esc(id)}">Restore</button></td></tr>`).join('')}</tbody></table><div class="row"><button type="button" class="btn" id="edqrestall">Restore all ${ED.qbMiss.length}</button></div>` : '<p class="muted small">The quests in that backup match the save.</p>') : ''}
+      ${ED.qbMiss ? (ED.qbMiss.length ? `<table class="edt"><thead><tr><th>Quest</th><th>Now</th><th>In backup</th><th></th></tr></thead><tbody>${ED.qbMiss.slice(0,200).map(([id, now, then]) => `<tr><td>${esc(questName(id))}<br><span class="small muted">${esc(questGroup(id))}</span></td><td>${now===null ? '<span class="muted">not in save</span>' : 'step ' + now}</td><td>${then===null ? '<span class="muted">not in backup</span>' : 'step ' + then}</td><td><button type="button" class="btn ghost" data-edqrest="${esc(id)}">Restore</button></td></tr>`).join('')}</tbody></table><div class="row"><button type="button" class="btn" id="edqrestall">Restore all ${ED.qbMiss.length}</button></div>` : '<p class="muted small">The quests in that backup match the save.</p>') : ''}
     </div>`;
 }
 async function questBackup(id){
@@ -3741,12 +3889,34 @@ function timerList(){
   return out;
 }
 const pathLabel = p => p.slice(2).map(k => typeof k==='number' ? '#'+(k+1) : KN(k)).join(' › ');
+const words = n => String(n).replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\s+/g,' ').trim();
+const TKEYS = { LastBuildingUpgradesTimestamps:'building started', LastJudgementTime:'last decision', LastUpkeepDebtCheckTime:'last upkeep check', LastDebtChangeTime:'debt last changed', LastWentIntoDebtTime:'went into debt', TimeStamp:'last saved', FreighterLastSpawnTime:'freighter last arrived', LastCheckedForStatResetsTime:'daily stat reset check' };
+// Group + plain-English label for a timer at path p.
+function timerInfo(p){
+  const top = KN(p[2]); const v = getAt(ED.cur.obj, p); const nm = o => { const n = o && (o[KO('Name')] || o.NKm); return typeof n==='string' && n ? SaveTools.rawToStr(n) : ''; };
+  if(top==='SettlementStatesV2' || p[2]==='GQA'){ const s = getAt(ED.cur.obj, p.slice(0,4)); const k = KN(p[4]); const who = nm(s) || 'Settlement';
+    if(p[4]==='3@T' || k==='LastBuildingUpgradesTimestamps') return ['Settlements', `${who}: plot ${(+p[5])+1} building started`];
+    if(p[4]==='abj') return ['Settlements', `${who}: production ${(+p[5])+1} (${esc(idName((s.abj[p[5]]||{}).CZw||''))}) last collected`];
+    return ['Settlements', `${who}: ${TKEYS[k] || words(k).toLowerCase()}`]; }
+  if(top==='MissionProgress'){ const m = getAt(ED.cur.obj, p.slice(0,4)); const id = m ? m[KO('Mission')] : ''; const g = questGroup(id);
+    return [/Starbirth/.test(g) ? 'Living Ship' : 'Quest timers', `${questName(id)} (${g})`]; }
+  if(top==='MissionRecurrences'){ const m = getAt(ED.cur.obj, p.slice(0,4)); const id = m ? Object.values(m).find(x => typeof x==='string') : ''; return ['Quest cooldowns', `${questName(id||'')} can be done again`]; }
+  if(/Fleet|Frigate|Freighter/.test(top)){ const e = p.length > 4 ? getAt(ED.cur.obj, p.slice(0,4)) : null; return ['Freighter & frigates', `${nm(e) || words(top).replace(/^Fleet /,'') + (typeof p[3]==='number' ? ' ' + (p[3]+1) : '')}: ${words(KN(p[p.length-1])).toLowerCase()}`]; }
+  if(/Egg|Pet|Companion/.test(top)) return ['Pets & eggs', `${words(top)}${typeof p[3]==='number' ? ' ' + (p[3]+1) : ''}: ${words(KN(p[p.length-1])).toLowerCase()}`];
+  if(/Season|Expedition/.test(top)) return ['Expeditions', words(KN(p[p.length-1]))];
+  if(/Base/.test(top)){ const e = p.length > 4 ? getAt(ED.cur.obj, p.slice(0,4)) : null; return ['Bases', `${nm(e) || 'Base'}: ${words(KN(p[p.length-1])).toLowerCase()}`]; }
+  const last = KN(p[p.length-1]); return ['Other', TKEYS[last] || TKEYS[top] || `${words(top)}${p.length > 3 ? ': ' + words(typeof last==='string' ? last : '#'+(last+1)).toLowerCase() : ''}`];
+}
+const TORDER = ['Settlements','Living Ship','Freighter & frigates','Pets & eggs','Expeditions','Bases','Quest timers','Quest cooldowns','Other'];
 function secTime(){
-  if(!ED.timers) ED.timers = timerList(); const f = ED.tf.trim().toLowerCase();
-  const rows = ED.timers.filter(p => !f || pathLabel(p).toLowerCase().includes(f)).sort((a,b) => getAt(ED.cur.obj, b) - getAt(ED.cur.obj, a)).slice(0, 250);
-  return `<div class="card"><h2>Timers</h2><p class="muted small" style="margin:0">Every date and time the save keeps (outside discoveries), newest first: settlement building, living ship growth, freighter missions, cooldowns and so on. Moving a time back makes the game think more time has passed, like the clock trick.</p>
-    <div class="row"><input class="txt" id="edtf" placeholder="Filter, e.g. Settlement, Bio, Frigate, Expedition" value="${esc(ED.tf)}" style="flex:1 1 240px"><span class="muted small">${fmt(ED.timers.length)} found${f ? `, ${rows.length} shown` : ''}</span></div>
-    <table class="edt"><tbody>${rows.map(p => { const v = getAt(ED.cur.obj, p); const k = JSON.stringify(p); return `<tr><td class="small">${esc(pathLabel(p))}</td><td>${fmtWhen(v)}<br><span class="muted small">${fmtAgo(v)}</span></td><td class="row">${[['1 h',3600],['1 day',86400],['7 days',604800]].map(([l,d]) => `<button type="button" class="btn ghost" data-edtm='${esc(k)}' data-edtd="${d}">−${l}</button>`).join('')}<button type="button" class="btn ghost" data-edtm='${esc(k)}' data-edtd="now">Now</button></td></tr>`; }).join('')}</tbody></table></div>`;
+  if(!ED.timers) ED.timers = timerList(); const f = ED.tf.trim().toLowerCase(); const act = edActive(); const now = nowS();
+  const rows = ED.timers.map(p => { const v = getAt(ED.cur.obj, p); const [g, l] = timerInfo(p); return { p, v, g, l }; })
+    .filter(x => (!act || x.v > now - 7*86400) && (!f || (x.g + ' ' + x.l).toLowerCase().includes(f)));
+  const groups = new Map(); rows.forEach(x => { if(!groups.has(x.g)) groups.set(x.g, []); groups.get(x.g).push(x); });
+  const btns = x => { const k = JSON.stringify(x.p); return [['1 h',3600],['1 day',86400],['7 days',604800]].map(([l,d]) => `<button type="button" class="btn ghost" data-edtm='${esc(k)}' data-edtd="${d}">−${l}</button>`).join('') + `<button type="button" class="btn ghost" data-edtm='${esc(k)}' data-edtd="now">Now</button>`; };
+  return `<div class="card"><h2>Timers</h2><p class="muted small" style="margin:0">Dates and times the save keeps, grouped. Moving one back makes the game think more time has passed, like the clock trick. ${act ? 'Showing only timers from the last week or still to come.' : 'Showing every timer.'}</p>
+    <div class="row"><input class="txt" id="edtf" placeholder="Filter, e.g. settlement, frigate, Starbirth" value="${esc(ED.tf)}" style="flex:1 1 240px"><span class="muted small">${fmt(rows.length)} shown of ${fmt(ED.timers.length)}</span></div>
+    ${groups.size ? TORDER.filter(g => groups.has(g)).map(g => `<details class="qgrp" open><summary><b>${esc(g)}</b> <span class="muted small">${groups.get(g).length}</span></summary><table class="edt"><tbody>${groups.get(g).sort((a,b) => b.v - a.v).slice(0,150).map(x => `<tr><td>${esc(x.l)}</td><td>${x.v > now ? 'in ' + ago(now*2000 - x.v*1000).replace(' ago','') : fmtAgo(x.v)}<br><span class="muted small">${fmtWhen(x.v)}</span></td><td class="row">${btns(x)}</td></tr>`).join('')}</tbody></table></details>`).join('') : `<div class="empty">${act ? 'No timers running right now.' : 'No timers found.'}</div>`}</div>`;
 }
 
 /* ---------- section: raw ---------- */
@@ -3800,13 +3970,21 @@ $('#p-tools').addEventListener('click', async e => {
   if((x = q('[data-edrename]'))){ const b = ED.backups.find(y => y.id===x.dataset.edrename); const l = prompt('Name for this backup', b ? b.label : ''); if(l===null) return; await api(`/api/backups?action=label&id=${encodeURIComponent(x.dataset.edrename)}&label=${encodeURIComponent(l)}`, {method:'POST'}); await edBackups(); edRender(); return; }
   if((x = q('[data-eddel]'))){ if(!confirm('Delete this backup for good?')) return; await api(`/api/backups?action=delete&id=${encodeURIComponent(x.dataset.eddel)}`, {method:'POST'}); await edBackups(); edRender(); return; }
   // inventories
-  if((x = q('[data-edcell]'))){ ED.invCell = ED.invCell===x.dataset.edcell ? null : x.dataset.edcell; edRender(); return; }
+  if((x = q('[data-edcell]'))){ ED.invCell = ED.invCell===x.dataset.edcell ? null : x.dataset.edcell; ED.pick = null; ED.pickAmt = null; edRender(); return; }
+  if(q('#edi-pick')){ ED.picking = true; edRender(); setTimeout(() => { const i = $('#edpq'); if(i) i.focus(); }, 30); return; }
+  if(q('#edpx') || (t.classList && t.classList.contains('edpick'))){ ED.picking = false; edRender(); return; }
+  if((x = q('[data-edpc]'))){ ED.pc = x.dataset.edpc; ED.pq = ''; edRender(); return; }
+  if((x = q('[data-edpi]'))){ ED.pick = x.dataset.edpi; ED.picking = false; const lim = stackLimit(ED.pick, INVM, null); ED.pickAmt = lim; edRender(); uCount('tools-pick'); return; }
+  if((x = q('[data-edamt]'))){ const inp = $('#edi-amt'); const lim = +inp.max; let v = Math.round(+inp.value||0); const k = x.dataset.edamt;
+    v = k==='-1' ? v-1 : k==='+1' ? v+1 : k==='q' ? Math.max(1, Math.floor(lim/4)) : k==='h' ? Math.max(1, Math.floor(lim/2)) : lim; inp.value = Math.max(0, Math.min(lim, v)); ED.pickAmt = +inp.value; return; }
   const m = INVM;
   const cellK = () => m.slots.findIndex(s => s.x+','+s.y===ED.invCell);
   if(q('#edi-set')) return invAction(m => {
-    const id = itemIdFromInput($('#edi-id').value); if(!id) throw new Error('Pick an item from the list, or type its ID.');
-    const type = $('#edi-type').value; const amt = Math.max(0, Math.round(+$('#edi-amt').value||0)); let max = Math.round(+$('#edi-max').value||0); if(!max) max = guessMax(id, type);
-    const [cx, cy] = ED.invCell.split(',').map(Number); const k = cellK(); const fid = '^' + id;
+    const k0 = cellK(); const id = ED.pick || (k0>=0 ? String(m.slots[k0].id).replace(/^\^/,'') : null); if(!id) throw new Error('Choose an item first.');
+    const keepId = k0>=0 && !ED.pick ? m.slots[k0].id : null; // keep procedural IDs (with #seed) when only the amount changes
+    const type = k0>=0 && !ED.pick ? m.slots[k0].type : guessType(id); const max = stackLimit(id.replace(/#.*$/,''), m, k0>=0 ? m.slots[k0] : null);
+    const amt = Math.max(0, Math.min(max, Math.round(+$('#edi-amt').value||0))); if(!amt) throw new Error('Set an amount above 0, or use Empty slot.');
+    const [cx, cy] = ED.invCell.split(',').map(Number); const k = k0; const fid = keepId || ('^' + id); ED.pick = null; ED.pickAmt = null;
     if(k>=0) Object.assign(m.slots[k], { id: fid, amt, max, type, dirty: true }); else m.slots.push({ id: fid, amt, max, type, x: cx, y: cy, dmg: 0, dirty: true, src: null });
     if(!m.valid.some(([vx,vy]) => vx===cx && vy===cy)){ m.valid.push([cx, cy]); invValidCommit(m, `${m.label}: unlock slot ${cx+1}, ${cy+1}`); }
     invCommit(m, `${m.label}: ${itemInfo(id).n} ×${fmt(amt)} in slot ${cx+1}, ${cy+1}`); });
@@ -3855,6 +4033,7 @@ $('#p-tools').addEventListener('click', async e => {
 });
 $('#p-tools').addEventListener('change', async e => {
   const t = e.target;
+  if(t.id==='edact'){ ST.edAll = t.checked ? 0 : 1; save(); INVM = null; ED.invSel = 0; ED.invCell = null; edRender(); uCount('tools-active-'+(t.checked?'on':'off')); return; }
   if(t.id==='eddir'){ ED.dir = t.value; ED.cur = null; ED.edits = new Map(); await edFiles(); edRender(); return; }
   if(t.id==='edinv'){ ED.invSel = +t.value; ED.invCell = null; INVM = null; edRender(); return; }
   if(t.id==='edset'){ ED.setSel = +t.value; edRender(); return; }
@@ -3863,6 +4042,8 @@ $('#p-tools').addEventListener('change', async e => {
 $('#p-tools').addEventListener('input', e => {
   const t = e.target;
   if(t.id==='edqf'){ ED.qf = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edqf'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); }
+  if(t.id==='edpq'){ ED.pq = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edpq'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 200); }
+  if(t.id==='edi-amt'){ const lim = +t.max; if(+t.value > lim) t.value = lim; ED.pickAmt = +t.value; }
   if(t.id==='edtf'){ ED.tf = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edtf'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); }
 });
 $('#p-tools').addEventListener('keydown', e => { if(e.key==='Enter' && e.target.id==='edrf'){ ED.rawFind = e.target.value.trim(); edRender(); } });

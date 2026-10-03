@@ -10,7 +10,7 @@ await p.click('#menubtn'); await p.click('[data-dsec="files"]'); await p.click('
 await p.click('#t-tools'); await p.waitForSelector('[data-edload]'); await p.screenshot({path:'/tmp/claude-0/tH-saves.png', fullPage:true});
 await p.click('[data-edload="save.hg"]'); await p.waitForSelector('.edgrid'); console.log('bar:', (await p.textContent('#edbar')).replace(/\s+/g,' ').slice(0,120));
 // inventory: put 50 storm crystals into the first empty exosuit slot
-const empty = await p.$('.edgrid .edc.empty'); await empty.click(); await p.fill('#edi-id','STORM_CRYSTAL'); await p.fill('#edi-amt','50'); await p.click('#edi-set'); await p.waitForTimeout(200);
+await p.uncheck('#edact'); await p.waitForTimeout(200); const empty = await p.$('.edgrid .edc.empty'); await empty.click(); await p.click('#edi-pick'); await p.fill('#edpq','Storm Crystal'); await p.waitForTimeout(500); await p.screenshot({path:'/tmp/claude-0/tH-pick.png'}); await p.click('[data-edpi="STORM_CRYSTAL"]'); await p.waitForTimeout(200); console.log('limit:', await p.textContent('.edlim'), 'warn:', !!(await p.$('.edqwarn'))); await p.click('[data-edamt="h"]'); console.log('half:', await p.inputValue('#edi-amt')); await p.fill('#edi-amt','99999'); await p.click('#edi-set'); await p.waitForTimeout(200); await p.check('#edact');
 console.log('msg:', await p.textContent('#edmsg'));
 await p.screenshot({path:'/tmp/claude-0/tH-inv.png', fullPage:false});
 // currencies
@@ -21,9 +21,9 @@ await p.click('[data-edsec="set"]'); await p.waitForSelector('#edset'); console.
 await p.screenshot({path:'/tmp/claude-0/tH-set.png', fullPage:true});
 await p.click('[data-edsq="finish"]'); await p.fill('#edsname','Foundria'); await p.click('#edsnameset');
 // quests
-await p.click('[data-edsec="quest"]'); await p.fill('#edqf','NEXUS'); await p.waitForTimeout(400); console.log('quest rows:', await p.$$eval('[data-edqp]', a=>a.length));
+await p.click('[data-edsec="quest"]'); await p.waitForTimeout(300); console.log('quest groups:', await p.$$eval('.qgrp > summary', a=>a.map(x=>x.textContent.replace(/\s+/g,' ').trim()).slice(0,30))); await p.screenshot({path:'/tmp/claude-0/tH-quest.png', fullPage:true});
 // timers + raw
-await p.click('[data-edsec="time"]'); console.log('timers:', (await p.textContent('#edbody')).match(/[\d,]+ found/)[0]);
+await p.click('[data-edsec="time"]'); await p.waitForTimeout(300); console.log('timers:', (await p.textContent('#edbody')).match(/[\d,]+ shown of [\d,]+/)[0], await p.$$eval('.qgrp > summary', a=>a.map(x=>x.textContent.replace(/\s+/g,' ').trim()))); console.log('timer rows:', await p.$$eval('#edbody .edt td:first-child', a=>a.slice(0,12).map(x=>x.textContent))); await p.screenshot({path:'/tmp/claude-0/tH-time.png', fullPage:true});
 await p.click('[data-edsec="raw"]'); await p.fill('#edrf','TotalPlayTime'); await p.click('#edrfgo'); await p.waitForTimeout(200); console.log('raw find:', (await p.textContent('#edbody')).includes('Total Play') || (await p.textContent('#edbody')).includes('TotalPlayTime'));
 console.log('pending:', await p.$$eval('.edlist li', a=>a.map(x=>x.textContent)));
 await p.click('#edwrite'); await p.waitForFunction(()=>/Written and checked|failed|isn.t|running|changed|not a|error/i.test((document.querySelector('#edmsg')||{}).textContent||''), null, {timeout:30000});
