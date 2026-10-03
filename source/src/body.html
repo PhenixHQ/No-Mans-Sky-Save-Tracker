@@ -2507,8 +2507,9 @@ function edContainers(){
   const nice = n => n.replace(/Inventory/,' inventory').replace(/_TechOnly/,' (technology)').replace(/_Cargo/,' (cargo)').replace(/([a-z])([A-Z0-9])/g,'$1 $2').replace(/^Inventory$/,'Exosuit').trim();
   Object.keys(ps).forEach(k => {
     const v = ps[k], n = KN(k);
+    if(isInv(v) && n==='WeaponInventory') return; // a copy of the multi-tool in use; edits go to both (see mtMirror)
     if(isInv(v)) out.push({ label: n==='Inventory' ? 'Exosuit' : n==='Inventory_TechOnly' ? 'Exosuit technology' : n==='Inventory_Cargo' ? 'Exosuit cargo' : n==='CorvetteStorageInventory' ? 'Corvette workshop storage' : nice(n), path: PSP.concat([k]) });
-    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const who = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`; out.push({ label: `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
+    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const mt = KN(k)==='Multitools'; const act = mt && ps[KO('ActiveMultioolIndex')]===i; const who = (typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : mt ? `Multi-tool ${i+1}` : `${KN(k).replace(/Ownership$/,'')} ${i+1}`) + (act ? ' (in use)' : ''); out.push({ label: mt ? `${who} · multi-tool` : `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
   });
   return out.filter(c => edActive() ? getAt(ED.cur.obj, c.path)[SL].length : ((getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length));
 }
@@ -2542,6 +2543,7 @@ function invCommit(m, label){
   const K = n => KO(n);
   const newObjs = m.slots.map(s => ({ [K('Type')]: {[K('InventoryType')]: s.type}, [K('Id')]: s.id, [K('Amount')]: s.amt, [K('MaxAmount')]: s.max, [K('DamageFactor')]: s.dmg||0, [K('FullyInstalled')]: s.fi!==false, [K('Index')]: {[K('X')]: s.x, [K('Y')]: s.y} }));
   edPut(SLp, '[' + parts.join(',') + ']', label, newObjs);
+  const mir = mtMirror(m); if(mir) edPut(mir.concat([KO('Slots')]), '[' + parts.join(',') + ']', label + ' (multi-tool copy)', newObjs.map(o => JSON.parse(JSON.stringify(o))));
 }
 let INVM = null;
 // One model per inventory for the whole editing session, so slots keep pointing at their original text.
@@ -2601,11 +2603,15 @@ function invFindHTML(q){
   return `<div class="edfind">${out.length ? out.slice(0, 60).map(r => `<button type="button" class="linkbtn" data-edgo="${r.ci}:${r.x},${r.y}">${itemIconHTML(r.id,'sm')} ${esc(r.n)} ×${fmt(r.a)} <span class="muted small">· ${esc(r.c.label)}, slot ${r.x+1}, ${r.y+1}</span></button>`).join('') : '<span class="muted small">Not in any inventory.</span>'}${out.length > 60 ? `<span class="muted small">and ${out.length-60} more</span>` : ''}</div>`;
 }
 function freeCell(m){ return m.valid.find(([vx,vy]) => !m.slots.some(s => s.x===vx && s.y===vy)); }
+// The multi-tool in use is stored twice: in Multitools[active].Store and in WeaponInventory. Keep both the same.
+function mtMirror(m){ const ps = getAt(ED.cur.obj, PSP); const mtk = KO('Multitools'), act = ps[KO('ActiveMultioolIndex')];
+  return m.path.length===5 && m.path[2]===mtk && m.path[3]===act && ps[KO('WeaponInventory')] ? PSP.concat([KO('WeaponInventory')]) : null; }
 function invValidCommit(m, label){
   const K = n => KO(n); const VP = m.path.concat([K('ValidSlotIndices')]); const els = SaveTools.elements(ED.cur.text, VP) || [];
   const tpl = els.length ? ED.cur.text.slice(els[0].s, els[0].e) : `{"${K('X')}":0,"${K('Y')}":0}`;
   const txt = m.valid.map(([x,y]) => { let t = tpl; const r = (k, v) => { const sp = SaveTools.locate(t, [k]); if(sp) t = t.slice(0, sp.s) + v + t.slice(sp.e); }; r(K('X'), x); r(K('Y'), y); return t; });
   edPut(VP, '[' + txt.join(',') + ']', label, m.valid.map(([x,y]) => ({[K('X')]: x, [K('Y')]: y})));
+  const mir = mtMirror(m); if(mir) edPut(mir.concat([K('ValidSlotIndices')]), '[' + txt.join(',') + ']', label + ' (multi-tool copy)', m.valid.map(([x,y]) => ({[K('X')]: x, [K('Y')]: y})));
 }
 function invAction(fn){ edTry(() => { fn(INVM); }); edRender(); }
 
