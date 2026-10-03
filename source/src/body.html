@@ -2509,9 +2509,20 @@ function edContainers(){
     const v = ps[k], n = KN(k);
     if(isInv(v) && n==='WeaponInventory') return; // a copy of the multi-tool in use; edits go to both (see mtMirror)
     if(isInv(v)) out.push({ label: n==='Inventory' ? 'Exosuit' : n==='Inventory_TechOnly' ? 'Exosuit technology' : n==='Inventory_Cargo' ? 'Exosuit cargo' : n==='CorvetteStorageInventory' ? 'Corvette workshop storage' : nice(n), path: PSP.concat([k]) });
-    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const mt = KN(k)==='Multitools'; const act = mt && ps[KO('ActiveMultioolIndex')]===i; const who = (typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : mt ? `Multi-tool ${i+1}` : `${KN(k).replace(/Ownership$/,'')} ${i+1}`) + (act ? ' (in use)' : ''); out.push({ label: mt ? `${who} · multi-tool` : `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
+    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const mt = KN(k)==='Multitools'; const act = mt && ps[KO('ActiveMultioolIndex')]===i; const who = mt ? mtLabel(e, i, act) : (typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`); out.push({ label: mt ? who : `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
   });
   return out.filter(c => edActive() ? getAt(ED.cur.obj, c.path)[SL].length : ((getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length));
+}
+// Unnamed multi-tools have a blank name in the save (the game makes the shown name up from the seed),
+// so build one from what the save does keep: the model type and the class.
+function mtLabel(e, i, act){
+  const nm = e[KO('Name')]; const st = e[KO('Store')] || {};
+  const cls = (st[KO('Class')] || {})[KO('InventoryClass')];
+  const file = String((e[KO('Resource')] || {})[KO('Filename')] || '');
+  const m = file.match(/([A-Z]*)MULTITOOL\.SCENE/i); const kind = m && m[1] ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + ' multi-tool' : 'Multi-tool';
+  const extra = [cls ? cls + '-class' : '', act ? 'in use' : ''].filter(Boolean).join(', ');
+  const base = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : (m ? kind : `Multi-tool ${i+1}`);
+  return base + (extra ? ` (${extra})` : '');
 }
 function invModel(path){
   const inv = getAt(ED.cur.obj, path); const K = n => KO(n);
