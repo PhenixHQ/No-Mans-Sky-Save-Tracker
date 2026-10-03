@@ -30,7 +30,7 @@ await p.screenshot({path:'/tmp/claude-0/tL-tech.png'});
 await p.click('#edt-repair').catch(()=>{}); await p.click('#edt-charge').catch(()=>{});
 await p.click('#edt-arrange'); await p.waitForTimeout(300); console.log('arrange msg:', await p.textContent('#edmsg'), '|', (await p.textContent('#edbody .card .muted.small')).trim());
 await p.click('#edt-max'); await p.waitForTimeout(300); console.log('max msg:', await p.textContent('#edmsg'));
-await p.click('#edt-install'); await p.waitForTimeout(300); console.log('module picker items:', await p.$$eval('.edpi', a=>a.length)); await p.click('#edpx');
+await p.click('#edt-install'); await p.waitForTimeout(300); console.log('module picker items:', await p.$$eval('.edpi', a=>a.length), '|', await p.textContent('#edmsg')); if(await p.isVisible('#edpx')) await p.click('#edpx');
 console.log('pending:', await p.$$eval('.edlist li', a=>a.map(x=>x.textContent)));
 await p.screenshot({path:'/tmp/claude-0/tL-tech2.png'});
 // near-live: pretend the game is running

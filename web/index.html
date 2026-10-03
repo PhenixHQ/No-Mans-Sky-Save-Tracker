@@ -617,6 +617,14 @@ textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
 .edpgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:8px}
 .edpi{display:grid; justify-items:center; gap:6px; padding:10px 6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; cursor:pointer; font:500 12px/1.25 var(--body); text-align:center; min-height:100px}
 .edpi:hover, .edpi:focus-visible{border-color:var(--accent)}
+.edpi{position:relative}
+.edpi.off{opacity:.45; cursor:not-allowed}
+.edpi.off:hover{border-color:var(--bad)}
+.edpb{font:600 10px/1.2 var(--body); padding:2px 6px; border-radius:999px; background:var(--surface-2); color:var(--muted)}
+.edpb.bad{background:var(--bad-soft); color:var(--bad)}
+.edmh{margin:6px 0 0; font:600 13px/1.3 var(--body); color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+.edmove{margin-top:8px; padding:8px 12px; border-radius:10px; background:var(--accent-soft); color:var(--ink); font-size:13px}
+.edpickin .edform{display:grid; gap:8px}
 .edpicked{display:inline-flex; align-items:center; gap:10px; flex:1 1 220px}
 .edamt input{width:110px} .edlim{font:600 15px var(--mono); color:var(--muted)}
 .edqwarn{background:var(--bad-soft); border:1px solid var(--bad); border-radius:8px; padding:8px 10px; font-size:13.5px}
@@ -1901,7 +1909,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.1.0';
+const APPVER = '2.2.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -3224,7 +3232,7 @@ function closeDrawer(){ closeEditor(); $('#drawer').hidden = true; $('#scrim').h
 $('#menubtn').addEventListener('click', () => openDrawer());
 $('#drawerclose').addEventListener('click', closeDrawer);
 $('#scrim').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); if(e.key==='Escape' && typeof ED!=='undefined' && ED.picking){ ED.picking = false; edRender(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && !$('#drawer').hidden) closeDrawer(); if(e.key==='Escape' && typeof ED!=='undefined' && (ED.picking || ED.invCell || ED.tmenu || TECHSEL)){ ED.picking = false; ED.invCell = null; ED.tmenu = null; TECHSEL = null; ED.pick = null; edRender(); } });
 $('#navselect').addEventListener('change', e => showTab(e.target.value));
 applyTheme(); applyNav(); applySize(); applyMap();
 
@@ -3580,7 +3588,7 @@ async function edLoad(name){
     const mfb = await edFetch(`/api/savefile?dir=${encodeURIComponent(dir)}&name=${encodeURIComponent('mf_'+name)}`);
     const o = await edOpen(bytes, mfb, name);
     ED.cur = Object.assign({ dir, name, mtime: f ? f.mtime : 0, size: bytes.length, packed: bytes, mfBytes: mfb }, o);
-    ED.edits = new Map(); ED.invCell = null; ED.qb = null; ED.qbMiss = null; ED.rawPath = []; ED.invModels = new Map(); ED.timers = null; INVM = null;
+    ED.edits = new Map(); ED.invCell = null; ED.tmenu = null; ED.qb = null; ED.qbMiss = null; ED.rawPath = []; ED.invModels = new Map(); ED.timers = null; INVM = null;
     edMsg(`Loaded ${name} (${slotName(name)}), saved ${f ? ago(f.mtime) : ''}.`); vcLog('tools', 'loaded ' + name);
   } catch(e){ edMsg('Could not load it: ' + e.message, true); vcLog('tools', 'load failed: ' + e.message); }
   ED.busy = false; edRender();
@@ -3701,10 +3709,41 @@ function edContainers(){
     const v = ps[k], n = KN(k);
     if(isInv(v) && n==='WeaponInventory') return; // a copy of the multi-tool in use; edits go to both (see mtMirror)
     if(isInv(v)) out.push({ label: n==='Inventory' ? 'Exosuit' : n==='Inventory_TechOnly' ? 'Exosuit technology' : n==='Inventory_Cargo' ? 'Exosuit cargo' : n==='CorvetteStorageInventory' ? 'Corvette workshop storage' : nice(n), path: PSP.concat([k]) });
-    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const mt = KN(k)==='Multitools'; const act = mt && ps[KO('ActiveMultioolIndex')]===i; const who = mt ? mtLabel(e, i, act) : (typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : `${KN(k).replace(/Ownership$/,'')} ${i+1}`); out.push({ label: mt ? who : `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
+    else if(Array.isArray(v)){ if(/MaintenanceInteractions|RefinerBufferData/.test(KN(k)) && edActive()) return; v.forEach((e, i) => { if(!e || typeof e!=='object') return; Object.keys(e).forEach(k2 => { if(isInv(e[k2])){ const nm = e[KO('Name')]; const mt = KN(k)==='Multitools'; const act = mt && ps[KO('ActiveMultioolIndex')]===i; const who = mt ? mtLabel(e, i, act) : craftName(KN(k), e, i, nm); out.push({ label: mt ? who : `${who} · ${nice(KN(k2)).replace(/^Exosuit$/,'main').replace(/^ ?inventory \(technology\)$/,'technology').replace(/^ ?inventory$/,'inventory')}`, path: PSP.concat([k, i, k2]), grp: KN(k) }); } }); }); }
   });
   return out.filter(c => edActive() ? getAt(ED.cur.obj, c.path)[SL].length : ((getAt(ED.cur.obj, c.path)[KO('ValidSlotIndices')]||[]).length || getAt(ED.cur.obj, c.path)[SL].length));
 }
+// ---------- what each craft is, and which technology the game lets it install ----------
+const TCAT = {"fam":{"BOLT":"Weapon","BOOST":"Exocraft","CANN":"Weapon","COLD":"Suit","ENGY":"Suit","EXENG":"Exocraft","EXGUN":"Exocraft","EXLAS":"Exocraft","EXSUB":"Submarine","FRCOM":"Freighter","FREXP":"Freighter","FRFUE":"Freighter","FRHYP":"Freighter","FRMIN":"Freighter","FRSPE":"Freighter","FRTRA":"Freighter","GREN":"Weapon","HAZ":"Suit","HOT":"Suit","HYP":"AllShipsExceptAlien","JET":"Suit","LASER":"Weapon","LAUN":"AllShipsExceptAlien","MCENG":"Mech","MCGUN":"Mech","MCLAS":"Mech","MFIRE":"Mech","PULSE":"AllShipsExceptAlien","RAD":"Suit","RAIL":"Weapon","RBSUIT":"Suit","SBLOB":"AllShipsExceptAlien","SCAN":"Weapon","SENGUN":"Weapon","SGUN":"AllShipsExceptAlien","SHLD":"Suit","SHOT":"Weapon","SLASR":"AllShipsExceptAlien","SMG":"Weapon","SMINI":"AllShipsExceptAlien","SNSUIT":"Suit","SSHOT":"AllShipsExceptAlien","SUGUN":"Submarine","S_SHL":"AllShipsExceptAlien","TGREN":"Weapon","TOX":"Suit","UNW":"Suit"},"ids":{"ATLASSUIT":"Suit","ATLAS_LASER":"Weapon","BOLT":"Weapon","BOLT_SM":"Weapon","CANNON":"Weapon","CARGOSHIELD":"AllShipsExceptAlien","CARGO_S_ALIEN":"AlienShip","CHARGER_ALIEN":"AlienShip","DENYSUIT":"Suit","DUMMY_SCAN":"Ship","ENERGY":"Suit","EXOPOD_TECH1":"Maintenance","EXOPOD_TECH2":"Maintenance","EXOPOD_TECH3":"Maintenance","EXO_PLOUGH":"Colossus","EXO_PROT_COLD":"Exocraft","EXO_PROT_HOT":"Exocraft","EXO_PROT_RAD":"Exocraft","EXO_PROT_TOX":"Exocraft","EXO_RECHARGE":"AllVehicles","EXO_REFINER":"Colossus","FISHLASER":"Weapon","FISH_SKIFF":"Suit","FLAME":"Weapon","FOOD_UNIT":"Suit","F_HACCESS1":"Freighter","F_HACCESS2":"Freighter","F_HACCESS3":"Freighter","F_HACCESS4":"Freighter","F_HDRIVEBOOST1":"Freighter","F_HDRIVEBOOST2":"Freighter","F_HDRIVEBOOST3":"Freighter","F_HYPERDRIVE":"Freighter","F_LIFESUPP":"Freighter","F_MEGAWARP":"Freighter","F_SCANNER":"Freighter","F_TELEPORT":"Freighter","GRAVITYGUN":"Weapon","GRENADE":"Weapon","GROUND_SHIELD":"Weapon","HDRIVEBOOST1":"AllShipsExceptAlien","HDRIVEBOOST2":"AllShipsExceptAlien","HDRIVEBOOST3":"AllShipsExceptAlien","HDRIVEBOOST4":"AllShips","HYPERDRIVE":"Ship","HYPERDRIVE_ROBO":"RobotShip","HYPERDRIVE_SPEC":"Ship","JET1":"Suit","LASER":"Weapon","LASER_XO":"Weapon","LAUNCHER":"Ship","LAUNCHER_ALIEN":"AlienShip","LAUNCHER_ROBO":"RobotShip","LAUNCHER_SPEC":"Ship","LIFESUP_ROBO":"RobotShip","MAINT_ARTIFACT":"Maintenance","MAINT_BAIT":"Maintenance","MAINT_BURNER":"Maintenance","MAINT_COOKER":"Maintenance","MAINT_FARM1":"Maintenance","MAINT_FARM2":"Maintenance","MAINT_FARM3":"Maintenance","MAINT_FARM4":"Maintenance","MAINT_FARM5":"Maintenance","MAINT_FISHTRAP":"Maintenance","MAINT_FOOD":"Maintenance","MAINT_FRIG1":"Maintenance","MAINT_FRIG10":"Maintenance","MAINT_FRIG2":"Maintenance","MAINT_FRIG3":"Maintenance","MAINT_FRIG4":"Maintenance","MAINT_FRIG5":"Maintenance","MAINT_FRIG6":"Maintenance","MAINT_FRIG7":"Maintenance","MAINT_FRIG8":"Maintenance","MAINT_FRIG9":"Maintenance","MAINT_FUEL1":"Maintenance","MAINT_FUEL2":"Maintenance","MAINT_FUEL3":"Maintenance","MAINT_FUEL4":"Maintenance","MAINT_FUEL5":"Maintenance","MAINT_HOOVER":"Maintenance","MAINT_MONONUB1":"Maintenance","MAINT_MONONUB2":"Maintenance","MAINT_MONONUB3":"Maintenance","MAINT_PORTAL1":"Maintenance","MAINT_PORTAL10":"Maintenance","MAINT_PORTAL11":"Maintenance","MAINT_PORTAL12":"Maintenance","MAINT_PORTAL13":"Maintenance","MAINT_PORTAL14":"Maintenance","MAINT_PORTAL15":"Maintenance","MAINT_PORTAL16":"Maintenance","MAINT_PORTAL2":"Maintenance","MAINT_PORTAL3":"Maintenance","MAINT_PORTAL4":"Maintenance","MAINT_PORTAL5":"Maintenance","MAINT_PORTAL6":"Maintenance","MAINT_PORTAL7":"Maintenance","MAINT_PORTAL8":"Maintenance","MAINT_PORTAL9":"Maintenance","MAINT_REFINER":"Maintenance","MAINT_ROBO1":"Maintenance","MAINT_ROBO10":"Maintenance","MAINT_ROBO2":"Maintenance","MAINT_ROBO3":"Maintenance","MAINT_ROBO4":"Maintenance","MAINT_ROBO5":"Maintenance","MAINT_ROBO6":"Maintenance","MAINT_ROBO7":"Maintenance","MAINT_ROBO8":"Maintenance","MAINT_ROBO9":"Maintenance","MAINT_S13":"Maintenance","MAINT_S22_PART1":"Maintenance","MAINT_S22_PART2":"Maintenance","MAINT_S22_PART3":"Maintenance","MAINT_SEALOCK1":"Maintenance","MAINT_SEALOCK2":"Maintenance","MAINT_TECH1":"Maintenance","MAINT_TECH10":"Maintenance","MAINT_TECH11":"Maintenance","MAINT_TECH12":"Maintenance","MAINT_TECH13":"Maintenance","MAINT_TECH14":"Maintenance","MAINT_TECH15":"Maintenance","MAINT_TECH16":"Maintenance","MAINT_TECH17":"Maintenance","MAINT_TECH18":"Maintenance","MAINT_TECH19":"Maintenance","MAINT_TECH2":"Maintenance","MAINT_TECH20":"Maintenance","MAINT_TECH21":"Maintenance","MAINT_TECH22":"Maintenance","MAINT_TECH23":"Maintenance","MAINT_TECH24":"Maintenance","MAINT_TECH25":"Maintenance","MAINT_TECH3":"Maintenance","MAINT_TECH4":"Maintenance","MAINT_TECH5":"Maintenance","MAINT_TECH6":"Maintenance","MAINT_TECH7":"Maintenance","MAINT_TECH8":"Maintenance","MAINT_TECH9":"Maintenance","MECH_ARMY_HEAD":"Mech","MECH_ARMY_LEGS":"Mech","MECH_ARMY_L_ARM":"Mech","MECH_ARMY_R_ARM":"Mech","MECH_BOOST":"Mech","MECH_ENGINE":"Mech","MECH_FUEL":"Mech","MECH_GUN":"Mech","MECH_LASER":"Mech","MECH_LASER1":"Mech","MECH_MINER":"Mech","MECH_PILOT":"Mech","MECH_PROT":"Mech","MECH_SCAN":"Mech","MECH_SENT_HEAD":"Mech","MECH_SENT_LEGS":"Mech","MECH_SENT_L_ARM":"Mech","MECH_SENT_R_ARM":"Mech","OBSOLETE":"Suit","PHOTONIX_CORE":"AllShipsExceptAlien","POWERGLOVE":"Suit","PRESSURE_SUIT":"Suit","PROTECT":"Suit","RAILGUN":"Weapon","S15_FISHLASER":"Weapon","S22_LINK":"Suit","SCAN1":"Weapon","SCANBINOC1":"Weapon","SCOPE":"Weapon","SENT_LASER":"Weapon","SHIELD_ALIEN":"AlienShip","SHIPEASY_DMG1":"Ship","SHIPEASY_DMG2":"Ship","SHIPEASY_DMG3":"Ship","SHIPEASY_DMG4":"Ship","SHIPGUN1":"Ship","SHIPGUN_ALIEN":"AlienShip","SHIPGUN_ROBO":"RobotShip","SHIPJUMP1":"Ship","SHIPJUMP_ALIEN":"AlienShip","SHIPJUMP_ROBO":"RobotShip","SHIPJUMP_SPEC":"Ship","SHIPLAS1":"AllShipsExceptAlien","SHIPLAS_ALIEN":"AlienShip","SHIPMINIGUN":"AllShipsExceptAlien","SHIPPLASMA":"AllShipsExceptAlien","SHIPROCKETS":"AllShipsExceptAlien","SHIPSCAN_ALIEN":"AlienShip","SHIPSCAN_COMBAT":"AllShipsExceptAlien","SHIPSCAN_ECON":"AllShipsExceptAlien","SHIPSHIELD":"Ship","SHIPSHIELD_ROBO":"RobotShip","SHIPSHOTGUN":"AllShipsExceptAlien","SHIPSLOT_DMG1":"Ship","SHIPSLOT_DMG10":"Ship","SHIPSLOT_DMG11":"Ship","SHIPSLOT_DMG12":"Ship","SHIPSLOT_DMG2":"Ship","SHIPSLOT_DMG3":"Ship","SHIPSLOT_DMG4":"Ship","SHIPSLOT_DMG5":"Ship","SHIPSLOT_DMG6":"Ship","SHIPSLOT_DMG7":"Ship","SHIPSLOT_DMG8":"Ship","SHIPSLOT_DMG9":"Ship","SHIP_LIFESUP":"Ship","SHIP_TELEPORT":"AllShipsExceptAlien","SHOTGUN":"Weapon","SMG":"Weapon","SOLAR_SAIL":"Ship","SOUL_LASER":"Weapon","SPOOK_PACK":"Suit","STARSUIT":"Suit","STEALTH":"Weapon","STORY_TRANSLATE":"Suit","STRONGLASER":"Weapon","STUN_GREN":"Weapon","SUB_BINOCS":"Submarine","SUB_ENGINE":"Submarine","SUB_GUN":"Submarine","SUB_LASER":"Submarine","SUB_MINER":"Submarine","SUB_RECHARGE":"Submarine","SUIT_REFINER":"Suit","SUIT_REFINER2":"Suit","SUIT_ROCKET":"Suit","SUMMON_SUIT":"Suit","SUN_LASER":"Weapon","TELEPORT_ALIEN":"AlienShip","TERRAINEDITOR":"Weapon","TERRAIN_GREN":"Weapon","T_SHIP_ATLAS":"AllShips","T_SHIP_DARK":"AllShips","T_SHIP_GOLD":"AllShips","T_SHIP_GREEN":"AllShips","T_SHIP_PIRATE":"AllShips","T_SHIP_PLASMA":"AllShips","T_SHIP_RAINBOW":"AllShips","T_SHIP_RED":"AllShips","T_SHIP_ROGUE":"AllShips","UT_BOLT":"Weapon","UT_BOLTBOUNCE":"Weapon","UT_BUI_SCAN":"Weapon","UT_BUI_SCAN2":"Weapon","UT_CANNON":"Weapon","UT_COLD":"Suit","UT_ENERGY":"Suit","UT_HOT":"Suit","UT_JET":"Suit","UT_JUMP":"Suit","UT_LAUNCHCHARGE":"AllShipsExceptAlien","UT_LAUNCHER":"AllShipsExceptAlien","UT_MIDAIR":"Suit","UT_MINER":"Weapon","UT_PROTECT":"Suit","UT_PULSEFUEL":"AllShipsExceptAlien","UT_PULSESPEED":"AllShipsExceptAlien","UT_QUICKWARP":"AllShipsExceptAlien","UT_RAD":"Suit","UT_RAIL":"Weapon","UT_RAIL_STUN":"Weapon","UT_ROCKETS":"AllShipsExceptAlien","UT_S10_SCAN":"Weapon","UT_SCAN":"Weapon","UT_SHIPBLOB":"AllShipsExceptAlien","UT_SHIPDRIFT":"AllShipsExceptAlien","UT_SHIPGUN":"AllShipsExceptAlien","UT_SHIPLAS":"AllShipsExceptAlien","UT_SHIPMINI":"AllShipsExceptAlien","UT_SHIPSHIELD":"AllShipsExceptAlien","UT_SHIPSHOT":"AllShipsExceptAlien","UT_SHOT":"Weapon","UT_SMG":"Weapon","UT_SMGBOUNCE":"Weapon","UT_SMG_DOT":"Weapon","UT_STUNDMG":"Weapon","UT_SURVEY":"Weapon","UT_TOX":"Suit","UT_TRANSLATE1":"Suit","UT_TRANSLATE2":"Suit","UT_TRANSLATE3":"Suit","UT_WATER":"Suit","UT_WATERENERGY":"Suit","UT_WATERJET":"Suit","VEHICLE_BOOST":"Exocraft","VEHICLE_ENGINE":"Exocraft","VEHICLE_FLAME":"Exocraft","VEHICLE_GRIP1":"Exocraft","VEHICLE_GRIP2":"Exocraft","VEHICLE_GRIP3":"Exocraft","VEHICLE_GUN":"Exocraft","VEHICLE_LASER":"Exocraft","VEHICLE_LASER1":"Exocraft","VEHICLE_SCAN":"Exocraft","VEHICLE_SCAN1":"Exocraft","VEHICLE_SCAN2":"Exocraft","VEHICLE_SCOPE":"AllVehicles","WARP_ALIEN":"AlienShip","WATERLAND_ALIEN":"AlienShip","WATER_LANDER":"AllShipsExceptAlien","WEAPEASY_DMG1":"Weapon","WEAPEASY_DMG2":"Weapon","WEAPEASY_DMG3":"Weapon","WEAPEASY_DMG4":"Weapon","WEAPSENT_DMG1":"Weapon","WEAPSENT_DMG2":"Weapon","WEAPSENT_DMG3":"Weapon","WEAPSENT_DMG4":"Weapon","WEAPSLOT_DMG1":"Weapon","WEAPSLOT_DMG10":"Weapon","WEAPSLOT_DMG11":"Weapon","WEAPSLOT_DMG12":"Weapon","WEAPSLOT_DMG2":"Weapon","WEAPSLOT_DMG3":"Weapon","WEAPSLOT_DMG4":"Weapon","WEAPSLOT_DMG5":"Weapon","WEAPSLOT_DMG6":"Weapon","WEAPSLOT_DMG7":"Weapon","WEAPSLOT_DMG8":"Weapon","WEAPSLOT_DMG9":"Weapon","WORMREADER":"Suit","WORMTECH":"Suit"},"src":"bradhave94/nms datav2 (game data 7.x), Category field"};
+const VNAMES = ['Roamer','Nomad','Colossus','Pilgrim','Hovercraft (unused slot)','Nautilon','Minotaur']; // the game's vehicle order: Buggy, Bike, Truck, WheeledBike, Hovercraft, Submarine, Mech
+function craftTechIds(e){ const out = []; Object.keys(e||{}).forEach(k => { const v = e[k]; if(v && typeof v==='object' && Array.isArray(v[KO('Slots')])) v[KO('Slots')].forEach(sl => out.push(cleanTid(sl[KO('Id')]))); }); return out; }
+function vehType(e, i){ const t = craftTechIds(e); if(t.some(x => /^SUB_/.test(x))) return 'Nautilon'; if(t.some(x => /^MECH_/.test(x))) return 'Minotaur'; if(t.some(x => /^EXO_(PLOUGH|REFINER)/.test(x))) return 'Colossus'; return VNAMES[i] || `Exocraft ${i+1}`; }
+function shipKind(e){ const f = String((e[KO('Resource')]||{})[KO('Filename')]||'').toUpperCase(); const t = craftTechIds(e);
+  const living = /BIOSHIP/.test(f) || t.some(x => /_ALIEN$/.test(x)), robo = /SENTINELSHIP/.test(f) || t.some(x => /_ROBO$/.test(x)), corvette = /\/BIGGS\//.test(f) || t.some(x => /^CV_/.test(x));
+  const type = living ? 'Living ship' : /SENTINELSHIP/.test(f) ? 'Sentinel interceptor' : corvette ? 'Corvette' : /DROPSHIP/.test(f) ? 'Hauler' : /SCIENTIFIC/.test(f) ? 'Explorer' : /SHUTTLE/.test(f) ? 'Shuttle' : /SAILSHIP/.test(f) ? 'Solar ship' : /S-CLASS|ROYAL/.test(f) ? 'Exotic' : /FIGHTER/.test(f) ? 'Fighter' : 'Starship';
+  const cls = ((e[KO('Inventory')]||{})[KO('Class')]||{})[KO('InventoryClass')] || '';
+  return { living, robo, corvette, type, cls }; }
+function craftName(group, e, i, nm){ const own = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : '';
+  if(group==='VehicleOwnership'){ const t = vehType(e, i); return own ? `${own} (${t})` : t; }
+  if(group==='ShipOwnership'){ const k = shipKind(e); return `${own || k.type}${k.cls ? ` (${k.cls}-class)` : ''}`; }
+  return own || `${group.replace(/Ownership$/,'')} ${i+1}`; }
+// Which craft an inventory belongs to: {plat, veh, ship}
+function craftOf(path){ const names = path.map(k => typeof k==='number' ? '' : KN(k)); const n = names.join(' ');
+  if(/Multitools|WeaponInventory/.test(n)) return { plat:'weapon' };
+  if(/VehicleOwnership/.test(n)){ const i = path[path.length-2]; return { plat:'exocraft', veh: vehType(getAt(ED.cur.obj, path.slice(0,-1)), i) }; }
+  if(/ShipOwnership/.test(n)) return { plat:'ship', ship: shipKind(getAt(ED.cur.obj, path.slice(0,-1))) };
+  if(/Freighter/.test(n)) return { plat:'freighter' };
+  if(/^\S+ \S+ Inventory(_TechOnly|_Cargo)?$/.test(n.replace(/\s+/g,' ').trim())) return { plat:'suit' };
+  return { plat:'storage' }; }
+function techCat(id){ id = cleanTid(id); if(TCAT.ids[id]) return TCAT.ids[id]; const m = /^UP_(.+?)(\d|X)?$/.exec(id); if(m && TCAT.fam[m[1]]) return TCAT.fam[m[1]]; if(/^AP_/.test(id)) return 'AlienShip'; if(/^CV_/.test(id)) return 'Corvette'; return ''; }
+const TCATNAME = { Suit:'the exosuit', Weapon:'multi-tools', Freighter:'freighters', Ship:'starships (not living ships)', AllShips:'any starship', AllShipsExceptAlien:'starships (not living ships)', AlienShip:'living ships only', RobotShip:'Sentinel interceptors only', Corvette:'corvettes only', Exocraft:'the Roamer, Nomad, Colossus and Pilgrim', AllVehicles:'any exocraft', Colossus:'the Colossus only', Submarine:'the Nautilon only', Mech:'the Minotaur only', Maintenance:'base machines, not inventories' };
+function craftCats(c){ if(c.plat==='suit') return ['Suit']; if(c.plat==='weapon') return ['Weapon']; if(c.plat==='freighter') return ['Freighter'];
+  if(c.plat==='exocraft') return ['AllVehicles'].concat(c.veh==='Nautilon' ? ['Submarine'] : c.veh==='Minotaur' ? ['Mech'] : ['Exocraft'].concat(c.veh==='Colossus' ? ['Colossus'] : []));
+  if(c.plat==='ship'){ const k = c.ship || {}; return ['AllShips'].concat(k.living ? ['AlienShip'] : ['Ship','AllShipsExceptAlien'].concat(k.robo ? ['RobotShip'] : [], k.corvette ? ['Corvette'] : [])); }
+  return []; }
+// '' if the game allows this technology here, otherwise why not
+function techWhyNot(path, id){ const cat = techCat(id), c = craftOf(path); if(!cat) return ''; if(cat==='Maintenance') return 'This is part of a base machine, not something an inventory can hold.';
+  if(c.plat==='storage') return 'Installed technology can\'t go in storage.'; return craftCats(c).includes(cat) ? '' : `${itemInfo(cleanTid(id)).n || cleanTid(id)} only fits ${TCATNAME[cat] || cat}.`; }
 // Unnamed multi-tools have a blank name in the save (the game makes the shown name up from the seed),
 // so build one from what the save does keep: the model type and the class.
 function mtLabel(e, i, act){
@@ -3783,22 +3822,23 @@ function secInv(){
   const pid = ED.pick ? ED.pick : s ? String(s.id).replace(/^\^/,'') : null;
   const lim = pid ? stackLimit(pid, m, s) : 0; const amt0 = ED.pickAmt!=null ? ED.pickAmt : s ? s.amt : 0;
   const qw = pid ? questWarn(pid) : '';
-  const form = ED.invCell ? `<div class="card edform"><h3>Slot ${cx+1}, ${cy+1}${ok.has(ED.invCell) ? '' : ' <span class="tag cat">locked</span>'}</h3>
+  const form = ED.invCell ? `<div class="edform">
       <div class="row"><span class="edpicked">${pid ? `${itemIconHTML(pid,'md')}<b>${esc(itemInfo(pid).n)}</b><span class="muted small">${esc(IVCATS.find(c => c[0]===itemCat(pid))[1])}</span>` : '<span class="muted">Empty slot</span>'}</span>
-        <button type="button" class="btn${pid ? '' : ' primary'}" id="edi-pick">${pid ? 'Change item…' : 'Choose an item…'}</button></div>
+</div>
       ${qw ? `<div class="edqwarn">⚠ ${esc(qw)}</div>` : ''}
       ${pid ? `<div class="row edamt"><label class="lbl" for="edi-amt">Amount</label><input class="txt" id="edi-amt" type="number" min="0" max="${lim}" value="${Math.min(amt0, lim)}"><span class="edlim">/ ${fmt(lim)}</span>
         <button type="button" class="btn ghost" data-edamt="-1">−1</button><button type="button" class="btn ghost" data-edamt="+1">+1</button><button type="button" class="btn ghost" data-edamt="q">¼ stack</button><button type="button" class="btn ghost" data-edamt="h">½ stack</button><button type="button" class="btn ghost" data-edamt="f">Full stack</button></div>
       <p class="small muted" style="margin:0">${fmt(lim)} is this item's stack limit in this inventory${ED.limSrc ? ' (' + ED.limSrc + ')' : ''}. Amounts can't go over it, so the game won't trim or reject the stack.</p>` : ''}
       <div class="row">${pid ? `<button type="button" class="btn primary" id="edi-set">${s ? 'Change slot' : 'Put it in this slot'}</button>` : ''}${s ? '<button type="button" class="btn ghost" id="edi-clear">Empty slot</button>' + (s.type!=='Technology' && s.amt > 1 ? '<button type="button" class="btn ghost" id="edi-split">Split stack</button>' : '') + (s.type!=='Technology' ? '<button type="button" class="btn ghost" id="edi-dup">Duplicate stack</button>' : '') : ''}
-        <button type="button" class="btn ghost" id="edi-lock">${ok.has(ED.invCell) ? 'Lock this slot' : 'Unlock this slot'}</button></div></div>` : '<p class="muted small">Click a slot to change it.</p>';
+        <button type="button" class="btn ghost" id="edi-lock">${ok.has(ED.invCell) ? 'Lock this slot' : 'Unlock this slot'}</button></div>
+      <h4 class="edmh">${s || ED.pick ? 'Put something else here' : 'Put something here'}</h4></div>` : '';
   return `<div class="card"><div class="row"><label class="lbl" for="edinv">Inventory</label><select id="edinv">${cs.map((c,i) => `<option value="${i}" ${i===ED.invSel?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
       <span class="muted small">${m.slots.length} items · ${m.valid.length} unlocked slots${m.inv[KO('Width')] ? ` · ${m.inv[KO('Width')]}×${m.inv[KO('Height')]}` : ''}</span></div>
     <div class="row"><button type="button" class="btn" id="edi-fillall">Fill every stack to its stack size</button><button type="button" class="btn ghost" id="edi-unlockall">Unlock every slot (${m.w}×${m.h})</button><button type="button" class="btn ghost" id="edi-clearall">Empty this inventory</button>
       <span class="lbl">Sort</span><button type="button" class="btn ghost" data-edisort="name">A–Z</button><button type="button" class="btn ghost" data-edisort="kind">By kind</button><button type="button" class="btn ghost" data-edisort="value">By value</button></div>
     <div class="row"><input class="txt" id="edfind" placeholder="Find an item in every inventory, e.g. Storm Crystal" value="${esc(ED.find||'')}" style="flex:1 1 260px"></div>
     ${ED.find ? invFindHTML(ED.find) : ''}
-    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div></div>${form}${ED.picking ? pickerHTML(invPickList(m)) : ''}`;
+    <div class="igridwrap"><div class="igrid edgrid" style="--cols:${m.w}">${cells}</div></div><p class="muted small" style="margin:0">Click any slot (or right-click it) for its menu.</p></div>${ED.tmenu ? techMenu(m, ED.tmenu, new Set(m.special.map(([a,b]) => a+','+b)), true) : ''}${ED.invCell ? slotModal(`Slot ${cx+1}, ${cy+1}${ok.has(ED.invCell) ? '' : ' <span class="tag cat">locked</span>'}`, form, pickerBody(invPickList(m), techAnn(m, s ? ED.invCell : null))) : ''}`;
 }
 function invFindHTML(q){
   q = q.trim().toLowerCase(); if(q.length < 2) return ''; const cs = edContainers(); const out = [];
@@ -3826,8 +3866,9 @@ function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), ou
   return PICKITEMS = out.sort((a,b) => a.n.localeCompare(b.n)); }
 // What an inventory may hold: 'tech' (technology only), 'cargo' (no technology) or 'any'.
 function techInstall(m, id, cell){
+  const why = techWhyNot(m.path, id); if(why) throw new Error(why);
   const fam = techFam(id); const same = m.slots.filter(s2 => s2.type==='Technology' && techFam(s2.id)===fam && isUpg(s2.id)).length;
-  if(isUpg(id) && /^UP_/.test(id) && same >= 3) throw new Error('The game allows 3 upgrades of one kind per inventory, and this one already has 3. Remove one first.');
+  if(/^(UP_|AP_)/.test(id) && same >= 3) throw new Error('The game allows 3 upgrades of one kind per inventory, and this one already has 3. Remove one first.');
   if(!cell) throw new Error('No empty tech slot. Unlock more slots or remove a module first.');
   if(!m.valid.some(([vx,vy]) => vx===cell[0] && vy===cell[1])){ m.valid.push(cell); invValidCommit(m, `${m.label}: unlock slot ${cell[0]+1}, ${cell[1]+1}`); }
   const tpl = m.slots.find(s2 => cleanTid(s2.id)===id);
@@ -3835,26 +3876,37 @@ function techInstall(m, id, cell){
   invCommit(m, `${m.label}: install ${itemInfo(id).n}`);
 }
 function invKind(m){ const n = m.path.map(k => typeof k==='number' ? '' : KN(k)).join(' ');
-  if(/TechOnly|Multitools|WeaponInventory/.test(n)) return 'tech';
-  // Installed technology can also sit in the exosuit's and ships' general slots, but not in cargo, storage or containers
-  return /^\S+ \S+ Inventory$|ShipOwnership\s+Inventory$/.test(n.replace(/\s+/g,' ').trim()) ? 'any' : 'cargo'; }
-function invPickList(m){ const k = invKind(m); if(k==='tech'){ const l = techModules(techPlat({ label: m.label, path: m.path })); l.techOnly = true; return l; }
+  // Since the Waypoint update, installed technology only lives in technology inventories (multi-tools have just one).
+  return /TechOnly|Multitools|WeaponInventory/.test(n) ? 'tech' : 'cargo'; }
+function invPickList(m){ const k = invKind(m); if(k==='tech'){ const l = pickItems().filter(x => isTechId(x.id) && techCat(x.id) && !techWhyNot(m.path, x.id)); l.techOnly = true; return l; }
   if(k==='cargo') return pickItems().filter(x => !isTechId(x.id)); return null; }
 function isTechId(id){ id = String(id).replace(/^\^/,'').replace(/#.*$/,''); if(/^U_/.test(id)) return false; /* U_… = a packed module (an item you carry, any inventory) */ return guessType(id)==='Technology' || /^(UP_|CV_)/.test(id) || itemCat(id)==='tech'; }
 function invFits(m, id){ const k = invKind(m), t = isTechId(id) ? 'Technology' : 'Item';
   if(k==='tech' && t!=='Technology') return 'This inventory only holds technology. Add modules in the Technology section instead.';
-  if(k==='cargo' && t==='Technology') return 'Installed technology only goes in technology slots or the exosuit and ship inventories. Packed modules (the ones you buy) can go anywhere.'; return ''; }
-function pickerHTML(only){
-  const all = only || pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cat = ED.pc || 'raw';
-  const cnt = {}; all.forEach(x => cnt[x.c] = (cnt[x.c]||0)+1);
-  const list = all.filter(x => q ? x.l.includes(q) : only ? true : x.c===cat); const show = list.slice(0, 300);
-  return `<div class="edpick" role="dialog" aria-modal="true" aria-label="Choose an item"><div class="edpickin">
-    <div class="row" style="justify-content:space-between"><h3>Choose an item</h3><button type="button" class="btn ghost" id="edpx">Close</button></div>
-    <input class="txt" id="edpq" placeholder="Search every item by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
-    ${only ? `<p class="small muted" style="margin:0">${only.techOnly ? 'This inventory only holds technology, so only modules that fit it are listed.' : 'Only items that fit this inventory are listed.'}</p>` : ''}<div class="fchips"${only ? ' hidden' : ''}>${IVCATS.filter(([k]) => cnt[k]).map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
-    <div class="edpgrid">${show.map(x => `<button type="button" class="edpi" data-edpi="${esc(x.id)}" title="${esc(x.n)} (${esc(x.id)})">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span></button>`).join('') || '<div class="muted">Nothing found.</div>'}</div>
-    ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}</div></div>`;
+  if(t==='Technology' && k!=='cargo'){ const w = techWhyNot(m.path, id); if(w) return w; }
+  if(k==='cargo' && t==='Technology') return 'Installed technology only goes in a technology inventory. Packed modules (the boxed ones you buy) can go anywhere.'; return ''; }
+// The item list used by every slot menu. ann(x) may return {off, badge, why} to mark items that won't work here.
+function pickerBody(only, ann){
+  const all = only || pickItems(); const q = (ED.pq||'').trim().toLowerCase(); const cnt = {}; all.forEach(x => cnt[x.c] = (cnt[x.c]||0)+1);
+  const cats = IVCATS.filter(([k]) => cnt[k]); const cat = cats.some(([k]) => k===ED.pc) ? ED.pc : (cats[0]||['raw'])[0]; const chips = cats.length > 1;
+  const list = all.filter(x => q ? x.l.includes(q) : chips ? x.c===cat : true); const show = list.slice(0, 300);
+  return `<input class="txt" id="edpq" placeholder="Search by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
+    ${only ? `<p class="small muted" style="margin:0">${only.techOnly ? 'Only technology the game lets this craft install is listed.' : 'Only items that fit this inventory are listed.'}</p>` : ''}
+    <div class="fchips"${chips ? '' : ' hidden'}>${cats.map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
+    <div class="edpgrid">${show.map(x => { const a = ann ? ann(x) || {} : {}; return `<button type="button" class="edpi${a.off ? ' off' : ''}" data-edpi="${esc(x.id)}" ${a.off ? 'aria-disabled="true"' : ''} title="${esc(x.n)} (${esc(x.id)})${a.why ? ' · ' + esc(a.why) : ''}">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span>${a.badge ? `<span class="edpb${a.off ? ' bad' : ''}">${esc(a.badge)}</span>` : ''}</button>`; }).join('') || '<div class="muted">Nothing found.</div>'}</div>
+    ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}`;
 }
+function pickerHTML(only, ann){ return slotModal('Choose an item', '', pickerBody(only, ann)); }
+function slotModal(title, top, body){
+  return `<div class="edpick" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="edpickin">
+    <div class="row" style="justify-content:space-between"><h3>${title}</h3><button type="button" class="btn ghost" id="edpx">Close</button></div>${top}${body}</div></div>`;
+}
+// Notes on technology in a pick list for inventory m (slot `key` is being replaced, so it doesn't count)
+function techAnn(m, key){ return x => { if(!isTechId(x.id)) return null; const id = x.id, fam = techFam(id); const others = m.slots.filter(s2 => s2.x+','+s2.y!==key && s2.type==='Technology');
+  if(/^(UP_|AP_)/.test(id)){ const n = others.filter(s2 => /^(UP_|AP_)/.test(cleanTid(s2.id)) && techFam(s2.id)===fam).length; if(n >= 3) return { off: true, badge: '3 of 3 already', why: 'The game counts 3 upgrades per technology; a 4th does nothing.' };
+    if(TBASE.some(([, f]) => f===fam) && !others.some(s2 => !isUpg(s2.id) && techFam(s2.id)===fam)) return { badge: 'Base tech missing', why: 'Upgrades only work when the technology they upgrade is installed.' }; return { badge: `${n} of 3` }; }
+  if(!isUpg(id) && others.some(s2 => cleanTid(s2.id)===id)) return { off: true, badge: 'Already installed', why: 'A second copy does nothing.' };
+  return null; }; }
 // Stack limit for an item in this inventory: the biggest stack the save already uses for it in the same kind of inventory.
 function stackLimit(id, m, s){
   const K = n => KO(n); const grpOf = inv => ((inv && inv[K('StackSizeGroup')])||{}).rri || ''; const want = grpOf(m.inv);
@@ -3923,12 +3975,15 @@ const TPLAT = { suit:['ENGY','HAZ','JET','COLD','HOT','RAD','TOX','UNW','SHLD','
   weapon:['LASER','SCAN','BOLT','SHOT','SMG','CANN','GREN','TGREN','RAIL','SENGUN'], freighter:['FRHYP','FRCOM','FREXP','FRFUE','FRMIN','FRSPE','FRTRA'], exocraft:['EXENG','EXGUN','EXLAS','EXSUB','BOOST','SUGUN','MCENG','MCGUN','MCLAS','MFIRE'] };
 const TPRIO = { ship:['HYP','PULSE','SBLOB','SGUN','SSHOT','SLASR','SMINI','S_SHL','LAUN'], suit:['JET','HAZ','ENGY','SHLD','UNW','SNSUIT','RBSUIT','COLD','HOT','RAD','TOX'], weapon:['LASER','SCAN','BOLT','SHOT','SMG','CANN','RAIL','GREN','TGREN','SENGUN'], freighter:['FRHYP'], exocraft:['EXENG','BOOST','EXGUN','EXLAS','EXSUB'] };
 const TBASE = [[/^(HYPERDRIVE|HDRIVEBOOST\d|UT_QUICKWARP)$/,'HYP'],[/^(SHIPJUMP\d|UT_PULSE\w*)$/,'PULSE'],[/^(LAUNCHER|UT_LAUNCH\w*)$/,'LAUN'],[/^(SHIPSHIELD|UT_SHIPSHIELD)$/,'S_SHL'],[/^SHIPGUN\d$/,'SGUN'],[/^SHIPLAS\d$/,'SLASR'],
-  [/^(ENERGY|UT_ENERGY|UT_WATERENERGY)$/,'ENGY'],[/^(PROTECT|UT_PROTECT)$/,'HAZ'],[/^(JET\d|UT_JET|UT_MIDAIR|UT_WATERJET)$/,'JET'],[/^UT_WATER$/,'UNW'],[/^(LASER|STRONGLASER|UT_MINER)$/,'LASER'],[/^(SCAN\d|UT_SCAN\w*|SCANBINOC\d)$/,'SCAN'],[/^BOLT$/,'BOLT'],[/^SHOTGUN$/,'SHOT'],[/^(F_HYPERDRIVE|F_HDRIVEBOOST\d)$/,'FRHYP']];
+  [/^(ENERGY|UT_ENERGY|UT_WATERENERGY)$/,'ENGY'],[/^(PROTECT|UT_PROTECT)$/,'HAZ'],[/^(JET\d|UT_JET|UT_MIDAIR|UT_WATERJET)$/,'JET'],[/^UT_WATER$/,'UNW'],[/^(LASER|STRONGLASER|UT_MINER)$/,'LASER'],[/^(SCAN\d|UT_SCAN\w*|SCANBINOC\d)$/,'SCAN'],[/^BOLT$/,'BOLT'],[/^SHOTGUN$/,'SHOT'],[/^(F_HYPERDRIVE|F_HDRIVEBOOST\d)$/,'FRHYP'],
+  [/^HYPERDRIVE_ROBO$/,'HYP'],[/^SHIPJUMP_ROBO$/,'PULSE'],[/^LAUNCHER_ROBO$/,'LAUN'],[/^SHIPSHIELD_ROBO$/,'S_SHL'],[/^SHIPGUN_ROBO$/,'SGUN'],
+  [/^WARP_ALIEN$/,'AP_HYPER'],[/^LAUNCHER_ALIEN$/,'AP_LAUNCH'],[/^SHIPJUMP_ALIEN$/,'AP_PULSE'],[/^SHIPGUN_ALIEN$/,'AP_SHIPGUN'],[/^SHIPLAS_ALIEN$/,'AP_SHIPLAS'],[/^SHIELD_ALIEN$/,'AP_SHIPSHIELD'],
+  [/^VEHICLE_ENGINE$/,'EXENG'],[/^VEHICLE_GUN$/,'EXGUN'],[/^VEHICLE_LASER1?$/,'EXLAS'],[/^VEHICLE_BOOST$/,'BOOST'],[/^SUB_ENGINE$/,'EXSUB'],[/^SUB_GUN$/,'SUGUN'],[/^MECH_ENGINE$/,'MCENG'],[/^MECH_GUN$/,'MCGUN'],[/^MECH_LASER1?$/,'MCLAS']];
 const TCORE = new Set(['HYPERDRIVE','LAUNCHER','SHIPJUMP1','SHIPSHIELD','ENERGY','PROTECT','JET1','LASER','SCAN1','F_HYPERDRIVE']);
 const cleanTid = id => String(id).replace(/^\^/,'').replace(/#.*$/,'');
 function techFam(id){ const c = cleanTid(id); let m = /^UP_(.+?)(\d|X)?$/.exec(c); if(m) return m[1]; for(const [re,f] of TBASE) if(re.test(c)) return f; m = /^CV_([A-Z]+)\d*$/.exec(c); if(m) return 'CV_' + m[1]; return c.replace(/\d+$/,''); }
 function techGrade(id){ const n = itemInfo(cleanTid(id)).n || ''; if(/S-Class/.test(n)) return 5; if(/Illegal|Banned|X-Class/.test(n) || /X$/.test(cleanTid(id))) return 4.5; if(/A-Class/.test(n)) return 4; if(/B-Class/.test(n)) return 3; if(/C-Class/.test(n)) return 2; if(/SeaTrash/.test(n)) return 1; return 0; }
-const isUpg = id => /^UP_|^CV_/.test(cleanTid(id));
+const isUpg = id => /^UP_|^CV_|^AP_/.test(cleanTid(id));
 function techPlat(c){ const n = c.label + ' ' + c.path.map(KN).join(' '); if(/Freighter/i.test(n)) return 'freighter'; if(/Weapon|Multi.?tool/i.test(n)) return 'weapon'; if(/Vehicle|Exocraft/i.test(n)) return 'exocraft'; if(/Ship/i.test(n)) return 'ship'; return 'suit'; }
 function techContainers(){ const cs = edContainers(); return cs.map((c,i) => ({ c, i })).filter(({c}) => { if(/Maintenance|RefinerBuffer/.test(c.path.map(KN).join(' '))) return false; const inv = getAt(ED.cur.obj, c.path); return /TechOnly|Weapon/.test(c.path.map(KN).join(' ')) || (inv[KO('Slots')]||[]).some(s => (s[KO('Type')]||{})[KO('InventoryType')]==='Technology'); }); }
 function techModules(plat){ return pickItems().filter(x => { const m = /^UP_(.+?)(\d|X)?$/.exec(x.id); return m && TPLAT[plat].includes(m[1]); }).concat(plat==='ship' ? pickItems().filter(x => /^CV_/.test(x.id)) : []); }
@@ -3995,15 +4050,25 @@ function secTech(){
       <span class="muted small">${m.slots.filter(s => s.type==='Technology').length} installed · ${m.valid.length} slots · ${m.special.length} supercharged · layout score ${sc.total}${prev ? ` (was ${prev.total})` : ''}</span></div>
     <div class="row"><button type="button" class="btn" id="edt-repair" ${broken?'':'disabled'}>Repair broken tech${broken?` (${broken})`:''}</button><button type="button" class="btn" id="edt-charge" ${charge?'':'disabled'}>Fill all charge${charge?` (${charge})`:''}</button>
       <button type="button" class="btn" id="edt-install">Install a module…</button><button type="button" class="btn primary" id="edt-arrange">Best layout</button><button type="button" class="btn" id="edt-max">Max it out (S-class)</button><button type="button" class="btn ghost" id="edt-unlock">Unlock every tech slot</button></div>
-    <p class="small muted" style="margin:0">Click a module, then click another slot to move it there (or swap). ★ marks supercharged slots. <b>Best layout</b> groups matching tech so they touch and puts your best upgrades on supercharged slots. <b>Max it out</b> adds S-class upgrades up to the game's limit of 3 per technology, into empty slots.</p>
+    <p class="small muted" style="margin:0">Click any slot (or right-click it) for its menu: install, swap, move, repair or remove. ★ marks supercharged slots. <b>Best layout</b> groups matching tech so they touch and puts your best upgrades on supercharged slots. <b>Max it out</b> adds S-class upgrades up to the game's limit of 3 per technology, into empty slots.</p>
     <div class="igridwrap"><div class="igrid edgrid techgrid" style="--cols:${m.w}">${cells}</div></div>
-    ${selS ? `<div class="row"><b>${esc(itemInfo(cleanTid(selS.id)).n)}</b><span class="muted small">${selS.amt>=0?`charge ${selS.amt} / ${selS.max}`:'no charge needed'}${+selS.dmg>0||selS.fi===false?' · broken':''}</span><button type="button" class="btn ghost" id="edt-remove">Remove this module</button></div>` : ''}</div>${ED.picking ? pickerHTML(techModules(plat)) : ''}`;
+    ${selS ? `<div class="edmove"><b>Moving ${esc(itemInfo(cleanTid(selS.id)).n)}:</b> click the slot it should go to (a module there swaps places). Click it again or press Esc to cancel.</div>` : ''}</div>${ED.tmenu ? techMenu(m, ED.tmenu, sp) : ''}`;
+}
+function techMenu(m, key, sp, noMove){
+  const [x, y] = key.split(',').map(Number); const s2 = m.slots.find(s3 => s3.x===x && s3.y===y); const on = m.valid.some(([vx,vy]) => vx===x && vy===y);
+  const id = s2 ? cleanTid(s2.id) : ''; const bad = s2 && (+s2.dmg > 0 || s2.fi===false); const chg = s2 && s2.amt >= 0 && s2.amt < s2.max;
+  const top = `<div class="edform">${s2 ? `<div class="row"><span class="edpicked">${itemIconHTML(id,'md')}<b>${esc(itemInfo(id).n)}</b><span class="muted small">${s2.amt>=0?`charge ${s2.amt} / ${s2.max}`:'no charge needed'}${bad?' · broken':''}</span></span></div>
+      <div class="row">${noMove ? '' : '<button type="button" class="btn" id="edt-move">Move…</button>'}${bad ? '<button type="button" class="btn" id="edt-fix1">Repair</button>' : ''}${chg ? '<button type="button" class="btn" id="edt-chg1">Fill charge</button>' : ''}<button type="button" class="btn ghost" id="edt-remove">Remove</button></div>`
+      : `<p class="muted small" style="margin:0">${on ? 'Empty slot.' : 'Locked slot: installing here unlocks it.'}</p>`}
+      <h4 class="edmh">${s2 ? 'Swap it for' : 'Install here'}</h4></div>`;
+  const list = pickItems().filter(x2 => isTechId(x2.id) && techCat(x2.id) && !techWhyNot(m.path, x2.id)); list.techOnly = true;
+  return slotModal(`Slot ${x+1}, ${y+1}${sp.has(key) ? ' ★' : ''}`, top, pickerBody(list, techAnn(m, s2 ? key : null)));
 }
 function techMax(m, plat){
   const fams = new Map(); m.slots.filter(s => s.type==='Technology').forEach(s => { const f = techFam(s.id); fams.set(f, (fams.get(f)||[]).concat([s])); });
   const free = m.valid.filter(([x,y]) => !m.slots.some(s => s.x===x && s.y===y)); const added = [];
   (TPLAT[plat]||[]).forEach(f => { const have = fams.get(f); if(!have) return; const ups = have.filter(s => isUpg(s.id)).length; let need = 3 - ups;
-    const best = techModules(plat).filter(x => techFam(x.id)===f).sort((a,b) => techGrade(b.id) - techGrade(a.id))[0]; if(!best || techGrade(best.id) < 5) return;
+    const best = techModules(plat).filter(x => techFam(x.id)===f && !techWhyNot(m.path, x.id)).sort((a,b) => techGrade(b.id) - techGrade(a.id))[0]; if(!best || techGrade(best.id) < 5) return;
     while(need-- > 0 && free.length){ const [x,y] = free.shift(); const s = { id: '^' + best.id + '#' + String(Math.floor(Math.random()*90000)+10000), amt: -1, max: 100, type: 'Technology', x, y, dmg: 0, fi: true, dirty: true, src: null }; m.slots.push(s); added.push(best.n); } });
   return added;
 }
@@ -4065,6 +4130,19 @@ function secCur(){
 /* ---------- section: settlements ---------- */
 const bldBuilt = v => ((v >>> 0) & 0x0400007F) === 0x0400007F || ((v >>> 20) & 0x3FF) > 0x40;
 const bldLevel = v => { let n = 0, b = (v >>> 20) & 0x3FF; while(b){ n += b & 1; b >>>= 1; } return n; };
+// Upgrade steps, worked out from 4,800 building states in a real save: built buildings add these bits one at a time,
+// in this order. Class C at step 1, B at 3, A at 6, S at 9; step 10 is the finished S-class building.
+const BSTEPS = [26, 20, 27, 21, 22, 28, 23, 24, 29, 25];
+const bldStepVal = (v, k) => { let x = ((v >>> 0) & 0x000FFFFF) >>> 0; for(let j=0; j<k; j++) x = (x | (1 << BSTEPS[j])) >>> 0; return x > 2147483647 ? x - 4294967296 : x; };
+const bldMask = k => BSTEPS.slice(0, k).reduce((m, b) => m | (1 << (b - 20)), 0);
+const bldStep = v => { const u = (v >>> 20) & 0x3FF; for(let k=1; k<=10; k++) if(u===bldMask(k)) return k; return 0; };
+const bldClass = k => k >= 9 ? 'S' : k >= 6 ? 'A' : k >= 3 ? 'B' : 'C';
+const bldStepLabel = k => `Class ${bldClass(k)}${[1,3,6,9].includes(k) ? '' : k===10 ? ', finished' : ', upgrading'} (step ${k} of 10)`;
+function bldStatus(v, started){ v = v >>> 0; if(!v) return 'Empty plot'; if(bldBuilt(v)){ const k = bldStep(v); return k ? bldStepLabel(k) : `Built, ${bldLevel(v)} of 10 upgrade marks (unusual pattern)`; } return started ? 'Being built' : 'Not built yet'; }
+const BTYPES = ['Housing','Small house','Medium house','Large house','Storage','Agriculture','Farm','Fish pond','Overseer\'s office','Sheriff\'s office','Settlement hub','Landing pad','Bar','Market','Tower','Monument','Factory','Workshop','Other'];
+const BGAME = { Hub:'Settlement hub', LandingZone:'Landing pad', Bar:'Bar', Tower:'Tower', Market:'Market', Small:'Small house', SmallIndustrial:'Small industrial', Medium:'Medium house', Large:'Large house', Monument:'Monument', SheriffsOffice:'Sheriff\'s office', Double:'Double', Farm:'Farm', Factory:'Factory', Clump:'Clump', FishPond:'Fish pond' };
+const bldGameName = c => { const k = String(c||'').replace(/^Settlement_/,''); return BGAME[k] || k.replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2'); };
+function bldName(s, i){ const id = String(s['20I']||s[KO('UniqueId')]||''); const own = ((S.bnames||{})[id]||{})[i]; if(own) return own; if(s[SKEY.nextIdx]===i && (s[SKEY.nextCls]||{}).iqv && s[SKEY.nextCls].iqv!=='None') return bldGameName(s[SKEY.nextCls].iqv); return ''; }
 const SSTAT = ['Max population','Happiness','Production','Upkeep','Sentinels','Debt','Alert','Bug attack'];
 const SKEY = { name:'NKm', owner:'3?K', bstate:'d3x', btime:'3@T', stats:'gUR', perks:'OEf', judge:'HMQ', prod:'abj', nextIdx:'hiD', nextCls:':Qn', race:'SS2' };
 function myUid(){ const c = ED.cur.obj[KO('CommonStateData')] || ED.cur.obj['<h0'] || {}; const a = (c[KO('UsedDiscoveryOwnersV2')] || c['F=J'] || [])[0] || {}; return a[KO('UID')] || a.K7E || ''; }
@@ -4090,9 +4168,17 @@ function secSet(){
    <div class="card"><h3>Name</h3><div class="row"><input class="txt" id="edsname" value="${esc(SaveTools.rawToStr(s[SKEY.name]||''))}" maxlength="60" style="flex:1 1 240px"><button type="button" class="btn" id="edsnameset">Rename</button></div></div>
    <div class="card"><h3>Stats</h3><div class="edgrid2">${stats.map((v,i) => `<label class="lbl" for="edss-${i}">${SSTAT[i]||'Stat '+(i+1)}</label><input class="txt" type="number" id="edss-${i}" data-edss="${i}" value="${v}">`).join('')}</div>
      <div class="row"><button type="button" class="btn" id="edssset">Save stats</button><span class="muted small">Stat names follow the game's order; if one looks swapped, the raw editor below shows the exact numbers.</span></div></div>
-   <div class="card"><h3>Buildings</h3><table class="edt"><thead><tr><th>Plot</th><th>State</th><th>Building started</th><th></th></tr></thead><tbody>
-     ${bs.map((v,i) => edActive() && !(bt[i] > now - 6.9*86400) ? '' : `<tr><td>${i+1}</td><td><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:140px"> <code class="small muted">0x${(v>>>0).toString(16).toUpperCase()}</code>${bldBuilt(v) ? `<br><span class="small">upgrade marks ${bldLevel(v)} / 10${bldLevel(v)===10 ? ' · fully upgraded' : ''}</span>` : ''}</td><td>${bt[i] ? `${fmtWhen(bt[i])}<br><span class="muted small">${fmtAgo(bt[i])}</span>` : '<span class="muted">—</span>'}</td><td class="row">${bt[i] ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}${bldBuilt(v) && bldLevel(v) < 10 ? `<button type="button" class="btn ghost" data-edsmax="${i}" title="Experimental: sets this plot to the pattern fully upgraded buildings use">Max out (experimental)</button>` : ''}</td></tr>`).join('')}
-     ${edActive() && !building.length ? '<tr><td colspan="4" class="muted">Nothing is being built right now. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table><div class="row"><button type="button" class="btn" id="edsbset">Save building states</button><span class="muted small">State numbers are the game's own codes. Built plots carry up to 10 "upgrade marks" (the bits above 0x100000); fully upgraded buildings in saves show all 10. <b>Max out (experimental)</b> sets a plot to that pattern. It isn't confirmed yet, so check the building in game afterwards, and restore the backup if it looks wrong.</span></div></div>
+   <div class="card"><h3>Buildings</h3>
+     <p class="muted small" style="margin:0 0 6px">The save doesn't record which building stands on which plot, so name them once and the app remembers (the game's own name fills in for the plot it's asking you to upgrade). <b>Stage</b> sets a built plot to a class. The steps come from the patterns the game itself writes; they're experimental until checked in game, and the save is backed up first.</p>
+     <datalist id="edbtypes">${BTYPES.map(t => `<option value="${esc(t)}">`).join('')}</datalist>
+     <table class="edt"><thead><tr><th>Plot</th><th>Building</th><th>Now</th><th>Stage</th><th></th></tr></thead><tbody>
+     ${bs.map((v,i) => { if(edActive() && !(bt[i] > now - 6.9*86400) && !bldBuilt(v)) return ''; const k = bldBuilt(v) ? bldStep(v) : 0;
+       return `<tr><td>${i+1}</td><td><input class="txt" list="edbtypes" data-edsbn="${i}" value="${esc(bldName(s, i))}" placeholder="Name this plot" style="width:170px"></td>
+       <td>${esc(bldStatus(v, bt[i] > now - 6.9*86400))}${bt[i] ? `<br><span class="muted small">started ${fmtAgo(bt[i])}</span>` : ''}</td>
+       <td>${bldBuilt(v) ? `<select data-edsstage="${i}">${k ? '' : '<option value="" selected>(unusual pattern)</option>'}${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n===k?'selected':''}>${esc(bldStepLabel(n))}</option>`).join('')}</select>` : '<span class="muted small">build it in game first</span>'}</td>
+       <td class="row">${bt[i] > now - 6.9*86400 ? `<button type="button" class="btn ghost" data-edsfin="${i}">Finish now</button>` : ''}<details class="small"><summary class="muted">game code</summary><input class="txt" type="number" data-edsb="${i}" value="${v}" style="width:130px"> <code class="muted">0x${(v>>>0).toString(16).toUpperCase()}</code></details></td></tr>`; }).join('')}
+     ${edActive() && !bs.some((v,i) => bldBuilt(v) || bt[i] > now - 6.9*86400) ? '<tr><td colspan="5" class="muted">No buildings yet. Untick “Show only what\'s active” to see every plot.</td></tr>' : ''}</tbody></table>
+     <div class="row"><button type="button" class="btn" data-edsall="10">Set every built plot to S-class, finished</button><button type="button" class="btn ghost" id="edsbset">Save game codes</button><span class="muted small">“Game codes” are the raw numbers, for advanced use.</span></div></div>
    <div class="card"><h3>Perks</h3><textarea id="edsperks" rows="4" class="txt" style="width:100%">${esc((s[SKEY.perks]||[]).map(p => String(p).replace(/^\^/,'')).join('\n'))}</textarea><div class="row"><button type="button" class="btn" id="edsperkset">Save perks</button><span class="muted small">One perk ID per line, e.g. STARTING_NEG1. Remove a line to drop that perk.</span></div></div>
    <div class="card"><h3>Production</h3><table class="edt"><thead><tr><th>Item</th><th>Stored</th><th>Cap</th><th>Amount ×</th><th>Speed ×</th></tr></thead><tbody>
      ${(s[SKEY.prod]||[]).map((p,i) => `<tr><td>${esc(idName(p.CZw))}</td><td><input class="txt" type="number" data-edsp="${i}:1o9" value="${p['1o9']}" style="width:90px"></td><td><input class="txt" type="number" data-edsp="${i}:T=R" value="${p['T=R']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}:5a3" value="${p['5a3']}" style="width:90px"></td><td><input class="txt" type="number" step="0.1" data-edsp="${i}::aM" value="${p[':aM']}" style="width:90px"></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nothing produced.</td></tr>'}
@@ -4233,7 +4319,7 @@ async function edRender(){
 $('#p-tools').addEventListener('click', async e => {
   const t = e.target; const q = sel => t.closest(sel);
   let x;
-  if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest' || ED.sec==='cmp'){ await edFiles().catch(()=>{}); await edBackups(); } edRender(); return; }
+  if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; ED.tmenu = null; ED.invCell = null; TECHSEL = null; ED.pick = null; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest' || ED.sec==='cmp'){ await edFiles().catch(()=>{}); await edBackups(); } edRender(); return; }
   if(q('#edwritemenu')){ edWrite({ menu: true }); uCount('tools-nearlive'); return; }
   if(q('#ednltest')){ const f = ED.files[0]; if(!f) return; if(ED.edits.size){ edMsg('Write or discard the waiting changes first.', true); return; }
     if(!confirm(`Near-live test: this adds 1 nanite to ${f.name} while the game sits at its main menu.\n\nIn game: save, choose Quit to Main Menu, then press OK here.`)) return;
@@ -4255,28 +4341,36 @@ $('#p-tools').addEventListener('click', async e => {
   if((x = q('[data-edrename]'))){ const b = ED.backups.find(y => y.id===x.dataset.edrename); const l = prompt('Name for this backup', b ? b.label : ''); if(l===null) return; await api(`/api/backups?action=label&id=${encodeURIComponent(x.dataset.edrename)}&label=${encodeURIComponent(l)}`, {method:'POST'}); await edBackups(); edRender(); return; }
   if((x = q('[data-eddel]'))){ if(!confirm('Delete this backup for good?')) return; await api(`/api/backups?action=delete&id=${encodeURIComponent(x.dataset.eddel)}`, {method:'POST'}); await edBackups(); edRender(); return; }
   // inventories
-  if((x = q('[data-edcell]'))){ ED.invCell = ED.invCell===x.dataset.edcell ? null : x.dataset.edcell; ED.pick = null; ED.pickAmt = null; edRender(); return; }
+  if((x = q('[data-edcell]')) && INVM && invKind(INVM)==='tech'){ ED.tmenu = x.dataset.edcell; ED.invCell = null; ED.pq = ''; edRender(); return; }
+  if((x = q('[data-edcell]'))){ ED.invCell = x.dataset.edcell; ED.pick = null; ED.pickAmt = null; ED.pq = ''; edRender(); setTimeout(() => { const i = $('#edpq'); if(i && matchMedia('(pointer:fine)').matches) i.focus({ preventScroll: true }); }, 30); return; }
   if(q('#edi-pick')){ ED.picking = true; edRender(); setTimeout(() => { const i = $('#edpq'); if(i) i.focus(); }, 30); return; }
-  if(q('#edpx') || (t.classList && t.classList.contains('edpick'))){ ED.picking = false; edRender(); return; }
+  if(q('#edpx') || (t.classList && t.classList.contains('edpick'))){ ED.picking = false; ED.invCell = null; ED.tmenu = null; ED.pick = null; ED.pickAmt = null; ED.pq = ''; edRender(); return; }
+  if((x = q('.edpi.off'))){ edMsg(x.title.split(' · ').slice(1).join(' · ') || 'That won\'t work here.', true); return; }
   if((x = q('[data-edpc]'))){ ED.pc = x.dataset.edpc; ED.pq = ''; edRender(); return; }
-  if((x = q('[data-edpi]')) && ED.sec==='tech'){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
-      let cell = TECHSEL && !m.slots.some(s2 => s2.x+','+s2.y===TECHSEL) ? TECHSEL.split(',').map(Number) : m.valid.find(([vx,vy]) => !m.slots.some(s2 => s2.x===vx && s2.y===vy));
-      techInstall(m, id, cell); TECHSEL = null; }); uCount('tools-tech-install'); return; }
+  if((x = q('[data-edpi]')) && (ED.sec==='tech' || ED.tmenu)){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
+      let cell = ED.tmenu ? ED.tmenu.split(',').map(Number) : m.valid.find(([vx,vy]) => !m.slots.some(s2 => s2.x===vx && s2.y===vy));
+      const old = cell ? m.slots.findIndex(s2 => s2.x===cell[0] && s2.y===cell[1]) : -1;
+      if(old >= 0){ const oid = cleanTid(m.slots[old].id); if(TCORE.has(oid) && !confirm(`${itemInfo(oid).n} is core technology. Replace it anyway?`)) return; const why = techWhyNot(m.path, id); if(why) throw new Error(why); m.slots.splice(old, 1); }
+      techInstall(m, id, cell); ED.tmenu = null; TECHSEL = null; }); uCount('tools-tech-install'); return; }
   // Technology picked in the Inventories section: install it like the Technology section does
   if((x = q('[data-edpi]')) && ED.sec==='inv' && INVM && isTechId(x.dataset.edpi) && !invFits(INVM, x.dataset.edpi)){ const id = x.dataset.edpi; ED.picking = false; invAction(m => {
       const cell = ED.invCell.split(',').map(Number); if(m.slots.some(s2 => s2.x===cell[0] && s2.y===cell[1])) throw new Error('Empty this slot first, then add the module.');
-      techInstall(m, id, cell); }); uCount('tools-tech-install'); return; }
+      techInstall(m, id, cell); ED.invCell = null; }); uCount('tools-tech-install'); return; }
   if((x = q('[data-edtc]'))){ const k = x.dataset.edtc; const m = INVM; const at = s2 => s2.x+','+s2.y;
     if(TECHSEL && TECHSEL!==k && m.slots.some(s2 => at(s2)===TECHSEL) && m.valid.some(([vx,vy]) => vx+','+vy===k)){
       return invAction(m => { const a = m.slots.find(s2 => at(s2)===TECHSEL), b = m.slots.find(s2 => at(s2)===k); const [ax,ay] = [a.x,a.y]; const [kx,ky] = k.split(',').map(Number);
         a.x = kx; a.y = ky; a.dirty = true; if(b){ b.x = ax; b.y = ay; b.dirty = true; } invCommit(m, `${m.label}: move ${itemInfo(cleanTid(a.id)).n}${b ? ' (swapped)' : ''}`); TECHSEL = null; }); }
-    TECHSEL = TECHSEL===k ? null : k; edRender(); return; }
+    if(TECHSEL){ TECHSEL = null; edRender(); return; }
+    ED.tmenu = k; ED.pq = ''; edRender(); return; }
+  if(q('#edt-move')){ TECHSEL = ED.tmenu; ED.tmenu = null; edRender(); return; }
+  if(q('#edt-fix1')) return invAction(m => { const s2 = m.slots.find(s3 => s3.x+','+s3.y===ED.tmenu); if(!s2) return; s2.dmg = 0; s2.fi = true; if(s2.amt >= 0) s2.amt = s2.max; s2.dirty = true; invCommit(m, `${m.label}: repair ${itemInfo(cleanTid(s2.id)).n}`); });
+  if(q('#edt-chg1')) return invAction(m => { const s2 = m.slots.find(s3 => s3.x+','+s3.y===ED.tmenu); if(!s2) return; s2.amt = s2.max; s2.dirty = true; invCommit(m, `${m.label}: charge ${itemInfo(cleanTid(s2.id)).n}`); });
   if(q('#edt-repair')) return invAction(m => { let n = 0; m.slots.forEach(s2 => { if(s2.type==='Technology' && (+s2.dmg > 0 || s2.fi===false)){ s2.dmg = 0; s2.fi = true; s2.dirty = true; n++; } }); invCommit(m, `${m.label}: repair ${n} broken module${n===1?'':'s'}`); });
   if(q('#edt-charge')) return invAction(m => { let n = 0; m.slots.forEach(s2 => { if(s2.type==='Technology' && s2.amt >= 0 && s2.amt < s2.max){ s2.amt = s2.max; s2.dirty = true; n++; } }); invCommit(m, `${m.label}: fill charge on ${n} module${n===1?'':'s'}`); });
-  if(q('#edt-install')){ ED.picking = true; ED.pq = ''; edRender(); return; }
-  if(q('#edt-remove')) return invAction(m => { const i = m.slots.findIndex(s2 => s2.x+','+s2.y===TECHSEL); if(i<0) return; const s2 = m.slots[i]; const id = cleanTid(s2.id);
+  if(q('#edt-install')){ const m = INVM; const c = m && m.valid.find(([vx,vy]) => !m.slots.some(s2 => s2.x===vx && s2.y===vy)); if(!c){ edMsg('No empty tech slot. Unlock more slots or remove a module first.', true); return; } ED.tmenu = c[0]+','+c[1]; ED.pq = ''; edRender(); return; }
+  if(q('#edt-remove')) return invAction(m => { const i = m.slots.findIndex(s2 => s2.x+','+s2.y===(ED.tmenu || TECHSEL)); if(i<0) return; const s2 = m.slots[i]; const id = cleanTid(s2.id);
     if(TCORE.has(id) && !confirm(`${itemInfo(id).n} is core technology. Removing it can leave you unable to fly, warp or survive. Remove anyway?`)) return;
-    m.slots.splice(i,1); invCommit(m, `${m.label}: remove ${itemInfo(id).n}`); TECHSEL = null; });
+    m.slots.splice(i,1); invCommit(m, `${m.label}: remove ${itemInfo(id).n}`); TECHSEL = null; ED.tmenu = null; });
   if(q('#edt-arrange')) return invAction(m => { const plat = techPlat(edContainers()[ED.techSel]); const before = techScore(m).total; const keep = m.slots.map(s2 => Object.assign({}, s2));
     const cur = new Map(m.slots.filter(s2 => s2.type==='Technology').map(s2 => [s2.x+','+s2.y, s2]));
     const tryIt = start => { const pl = techOptimize(m, start); const tmp = m.slots.map(s2 => Object.assign({}, s2)); const map = new Map(m.slots.map((s2,i) => [s2, tmp[i]])); pl.forEach((s2, k) => { const [nx,ny] = k.split(',').map(Number); map.get(s2).x = nx; map.get(s2).y = ny; }); return { pl, sc: techScore(Object.assign({}, m, { slots: tmp })).total }; };
@@ -4298,9 +4392,9 @@ $('#p-tools').addEventListener('click', async e => {
     const [cx, cy] = ED.invCell.split(',').map(Number); const k = k0; const fid = keepId || ('^' + id); ED.pick = null; ED.pickAmt = null;
     if(k>=0) Object.assign(m.slots[k], { id: fid, amt, max, type, dirty: true }); else m.slots.push({ id: fid, amt, max, type, x: cx, y: cy, dmg: 0, dirty: true, src: null });
     if(!m.valid.some(([vx,vy]) => vx===cx && vy===cy)){ m.valid.push([cx, cy]); invValidCommit(m, `${m.label}: unlock slot ${cx+1}, ${cy+1}`); }
-    invCommit(m, `${m.label}: ${itemInfo(id).n} ×${fmt(amt)} in slot ${cx+1}, ${cy+1}`); });
+    invCommit(m, `${m.label}: ${itemInfo(id).n} ×${fmt(amt)} in slot ${cx+1}, ${cy+1}`); ED.invCell = null; });
   if(q('#edi-full')) return invAction(m => { const k = cellK(); const s = m.slots[k]; s.amt = s.max; s.dirty = true; invCommit(m, `${m.label}: fill ${idName(s.id)} to ${fmt(s.max)}`); });
-  if(q('#edi-clear')) return invAction(m => { const k = cellK(); const s = m.slots[k]; m.slots.splice(k, 1); invCommit(m, `${m.label}: empty the slot with ${idName(s.id)}`); });
+  if(q('#edi-clear')) return invAction(m => { const k = cellK(); const s = m.slots[k]; m.slots.splice(k, 1); invCommit(m, `${m.label}: empty the slot with ${idName(s.id)}`); ED.invCell = null; });
   if(q('#edi-lock')) return invAction(m => { const [cx, cy] = ED.invCell.split(',').map(Number); const i = m.valid.findIndex(([vx,vy]) => vx===cx && vy===cy);
     if(i>=0){ if(m.slots.some(s => s.x===cx && s.y===cy)) throw new Error('Empty the slot before locking it.'); m.valid.splice(i,1); } else m.valid.push([cx, cy]);
     invValidCommit(m, `${m.label}: ${i>=0 ? 'lock' : 'unlock'} slot ${cx+1}, ${cy+1}`); });
@@ -4331,8 +4425,9 @@ $('#p-tools').addEventListener('click', async e => {
   if(q('#edsnameset')){ const v = $('#edsname').value.trim(); if(!v) return; edTry(() => edSetVal(P.concat([SKEY.name]), v, `${sName}: rename to ${v}`)); edRender(); return; }
   if(q('#edssset')){ const st = $$('[data-edss]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.stats, st, `${sName}: stats`)); edRender(); return; }
   if(q('#edsbset')){ const bs = $$('[data-edsb]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: building states`)); edRender(); return; }
-  if((x = q('[data-edsmax]'))){ const i = +x.dataset.edsmax; if(!confirm('Experimental: set this plot to the fully upgraded pattern? The save is backed up first; check the building in game and restore the backup if it looks wrong.')) return;
-    const bs = sObj[SKEY.bstate].slice(); bs[i] = (((bs[i] >>> 0) & 0x000FFFFF) | 0x3FF00000) >>> 0; if(bs[i] > 2147483647) bs[i] -= 4294967296; edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: max out plot ${i+1} (experimental)`)); uCount('tools-set-max'); edRender(); return; }
+  if((x = q('[data-edsall]'))){ const k = +x.dataset.edsall; const bs = sObj[SKEY.bstate].slice(); let n = 0; bs.forEach((v,i) => { if(bldBuilt(v) && bldStep(v)!==k){ bs[i] = bldStepVal(v, k); n++; } }); if(!n){ edMsg('Every built plot is already at that stage.'); return; }
+    if(!confirm(`Experimental: set ${n} built plot${n===1?'':'s'} to ${bldStepLabel(k)}? The save is backed up first; check the buildings in game and restore the backup if anything looks wrong.`)) return;
+    edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: ${n} plots → ${bldStepLabel(k)} (experimental)`)); uCount('tools-set-all'); edRender(); return; }
   if((x = q('[data-edsfin]'))){ const i = +x.dataset.edsfin; const bt = sObj[SKEY.btime].slice(); bt[i] = bt[i] - 604800; edTry(() => setArrEdit(SKEY.btime, bt, `${sName}: finish plot ${i+1}`)); edRender(); return; }
   if(q('#edsperkset')){ const list = $('#edsperks').value.split(/\n/).map(l => l.trim()).filter(Boolean).map(l => l.startsWith('^') ? l : '^' + l); edTry(() => setArrEdit(SKEY.perks, list, `${sName}: perks`)); edRender(); return; }
   if(q('#edspset')){ edTry(() => { $$('[data-edsp]').forEach(inp => { const [i, k] = [inp.dataset.edsp.split(':')[0], inp.dataset.edsp.split(':').slice(1).join(':')]; const v = +inp.value; const cur = sObj[SKEY.prod][+i][k]; if(v !== cur) edSetVal(P.concat([SKEY.prod, +i, k]), v, `${sName}: production ${+i+1} ${k}`); }); }); edRender(); return; }
@@ -4358,11 +4453,18 @@ $('#p-tools').addEventListener('change', async e => {
   if(t.id==='edact'){ ST.edAll = t.checked ? 0 : 1; save(); INVM = null; ED.invSel = 0; ED.invCell = null; edRender(); uCount('tools-active-'+(t.checked?'on':'off')); return; }
   if(t.id==='eddir'){ ED.dir = t.value; ED.cur = null; ED.edits = new Map(); await edFiles(); edRender(); return; }
   if(t.id==='edkeep'){ ST.bkKeep = +t.value; save(); await edBackups(); edRender(); return; }
-  if(t.id==='edtech'){ ED.techSel = +t.value; TECHSEL = null; ED.techPrev = null; INVM = null; edRender(); return; }
-  if(t.id==='edinv'){ ED.invSel = +t.value; ED.invCell = null; INVM = null; edRender(); return; }
+  if(t.id==='edtech'){ ED.techSel = +t.value; TECHSEL = null; ED.tmenu = null; ED.techPrev = null; INVM = null; edRender(); return; }
+  if(t.id==='edinv'){ ED.invSel = +t.value; ED.invCell = null; ED.tmenu = null; ED.pick = null; INVM = null; edRender(); return; }
   if(t.id==='edset'){ ED.setSel = +t.value; edRender(); return; }
   if(t.id==='edsmine'){ ED.setMine = t.checked; edRender(); return; }
+  if(t.dataset.edsstage!==undefined && t.value){ const i = +t.dataset.edsstage, k = +t.value; const P = setPath(); const sObj = getAt(ED.cur.obj, P); const sName = SaveTools.rawToStr(sObj[SKEY.name]||'settlement');
+    const bs = sObj[SKEY.bstate].slice(); bs[i] = bldStepVal(bs[i], k); const nm = bldName(sObj, i);
+    edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: plot ${i+1}${nm ? ' (' + nm + ')' : ''} → ${bldStepLabel(k)} (experimental)`)); uCount('tools-set-stage'); edRender(); return; }
+  if(t.dataset.edsbn!==undefined){ const i = +t.dataset.edsbn; const sObj = getAt(ED.cur.obj, setPath()); const id = String(sObj['20I']||sObj[KO('UniqueId')]||''); if(!id) return;
+    S.bnames = S.bnames || {}; S.bnames[id] = S.bnames[id] || {}; const v = t.value.trim().slice(0, 40); if(v) S.bnames[id][i] = v; else delete S.bnames[id][i]; save(); return; }
 });
+$('#p-tools').addEventListener('contextmenu', e => { const c = e.target.closest && e.target.closest('[data-edcell],[data-edtc]'); if(!c) return; e.preventDefault();
+  if(c.dataset.edcell && INVM && invKind(INVM)==='tech'){ ED.tmenu = c.dataset.edcell; } else if(c.dataset.edcell){ ED.invCell = c.dataset.edcell; ED.pick = null; ED.pickAmt = null; } else { TECHSEL = null; ED.tmenu = c.dataset.edtc; } ED.pq = ''; edRender(); });
 $('#p-tools').addEventListener('input', e => {
   const t = e.target;
   if(t.id==='edqf'){ ED.qf = t.value; clearTimeout(ED.qt); ED.qt = setTimeout(() => { edRender(); const el = $('#edqf'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 250); }
@@ -4483,7 +4585,7 @@ document.addEventListener('keydown', e => {
   if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
 });
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }

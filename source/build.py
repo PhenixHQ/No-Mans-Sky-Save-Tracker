@@ -5,7 +5,7 @@
 
 src/head.html      <head> contents: title, fonts, all CSS
 src/body.html      page markup + the main script, with placeholders:
-                   __SAVESYNC__ (src/savesync.js), __GAMEICONS__ (src/gameicons.js), __SAVETOOLS__ (src/savetools.js), __GAME__ (data/game.bundle.json),
+                   __SAVESYNC__ (src/savesync.js), __GAMEICONS__ (src/gameicons.js), __SAVETOOLS__ (src/savetools.js), __GAME__ (data/game.bundle.json), __TECHCAT__ (data/techcat.json: where each technology may be installed),
                    __GALAXY__ (data/galaxy-snapshot.json, only shown in the web version)
 """
 import os, sys
@@ -17,7 +17,8 @@ gi = rd('src/gameicons.js'); assert '</script' not in gi
 st = rd('src/savetools.js'); assert '</script' not in st
 game = rd('data/game.bundle.json').replace('</', '<\\/')
 gal = rd('data/galaxy-snapshot.json').replace('</', '<\\/')
-page = head + body.replace('__SAVESYNC__', ss).replace('__GAMEICONS__', gi).replace('__SAVETOOLS__', st).replace('__GAME__', game).replace('__GALAXY__', gal)
+tcat = rd('data/techcat.json').replace('</', '<\\/')
+page = head + body.replace('__SAVESYNC__', ss).replace('__GAMEICONS__', gi).replace('__SAVETOOLS__', st).replace('__GAME__', game).replace('__GALAXY__', gal).replace('__TECHCAT__', tcat)
 out = os.path.join(here, '..', 'web', 'index.html')
 open(out, 'w', encoding='utf-8', newline='\n').write('<!doctype html>\n<html lang="en">\n<head>\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' + page + '\n</html>\n')
 print('wrote', os.path.normpath(out), len(page), 'chars')
