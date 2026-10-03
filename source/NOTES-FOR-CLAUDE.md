@@ -16,9 +16,11 @@ An unofficial fan-made desktop companion for No Man's Sky (PC, Steam). Tabs: Rec
 
 Installed at `C:\NO MANS SKY COMPANION PROJECT\`:
 ```
-NMS Save Tracker.vbs      launcher (runs app\server.ps1 hidden, -STA)
-Voidigaunt Companion.vbs  old name, same launcher, kept for old shortcuts
-app\server.ps1            PowerShell helper: HttpListener on 127.0.0.1:47831
+NMS Save Tracker.exe      app window (2.1.0): WinForms + WebView2, source in source\window\Window.cs
+NMS Save Tracker.vbs      launcher: starts the .exe if present, else runs app\server.ps1 hidden (-STA)
+Voidigaunt Companion.vbs  old name, kept for old shortcuts (runs the helper, which opens the .exe)
+app\server.ps1            PowerShell helper: HttpListener on 127.0.0.1:47831 (-NoWindow = started by the .exe)
+app\lib\                 WebView2 SDK 1.0.3856 (Core/WinForms dll + runtimes\win-*\native\WebView2Loader.dll)
 web\index.html            the whole app, one file, built from source\
 web\mapping.json          MBINCompiler key map to de-obfuscate save JSON
 web\config.json           {"githubRepo": "owner/repo"} for bug reports (empty = GitHub button hidden)
@@ -112,6 +114,16 @@ pins, inv (manual planner list), pl (planner source), iv (inventory tab), addr (
 - **Compare** (`cmpDiff`): currencies, item totals, inventories added/removed, quest steps, settlement stats/plots, discoveries, systems, bases, play time, plus a catch-all count of other changed values by area.
 - Undo last write = restore the newest "Before…" backup of the file; automatic backups trimmed to `ST.bkKeep` (default 40) per file, never hand-made ones. Edits carry `risk` for the write confirmation.
 - Tracker extras: Ctrl+K search (`gsResults`), keys 1–8, `/`, G, ?; `S.recent` (last 10 item cards); `S.inotes` (item notes); Copy as text (`planText`); What's new (`NEWS[APPVER]`, `S.seenVer`). Tests: `tL.js` (2.0.0 features, real helper).
+
+## 2.1.0 additions
+- **App window** `NMS Save Tracker.exe` (source/window/Window.cs, build with source/window/build.sh: Mono mcs, references .NET Framework 4.x identities, runs on Windows' built-in .NET 4.8). WebView2 SDK dlls come from the pywebview wheel on PyPI (NuGet and Microsoft downloads are blocked in the workspace).
+  - Single instance (mutex `NMSSaveTracker.Window`; a second launch brings the first forward). Pings /api/ping; if down, starts `powershell ... server.ps1 -NoWindow` and waits up to 20 s.
+  - WebView2 user data in data\webview2; window bounds in data\window.txt; loader dll picked per arch via SetLoaderDllFolderPath; assemblies resolved from app\lib via AssemblyResolve.
+  - Links outside 127.0.0.1 open in the default browser. If WebView2 fails, falls back to the old Edge --app window. Logs to data\helper.log with the prefix "window:".
+  - Helper: `param([switch]$NoWindow)`; Open-Window starts the .exe when it exists; New-Shortcut targets the .exe; Update-OldShortcut repoints a desktop shortcut that still targets wscript.
+  - Not code-signed: SmartScreen warns on first run. Hotkeys, always-on-top mini window, tray and notifications are now possible as later features (Jay asked about an in-game overlay; a true overlay is a separate big project).
+- Fonts bundled as base64 woff2 (latin subset, @fontsource 5.3.0) in head.html: works offline. The favicon is embedded too (window/taskbar icon).
+- Multi-tool labels: mtLabel() = name or "<Type> multi-tool" from Resource.Filename + "(S-class, in use)".
 
 ## Roadmap / ideas Jay asked about
 - The save editor ("NMS Toolkit") was merged into the Tracker as the opt-in save tools in 1.8.0.

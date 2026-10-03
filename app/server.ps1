@@ -4,6 +4,9 @@
 # next to this app. It never changes your game files. It only writes to a save
 # when you use the opt-in save tools, never while the game is running, and it
 # backs the save up to data\backups first.
+#
+# -NoWindow: started by "NMS Save Tracker.exe", which shows the app itself.
+param([switch]$NoWindow)
 
 $ErrorActionPreference = 'Stop'
 $AppDir    = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -19,6 +22,7 @@ $Prefix    = "http://127.0.0.1:$Port/"
 $AutoSaves = Join-Path $env:APPDATA 'HelloGames\NMS'
 $Utf8      = New-Object System.Text.UTF8Encoding($false)
 $AppName   = 'NMS Save Tracker'
+$AppExe    = Join-Path $AppDir "$AppName.exe"
 
 function Write-Log([string]$msg) {
   try { Add-Content -Path $LogFile -Value ("{0:u}  {1}" -f (Get-Date), $msg) -Encoding UTF8 } catch {}
@@ -35,6 +39,8 @@ function Find-Edge {
 }
 
 function Open-Window {
+  # The app's own window (NMS Save Tracker.exe) when it's there; it falls back to Edge by itself
+  if (Test-Path $AppExe) { try { Start-Process -FilePath $AppExe -WorkingDirectory $AppDir; return } catch { Write-Log "Could not start the app window: $($_.Exception.Message)" } }
   $edge = Find-Edge
   $profileDir = Join-Path $DataDir 'window'
   if ($edge) {
@@ -48,10 +54,13 @@ function Open-Window {
 function New-Shortcut {
   $desktop = [Environment]::GetFolderPath('Desktop')
   $lnk = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop "$AppName.lnk"))
-  $lnk.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
-  $lnk.Arguments = '"' + (Join-Path $AppDir "$AppName.vbs") + '"'
+  if (Test-Path $AppExe) { $lnk.TargetPath = $AppExe; $lnk.Arguments = ''; $lnk.IconLocation = $AppExe + ',0' }
+  else {
+    $lnk.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
+    $lnk.Arguments = '"' + (Join-Path $AppDir "$AppName.vbs") + '"'
+    $lnk.IconLocation = (Join-Path $WebDir 'icon.ico') + ',0'
+  }
   $lnk.WorkingDirectory = $AppDir
-  $lnk.IconLocation = (Join-Path $WebDir 'icon.ico') + ',0'
   $lnk.Description = "$AppName for No Man's Sky (unofficial fan-made app)"
   $lnk.Save()
 }
@@ -60,7 +69,13 @@ function Update-OldShortcut {
   try {
     $desktop = [Environment]::GetFolderPath('Desktop')
     $old = Join-Path $desktop 'Voidigaunt Companion.lnk'
-    if ((Test-Path $old) -and -not (Test-Path (Join-Path $desktop "$AppName.lnk"))) { New-Shortcut; Remove-Item $old -Force; Write-Log 'Replaced old desktop shortcut' }
+    $cur = Join-Path $desktop "$AppName.lnk"
+    if ((Test-Path $old) -and -not (Test-Path $cur)) { New-Shortcut; Remove-Item $old -Force; Write-Log 'Replaced old desktop shortcut' }
+    # Point the desktop shortcut at the app window once it exists
+    if ((Test-Path $cur) -and (Test-Path $AppExe)) {
+      $t = (New-Object -ComObject WScript.Shell).CreateShortcut($cur).TargetPath
+      if ($t -and $t -like '*wscript.exe') { New-Shortcut; Write-Log 'Desktop shortcut now opens the app window' }
+    }
   } catch { Write-Log "Shortcut update skipped: $($_.Exception.Message)" }
 }
 
@@ -236,7 +251,7 @@ function Read-BodyBytes($req, [int]$max) {
 # Already running? Just open another window.
 try {
   $r = Invoke-WebRequest -UseBasicParsing -Uri ($Prefix + 'api/ping') -Headers @{ 'X-VC' = '1' } -TimeoutSec 2
-  if ($r.StatusCode -eq 200) { Open-Window; exit }
+  if ($r.StatusCode -eq 200) { if (-not $NoWindow) { Open-Window }; exit }
 } catch {}
 
 $Mime = @{
@@ -506,7 +521,7 @@ Write-Log "Helper started"
 Update-OldShortcut
 $script:lastPing = (Get-Date).AddSeconds(90)   # grace period while the window opens
 $script:quit = $false
-Open-Window
+if (-not $NoWindow) { Open-Window }
 
 while ($listener.IsListening -and -not $script:quit) {
   $task = $listener.GetContextAsync()

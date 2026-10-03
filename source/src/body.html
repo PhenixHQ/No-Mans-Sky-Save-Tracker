@@ -709,7 +709,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.0.0';
+const APPVER = '2.1.0';
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -3273,7 +3273,7 @@ document.addEventListener('keydown', e => {
   if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
 });
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }

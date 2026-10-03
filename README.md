@@ -43,7 +43,7 @@ Use them at your own risk, and keep your own copy of anything important.
 
 ## Install (Windows)
 1. Download this repository (**Code → Download ZIP**) and unzip it anywhere.
-2. Double-click **`NMS Save Tracker.vbs`**. The app opens in its own window using Microsoft Edge, which comes with Windows.
+2. Double-click **`NMS Save Tracker.exe`**. The app opens in its own window (Microsoft WebView2, part of Windows 10 and 11). The .exe isn't code-signed, so the first time Windows may say "Windows protected your PC": click **More info → Run anyway**. `NMS Save Tracker.vbs` still works too.
 3. Press **Sync** to read your latest save. Tick **Auto-sync** next to it to keep every tab updated while you play.
 
 The app finds your saves in `%APPDATA%\HelloGames\NMS` automatically. If yours are somewhere else, pick the folder under **Settings & help → Game files**. Steam and GOG saves are supported; Game Pass saves use a different format and aren't yet.
@@ -57,8 +57,10 @@ The app finds your saves in `%APPDATA%\HelloGames\NMS` automatically. If yours a
 
 ## Folder layout
 ```
-NMS Save Tracker.vbs   launcher
+NMS Save Tracker.exe   the app window (WebView2); starts the helper
+NMS Save Tracker.vbs   older launcher (starts the .exe, or an Edge window without it)
 app\server.ps1         local helper (PowerShell)
+app\lib\               Microsoft WebView2 SDK libraries (BSD license)
 web\                   the app (index.html is built from source\)
 web\config.json        publisher settings (GitHub repo for bug reports)
 source\                source code, build script and developer notes
@@ -66,13 +68,15 @@ data\                  created on first run: your personal app data, icon cache 
 ```
 
 ## Building from source
-Requires Python 3. Run `python source\build.py` to rebuild `web\index.html` from `source\src`. See `source\NOTES-FOR-CLAUDE.md` for how everything fits together.
+Requires Python 3. Run `python source\build.py` to rebuild `web\index.html` from `source\src`. The app window is built from `source\window\Window.cs` with `source/window/build.sh` (Mono `mcs`). See `source\NOTES-FOR-CLAUDE.md` for how everything fits together.
 
 ## Credits
 - Save decoding key map: [MBINCompiler](https://github.com/monkeyman192/MBINCompiler) `mapping.json`.
 - Item and recipe data: extracted game data via [bradhave94/nms](https://github.com/bradhave94/nms).
 - Galaxy names list: community sources.
 - Game pack format: as documented by [HGPAKtool](https://github.com/monkeyman192/HGPAKtool) (MIT).
+- App window: [Microsoft WebView2 SDK](https://www.nuget.org/packages/Microsoft.Web.WebView2) (BSD 3-Clause).
+- Fonts: Chakra Petch, IBM Plex Sans and IBM Plex Mono (SIL Open Font License), bundled so the app works offline.
 - zstd decoding: [fzstd](https://github.com/101arrowz/fzstd) by Arjun Barrett (MIT), included in `source/src/gameicons.js`.
 - BC7 partition tables: [bcdec](https://github.com/iOrange/bcdec) by Sergii Kudlai (MIT).
 - Save manifest format (XXTEA key and layout) and save compression (LZ4 blocks): as documented by the NMS modding community. The LZ4 packer in `source/src/savetools.js` is written for this app.
