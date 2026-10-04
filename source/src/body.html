@@ -69,6 +69,12 @@
 })();
 </script>
 <div class="wrap">
+  <div class="panelbar" id="panelbar" role="toolbar" aria-label="Side panel">
+    <span class="grow1" id="panelhint">Side panel</span>
+    <button type="button" class="btn ghost" id="pnside" title="Move the panel to the other side of the screen">Other side</button>
+    <button type="button" class="btn ghost" id="pnwin" title="Turn back into a normal window">Normal window</button>
+    <button type="button" class="btn" id="pnhide" title="Hide the panel and go back to the game">Hide</button>
+  </div>
   <header class="top">
     <div class="toprow">
       <div class="brand">
@@ -498,6 +504,7 @@
     <button type="button" data-dsec="map" aria-pressed="false">Map colours</button>
     <button type="button" data-dsec="sync" aria-pressed="false">Sync</button>
     <button type="button" data-dsec="files" aria-pressed="false">Game files</button>
+    <button type="button" data-dsec="ovl" aria-pressed="false" id="dsecovl" hidden>Overlay</button>
     <button type="button" data-dsec="bug" aria-pressed="false">Report a bug</button>
     <button type="button" data-dsec="help" aria-pressed="false">Help</button>
   </div>
@@ -606,6 +613,8 @@
     <div class="row"><button type="button" class="btn" id="resetmap">Reset map colours</button></div>
   </div>
 
+  <div class="dsec" id="d-ovl" hidden><div class="ovset" id="ovlset"></div></div>
+
   <div class="dsec" id="d-sync" hidden>
     <p class="muted small" style="margin:0" id="syncnote">Sync reads your newest No Man's Sky save. It only reads the file; it never changes it.</p>
     <label class="toggle" for="autosync2"><input type="checkbox" id="autosync2"> Auto-sync while I play</label>
@@ -692,7 +701,7 @@
     <details><summary>Save tools (advanced)</summary><p>Off by default. Turn them on in Settings &amp; help, Game files, Advanced. A Save tools tab appears with: <b>Saves &amp; backups</b> (back up any save, restore a backup, or make an older save the one the game loads), <b>Inventories</b> (any item and amount in any slot, unlock slots), <b>Currencies</b>, <b>Settlements</b> (finish construction, debt, name, stats, buildings, perks, production, timers, or the whole entry raw), <b>Quests</b> (change a step, remove a mission, or restore missions from a backup), <b>Timers</b> (move any date in the save back, like the clock trick) and <b>Everything (raw)</b> to browse and change any value.</p><p>Changes wait in a list until you press <b>Write to save</b>. The app refuses to write while No Man's Sky is running, backs the save up to data\backups first, then reads it back to check it. If anything looks wrong in game, restore the backup.</p></details>
     <details><summary>Reporting a bug</summary><p>Open <b>Report a bug</b> in this menu, say what happened and how, and save, copy or download the report. The attached log has no save data, names, locations or personal details; you can read all of it before sending.</p></details>
     <details><summary>Quests</summary><p>Change a quest's status with its dropdown and write your next step in the notes. <b>Add a goal</b> makes your own card; double-click a title to rename it.</p></details>
-    <details id="helpkeys"><summary>Keyboard shortcuts</summary><p><b>Ctrl+K</b> search everything · <b>1–8</b> switch tabs · <b>/</b> jump to the search box · <b>G</b> open or close Goals · <b>?</b> this help · <b>Esc</b> close a panel.</p></details>
+    <details id="helpkeys"><summary>Keyboard shortcuts</summary><p><b>Ctrl+K</b> search everything · <b>1–8</b> switch tabs · <b>/</b> jump to the search box · <b>G</b> open or close Goals · <b>?</b> this help · <b>Esc</b> close a panel. In the app window: <b>Ctrl+Shift+O</b> overlay, <b>Ctrl+Shift+P</b> side panel, <b>Ctrl+Shift+L</b> overlay click-through (change them in Settings &amp; help &gt; Overlay).</p></details>
     <details><summary>Goals</summary><p>Press <b>Goals</b> at the top (or G) for a side panel with your pinned recipes and your own goals. Make a goal, then add rows: an item and how many, money, a recipe to be able to make, or a quest to finish. Every row updates by itself from your save, ticks off when done, and the panel lists what you still need to gather. Drag goals to reorder them.</p></details>
     <details><summary>Display</summary><p>Settings → Display picks how portal glyphs show (icons, numbers, names, hex), whether big numbers are written in full or short (1.37B), how a system's location is given, and whether inventories show as a grid like in the game or as a list.</p></details>
     <details><summary>Item cards</summary><p>Search an item by its exact name to get its card. <b>You own</b> adds it up across all your inventories; click it to see where it's stored. <b>Where to find</b> (or double-click the card) jumps to where it's gathered, or to the recipes that make it.</p></details>
@@ -701,6 +710,8 @@
   </div>
 </aside>
 
+
+<div id="ovl" hidden></div>
 
 <script>
 __SAVESYNC__
@@ -735,7 +746,12 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.3.0';
+const APPVER = '2.4.0';
+// 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
+// ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
+const OVL = /[?&]overlay=1\b/.test(location.search);
+const HOST = !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessage);
+function hostSend(o){ if(HOST){ try { window.chrome.webview.postMessage(JSON.stringify(o)); } catch(e) {} } }
 let HELPER = 0;
 const DESK = (function(){
   if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -752,8 +768,9 @@ S.diag = S.diag || {}; if(S.diag.cur && S.diag.cur.length) S.diag.prev = S.diag.
 S.addr = S.addr || null;
 S.quests = S.quests || null;
 let saveT = null;
-function flush(keep){ saveT = null; return api('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(S), keepalive: !!keep}).catch(()=>{}); }
+function flush(keep){ saveT = null; if(OVL) return Promise.resolve(); return api('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(S), keepalive: !!keep}).then(r => { if(r && r.ok) hostSend({t:'saved'}); }).catch(()=>{}); }
 function save(){
+  if(OVL) return;
   if(DESK){ clearTimeout(saveT); saveT = setTimeout(flush, 300); return; }
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {}
 }
@@ -766,6 +783,7 @@ if(DESK){
 if(S.galaxy && S.galaxy.sys) GX = S.galaxy;
 /* ---------- loading screen (only while the app is loading) ---------- */
 const BOOT = { icons: !DESK, sync: true, done: false };
+if(OVL){ const b = document.getElementById('boot'); if(b) b.hidden = true; }
 function bootStep(msg, pct){ const el = document.getElementById('bootstep'); if(el && msg) el.textContent = msg; const f = document.getElementById('bootfill'); if(f && pct!=null) f.style.width = Math.max(4, Math.min(100, pct)) + '%'; }
 function bootDone(){ if(BOOT.done) return; BOOT.done = true; bootStep('Ready', 100); const b = document.getElementById('boot'); if(b){ b.classList.add('out'); setTimeout(() => { b.hidden = true; clearInterval(window.BOOT_TIPS); }, 350); } vcLog('boot', `ready in ${Math.round(performance.now())} ms`); }
 function bootCheck(){ if(BOOT.icons && BOOT.sync) setTimeout(bootDone, 0); }
@@ -1908,6 +1926,7 @@ $('#ggal').addEventListener('change', e => { galView = +e.target.value; filterGa
 function snapText(){ const n = SY.filter(s=>s.v).length; $('#gsnap').textContent = DESK ? `${n} visited system${n===1?'':'s'} in ${galName(galView)}.` : `Snapshot from your save on ${GX.snap}: ${n} visited systems in ${galName(galView)}.`; }
 renderGalSelect(); snapText();
 function setGalaxy(g){
+  if(OVL){ GX = g; ALLSY = g.sys; cur = g.cur || {}; HAVE = stock(); MK = new Map(); CANN = new Map(); renderOvl(); return; }
   const prevG = cur.g||0;
   GX = g; ALLSY = g.sys; cur = g.cur; if(cur.g===undefined) cur.g = 0;
   if((cur.g||0)!==prevG) galView = cur.g||0;
@@ -2063,8 +2082,8 @@ $('#c-teal').addEventListener('input', e => { ST.teal = e.target.value; applyCol
 $('#c-accent').addEventListener('change', save); $('#c-teal').addEventListener('change', save);
 $('#drawer').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.mapcol; if(!k) return; ST.map = ST.map||{}; ST.map[k] = e.target.value; if(k in COL) COL[k] = e.target.value; if(k in DCOL) DCOL[k] = e.target.value; renderLegend(); draw(); });
 $('#drawer').addEventListener('change', e => { if(e.target.dataset && e.target.dataset.mapcol) save(); });
-const DSECS = ['look','disp','map','sync','files','bug','help'];
-function showDsec(s){ DSECS.forEach(x => $('#d-'+x).hidden = x!==s); sync('dsec', s); if(s==='bug') renderBugPreview(); if(s==='disp') renderDisp(); if(s==='files') loadPaths(); }
+const DSECS = ['look','disp','map','sync','ovl','files','bug','help'];
+function showDsec(s){ DSECS.forEach(x => $('#d-'+x).hidden = x!==s); sync('dsec', s); if(s==='bug') renderBugPreview(); if(s==='disp') renderDisp(); if(s==='files') loadPaths(); if(s==='ovl') renderOvlSet(); }
 function renderDisp(){
   $$('[data-disp]').forEach(i => i.checked = !!DSP[i.dataset.disp]);
   sync('dbig', DSP.big); sync('dloc', DSP.loc); sync('dinv', DSP.invView);
@@ -2124,6 +2143,7 @@ function renderSync(msg, bad){
   $('#autosync').checked = !!ST.autosync; $('#autosync2').checked = !!ST.autosync; $('#autosync3').checked = !!ST.autosync;
   $('#autopill').classList.toggle('on', !!ST.autosync); $('#autopill').title = ST.autosync ? `Auto-sync is on: checking for a new save every ${syncEvery()<60 ? syncEvery()+' seconds' : 'minute'}. Every tab updates.` : 'Turn on to re-read your save by itself while you play. Every tab updates: inventory, recipes you can make, map and stats.';
   sync('every', String(syncEvery()));
+  if(OVL && window.__ovlReady) renderOvl();
 }
 async function syncNow(manual){
   if(!DESK || syncing) return;
@@ -2149,7 +2169,7 @@ async function syncNow(manual){
     syncing = false; renderSync('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), true);
   }
 }
-function schedSync(){ clearTimeout(syncTimer); if(!DESK) return; syncTimer = setTimeout(async () => { if(ST.autosync) { try { await syncNow(false); } catch(e) {} } schedSync(); }, syncEvery()*1000); }
+function schedSync(){ clearTimeout(syncTimer); if(!DESK) return; syncTimer = setTimeout(async () => { if(ST.autosync || OVL) { try { await syncNow(false); } catch(e) {} } schedSync(); }, syncEvery()*1000); }
 function setAuto(on){ ST.autosync = on; save(); renderSync(); schedSync(); if(on) syncNow(false); uCount('autosync-'+(on?'on':'off')); }
 if(DESK){
   $('#syncpill').hidden = false; $('#autopill').hidden = false; $('#mkshortcut').hidden = false;
@@ -2165,7 +2185,7 @@ if(DESK){
   $('#mkshortcut').addEventListener('click', async e => { const bn = e.currentTarget; try { const r = await api('/api/shortcut', {method:'POST'}); bn.textContent = r.ok ? 'Shortcut added to desktop' : 'Could not add shortcut'; } catch(err) { bn.textContent = 'Could not add shortcut'; } });
   schedSync();
   // A first sync, or a refresh when this app version reads more from the save than the stored copy has.
-  if(!S.lastSync || ST.autosync || !(S.galaxy && S.galaxy.v===4)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===4)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
+  if(!S.lastSync || ST.autosync || OVL || !(S.galaxy && S.galaxy.v===4)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===4)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
 }
 renderSync();
 
@@ -2373,7 +2393,7 @@ async function giPreload(){
   const idx = await giLoadIndex();
   if(idx && idx.pack && DSP.gameIcons!==0){ try { const t0 = performance.now(); const n = await giLoadPack(idx); vcLog('icons', `pack loaded: ${n} icons in ${Math.round(performance.now()-t0)} ms`); } catch(e){ vcLog('icons', 'pack: ' + e.message); await giLoadIndex(); } }
   BOOT.icons = true; bootCheck(); giRender(); if(GI.map.size) giRefresh();
-  if(DSP.gameIcons===0) return;
+  if(DSP.gameIcons===0 || OVL) return;
   try { const r = await api('/api/paks'); const pk = r.ok ? await r.json() : {};
     if(!pk.ok || !pk.paks || !pk.paks.length){ if(idx && idx.files && !idx.pack) await giMakePack(idx.sig||'', idx.files, idx.iv); return; }
     const sig = pk.paks.map(p => p.name + ':' + p.size + ':' + p.mtime).join('|');
@@ -3454,6 +3474,169 @@ $('#side').addEventListener('dragover', e => { if(gDrag!==null && e.target.close
 $('#side').addEventListener('drop', e => { const g = e.target.closest('[data-goal]'); if(gDrag===null || !g) return; e.preventDefault(); const to = +g.dataset.goal; const [it] = S.goals.splice(gDrag, 1); S.goals.splice(to, 0, it); gDrag = null; save(); renderSide(); });
 if(ST.side) setTimeout(() => sideOpen(true), 0);
 
+/* ---------- 2.4.0: IN-GAME OVERLAY + SIDE PANEL (app window only) ---------- */
+// The overlay is a second, small always-on-top window showing this page with ?overlay=1.
+// It reads the app's data and auto-syncs on its own, but never writes; its choices live in S.ovl,
+// set here in Settings & help > Overlay. The window part (hotkeys, tray, panel) is NMS Save Tracker.exe.
+const OVW = { goals:'Goals', short:'Still needed for goals', pins:'Pinned recipes', cur:'Units, nanites, quicksilver', where:'Where you are' };
+const OVW_DEF = [{k:'goals',on:1},{k:'short',on:1},{k:'cur',on:1},{k:'pins',on:1},{k:'where',on:0}];
+let HCFG = null; // what the app window last told us: {cfg, hk, panel, overlay}
+function ovlCfg(){ S.ovl = S.ovl || {}; const o = S.ovl;
+  let w = Array.isArray(o.w) ? o.w.filter(x => x && OVW[x.k]) : [];
+  Object.keys(OVW).forEach(k => { if(!w.some(x => x.k===k)) w.push((OVW_DEF.find(x => x.k===k)) ? Object.assign({}, OVW_DEF.find(x => x.k===k)) : {k, on:0}); });
+  if(!Array.isArray(o.w) || !o.w.length) w = OVW_DEF.map(x => Object.assign({}, x));
+  return { w, goals: Array.isArray(o.goals) ? o.goals : [], size: +o.size || 13 }; }
+const OVSVG = {
+  sync:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5.5A5.5 5.5 0 0 0 3.2 4M3 10.5A5.5 5.5 0 0 0 12.8 12"/><path d="M3 1.5V4.5H6M13 14.5V11.5H10"/></svg>',
+  click:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2l4 11 1.6-4.4L13 7z"/><path d="M9 9l4 4"/></svg>',
+  fade:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11A5.5 5.5 0 0 0 8 2.5z" fill="currentColor" stroke="none"/></svg>',
+  app:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M9.5 3v10"/></svg>',
+  gear:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>',
+  close:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>'
+};
+function ovlGoals(c){ const all = S.goals || []; const pick = c.goals.filter(n => all.some(g => g.n===n)); return pick.length ? all.filter(g => pick.includes(g.n)) : all; }
+function ovlWidget(k, c){
+  if(k==='goals'){ const gs = ovlGoals(c);
+    if(!gs.length) return `<div class="ovw"><div class="ovwt">Goals</div><p class="ovempty">No goals yet. Open the app, press Goals and make one; it shows up here and ticks itself off as you play.</p></div>`;
+    return `<div class="ovw"><div class="ovwt">Goals</div>${gs.map(g => { const rows = g.rows.map(goalRow); const done = rows.filter(x => x.done).length;
+      return `<div class="ovgoal"><div class="ovgn"><span>${esc(g.n)}</span><span class="${rows.length && done===rows.length ? 'done' : 'muted'}">${rows.length && done===rows.length ? 'done ✓' : `${done}/${rows.length}`}</span></div>${rows.map(x => { const pct = Math.min(100, Math.round(x.have / Math.max(1, x.need) * 100));
+        return `<div class="ovrow${x.done?' done':''}">${x.icon || '<span style="width:22px"></span>'}<div class="ovl1"><span title="${esc(x.label)}">${esc(x.label)}</span><div class="ivbar"><span style="width:${pct}%"></span></div></div><span class="n">${x.status ? (x.done ? '✓' : esc(x.sub||'')) : `<b>${x.money ? fmtBig(x.have) : fmt(x.have)}</b>/${x.money ? fmtBig(x.need) : fmt(x.need)}`}</span></div>`; }).join('') || '<p class="ovempty">Nothing in this goal yet.</p>'}</div>`; }).join('')}</div>`; }
+  if(k==='short'){ const short = new Map();
+    ovlGoals(c).forEach(g => { const rows = g.rows.map(goalRow); g.rows.forEach((r, i) => { if(r.t==='item' && rows[i].short) short.set(r.id, (short.get(r.id)||0) + rows[i].short); }); });
+    if(!short.size) return ''; return `<div class="ovw"><div class="ovwt">Still needed</div><div class="ovchips">${[...short.entries()].map(([id,q]) => `<span class="chip">${giImg(id,'cimg')}<span class="q">${fmt(q)}×</span><span>${esc(itemInfo(id).n)}</span></span>`).join('')}</div></div>`; }
+  if(k==='pins'){ const pins = (S.pins||[]).map(x => ALL.get(x)).filter(Boolean); if(!pins.length) return '';
+    return `<div class="ovw"><div class="ovwt"><span>Pinned recipes</span><span>now · from scratch</span></div>${pins.map(r => { const cc = HAVE.size ? makeCounts(r) : null; return `<div class="ovrow">${itemIconHTML(idOf(r.out[0]),'sm')}<div class="ovl1"><span>${esc(I[r.out[0]].n)}</span></div><span class="n">${cc ? `<b>${fmt(cc.now)}</b> · ${fmt(cc.all)}` : '–'}</span></div>`; }).join('')}</div>`; }
+  if(k==='cur'){ const g = GX.stats || {}; return `<div class="ovw"><div class="ovcur"><div><small>Units</small><b>${fmtBig(g.units||0)}</b></div><div><small>Nanites</small><b>${fmtBig(g.nanites||0)}</b></div><div><small>Quicksilver</small><b>${fmtBig(g.quicksilver||0)}</b></div></div></div>`; }
+  if(k==='where'){ const g = GX.stats || {}; return g.summary ? `<div class="ovw"><div class="ovwt">Where you are</div><div>${esc(g.summary)}</div></div>` : ''; }
+  return '';
+}
+function ovlSyncText(){ const L = S.lastSync; if(syncing) return 'Reading your save…'; if(!L) return 'Not synced yet'; return `Synced ${ago(L.at)} · game saved ${ago(L.mtime)}`; }
+function renderOvl(){
+  if(!OVL) return; const el = $('#ovl'); if(!el) return; el.hidden = false;
+  const c = ovlCfg(); el.style.fontSize = c.size + 'px';
+  const cl = HCFG && HCFG.cfg && HCFG.cfg.Click, op = HCFG && HCFG.cfg ? HCFG.cfg.Opacity : 100, hk = HCFG && HCFG.cfg ? HCFG.cfg.HkClick : 'Ctrl+Shift+L';
+  if(!el.firstChild){ el.innerHTML = `<div class="ovhead" id="ovhead"><div class="ovt"><b>NMS Save Tracker</b><span id="ovsync"></span></div>
+      <button type="button" class="ovb" data-ov="sync" title="Sync now">${OVSVG.sync}</button>
+      <button type="button" class="ovb" data-ov="fade" title="See-through (click to change)">${OVSVG.fade}</button>
+      <button type="button" class="ovb" data-ov="click" title="Click-through: let the mouse pass through to the game">${OVSVG.click}</button>
+      <button type="button" class="ovb" data-ov="app" title="Open the full app as a side panel">${OVSVG.app}</button>
+      <button type="button" class="ovb" data-ov="set" title="Choose what the overlay shows">${OVSVG.gear}</button>
+      <button type="button" class="ovb" data-ov="hide" title="Hide the overlay">${OVSVG.close}</button></div>
+    <div class="ovbody" id="ovbody"></div><div class="ovhint" id="ovhint" hidden></div>`;
+    el.addEventListener('mousedown', e => { if(e.button!==0 || e.target.closest('button') || !e.target.closest('#ovhead')) return; e.preventDefault(); hostSend({t:'drag'}); });
+    el.addEventListener('click', e => { const b = e.target.closest('[data-ov]'); if(!b) return; const a = b.dataset.ov;
+      if(a==='sync') syncNow(true).then(renderOvl); else if(a==='hide') hostSend({t:'overlay', on:false}); else if(a==='click') hostSend({t:'click'});
+      else if(a==='app') hostSend({t:'open'}); else if(a==='set') hostSend({t:'open', sec:'ovl'});
+      else if(a==='fade'){ const steps = [100, 85, 70, 55]; const cur2 = HCFG && HCFG.cfg ? HCFG.cfg.Opacity : 100; const i = steps.findIndex(x => x < cur2); hostSend({t:'setcfg', cfg:{Opacity: i<0 ? 100 : steps[i]}}); } });
+  }
+  $('#ovsync').textContent = ovlSyncText();
+  const cb = el.querySelector('[data-ov="click"]'); cb.classList.toggle('on', !!cl);
+  el.querySelector('[data-ov="fade"]').classList.toggle('on', op < 100); el.querySelector('[data-ov="fade"]').title = `See-through: ${op}% (click to change)`;
+  const hint = $('#ovhint'); hint.hidden = !cl; hint.textContent = cl ? `Click-through is on: the mouse goes to the game. Press ${hk && hk!=='None' ? hk : 'the click-through hotkey'} to use the overlay again.` : '';
+  const body = c.w.filter(x => x.on).map(x => ovlWidget(x.k, c)).join('');
+  $('#ovbody').innerHTML = body || '<p class="ovempty">Nothing picked to show. Press the gear to choose.</p>';
+}
+// A newer copy of the app's data was saved by the main window: pick up goals, pins, looks and the latest sync.
+let ovlReloading = false;
+async function ovlReload(){
+  if(!OVL || ovlReloading) return; ovlReloading = true;
+  try { const d = await (await api('/api/data')).json() || {};
+    ['goals','pins','ovl','quests','bnames','inotes','econ'].forEach(k => { if(d[k]!==undefined) S[k] = d[k]; });
+    if(d.settings) ['theme','preset','custom','accent','teal','size','map'].forEach(k => { if(d.settings[k]!==undefined) ST[k] = d.settings[k]; else delete ST[k]; });
+    if(d.galaxy && d.lastSync && (!S.lastSync || d.lastSync.mtime > S.lastSync.mtime)){ S.lastSync = d.lastSync; S.galaxy = d.galaxy; setGalaxy(d.galaxy); }
+    applyTheme(); renderOvl();
+  } catch(e) { vcLog('overlay', 'reload: ' + (e && e.message)); }
+  ovlReloading = false;
+}
+// Side panel bar (main window)
+function renderPanelBar(){
+  if(OVL) return; const on = !!(HCFG && HCFG.panel); document.body.classList.toggle('panelmode', on);
+  if(!on) return; const c = HCFG.cfg || {};
+  $('#panelhint').textContent = `Side panel · ${c.HkPanel && c.HkPanel!=='None' ? c.HkPanel + ' or ' : ''}Esc hides it`;
+  $('#pnside').textContent = c.PanelSide==='left' ? 'Move right' : 'Move left';
+}
+$('#pnhide').addEventListener('click', () => hostSend({t:'panel', on:false}));
+$('#pnwin').addEventListener('click', () => hostSend({t:'panel-exit'}));
+$('#pnside').addEventListener('click', () => hostSend({t:'setcfg', cfg:{PanelSide: HCFG && HCFG.cfg && HCFG.cfg.PanelSide==='left' ? 'right' : 'left'}}));
+document.addEventListener('keydown', e => { // Esc hides the side panel when nothing else is open
+  if(e.key!=='Escape' || OVL || !document.body.classList.contains('panelmode') || HKCAP) return;
+  const busy = !$('#drawer').hidden || GS.open || !$('#newsbox').hidden || (typeof ED!=='undefined' && (ED.picking || ED.invCell || ED.tmenu || TECHSEL)) || /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'') || document.querySelector('.modal:not([hidden])');
+  if(!busy) hostSend({t:'panel', on:false});
+}, true);
+// Settings & help > Overlay
+const HKN = { HkOverlay:['Show or hide the overlay','overlay'], HkClick:['Overlay click-through on or off','click'], HkPanel:['Open the app as a side panel','panel'] };
+let HKCAP = null;
+function hkFromEvent(e){
+  const c = e.code || ''; let k = null, m;
+  if((m = /^Key([A-Z])$/.exec(c))) k = m[1]; else if((m = /^Digit(\d)$/.exec(c))) k = m[1]; else if((m = /^F(\d{1,2})$/.exec(c))) k = 'F' + m[1];
+  else if((m = /^Numpad(\d)$/.exec(c))) k = 'NumPad' + m[1];
+  else k = ({Insert:'Insert', Home:'Home', End:'End', PageUp:'PageUp', PageDown:'PageDown', Pause:'Pause', ScrollLock:'Scroll', Backquote:'Oemtilde'})[c] || null;
+  if(!k) return null;
+  const mods = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt'].filter(Boolean);
+  if(!mods.length && /^[A-Z0-9]$|^NumPad/.test(k)) return ''; // a plain letter would fire while you type in game
+  return [...mods, k].join('+');
+}
+document.addEventListener('keydown', e => {
+  if(!HKCAP) return; e.preventDefault(); e.stopPropagation();
+  if(e.key==='Escape'){ HKCAP = null; renderOvlSet(); return; }
+  if(e.key==='Backspace' || e.key==='Delete'){ const k = HKCAP; HKCAP = null; hostSend({t:'setcfg', cfg:{[k]:'None'}}); renderOvlSet(); return; }
+  if(/^(Control|Shift|Alt|Meta)$/.test(e.key)) return;
+  const v = hkFromEvent(e); const msg = $('#hkmsg');
+  if(v===null){ if(msg) msg.textContent = 'That key can\'t be used. Try a letter or F-key with Ctrl, Shift or Alt.'; return; }
+  if(v===''){ if(msg) msg.textContent = 'Add Ctrl, Shift or Alt to letters and numbers, so the hotkey doesn\'t fire while you type in game.'; return; }
+  const k = HKCAP; HKCAP = null; hostSend({t:'setcfg', cfg:{[k]: v}}); uCount('hotkey-set'); renderOvlSet();
+}, true);
+function renderOvlSet(){
+  const el = $('#ovlset'); if(!el || OVL) return;
+  if(!HCFG){ el.innerHTML = '<p class="muted small">The overlay works in the app window (NMS Save Tracker.exe), not in a browser.</p>'; return; }
+  const c = HCFG.cfg || {}, hk = HCFG.hk || {}, oc = ovlCfg();
+  const gnames = (S.goals||[]).map(g => g.n);
+  el.innerHTML = `<p class="muted small" style="margin:0">Keep your goals and more on top of the game, or pull the whole app up beside it. Set No Man's Sky to <b>Borderless</b> (Options › Video › Window mode): in exclusive Fullscreen, Windows can't show anything on top of the game.</p>
+    <div class="row"><button type="button" class="btn primary" id="ovtog">${HCFG.overlay ? 'Hide the overlay' : 'Show the overlay'}</button><button type="button" class="btn" id="pntog">${HCFG.panel ? 'Hide the side panel' : 'Open as side panel'}</button></div>
+    <h3>Hotkeys</h3><p class="muted small" style="margin:0">They work while the game has focus. Click Change, then press the new keys (Backspace turns one off, Esc cancels).</p>
+    ${Object.entries(HKN).map(([k,[l,id]]) => `<div class="hkrow"><span>${l}${hk[id]==='taken' ? '<br><span class="hkbad">Another program already uses this one. Pick different keys.</span>' : ''}</span><kbd class="${HKCAP===k?'wait':''}">${HKCAP===k ? 'Press keys…' : esc(c[k] && c[k]!=='None' ? c[k] : 'Off')}</kbd><button type="button" class="btn ghost" data-hk="${k}">${HKCAP===k ? 'Cancel' : 'Change'}</button></div>`).join('')}
+    <p class="small" id="hkmsg" style="margin:0; color:var(--accent)"></p>
+    <h3>Overlay window</h3>
+    <label class="toggle"><input type="checkbox" id="ovclick" ${c.Click?'checked':''}> Click-through (the mouse goes to the game; use the hotkey to turn it off again)</label>
+    <div class="field"><span class="lbl">See-through: <b id="ovopv">${c.Opacity||100}%</b></span><input type="range" id="ovop" min="30" max="100" step="5" value="${c.Opacity||100}"><span class="small muted">If the overlay turns blank when see-through or click-through is on, set this back to 100% and tell me in a bug report.</span></div>
+    <div class="field"><span class="lbl">Text size</span><div class="seg" role="group" aria-label="Overlay text size">${[11,12,13,14,16].map(z => `<button type="button" data-ovsize="${z}" aria-pressed="${oc.size===z}">${z}</button>`).join('')}</div></div>
+    <div class="field"><span class="lbl">What it shows (top to bottom)</span><div class="owl">${oc.w.map((x, i) => `<div class="orow"><label class="toggle"><input type="checkbox" data-ovw="${i}" ${x.on?'checked':''}> ${esc(OVW[x.k])}</label><button type="button" class="linkbtn" data-ovup="${i}" ${i?'':'disabled'} title="Move up">▲</button><button type="button" class="linkbtn" data-ovdn="${i}" ${i<oc.w.length-1?'':'disabled'} title="Move down">▼</button></div>`).join('')}</div></div>
+    <div class="field"><span class="lbl">Which goals</span>${gnames.length ? `<div class="owl">${gnames.map(n => `<label class="toggle"><input type="checkbox" data-ovg="${esc(n)}" ${oc.goals.includes(n)?'checked':''}> ${esc(n)}</label>`).join('')}</div><span class="small muted">None ticked shows every goal.</span>` : '<span class="small muted">You have no goals yet. Press Goals at the top of the app to make one.</span>'}</div>
+    <p class="small muted" style="margin:0">Move the overlay by dragging its title bar and resize it from any edge. It syncs by itself while you play.</p>
+    <h3>Side panel</h3>
+    <div class="field"><span class="lbl">Side of the screen</span><div class="seg" role="group" aria-label="Panel side"><button type="button" data-pnside="left" aria-pressed="${c.PanelSide==='left'}">Left</button><button type="button" data-pnside="right" aria-pressed="${c.PanelSide!=='left'}">Right</button></div></div>
+    <div class="field"><span class="lbl">Width: <b id="pnpctv">${c.PanelPct||40}%</b> of the screen</span><input type="range" id="pnpct" min="20" max="85" step="1" value="${c.PanelPct||40}"><span class="small muted">You can also drag the panel's inner edge.</span></div>
+    <h3>When I close the window</h3>
+    <label class="toggle"><input type="checkbox" id="ovtray" ${c.Tray!==false?'checked':''}> Keep running in the tray so the hotkeys keep working (right-click the tray icon to quit)</label>`;
+}
+$('#ovlset').addEventListener('click', e => { const t = e.target; let x;
+  if(t.closest('#ovtog')){ hostSend({t:'overlay', on: !HCFG.overlay}); uCount('overlay-'+(HCFG.overlay?'off':'on')); return; }
+  if(t.closest('#pntog')){ hostSend({t:'panel', on: !HCFG.panel}); return; }
+  if((x = t.closest('[data-hk]'))){ HKCAP = HKCAP===x.dataset.hk ? null : x.dataset.hk; renderOvlSet(); return; }
+  if((x = t.closest('[data-ovsize]'))){ S.ovl = S.ovl || {}; S.ovl.size = +x.dataset.ovsize; save(); renderOvlSet(); return; }
+  if((x = t.closest('[data-ovup],[data-ovdn]'))){ const oc = ovlCfg(); const i = +(x.dataset.ovup ?? x.dataset.ovdn); const j = x.dataset.ovup!==undefined ? i-1 : i+1; if(j<0 || j>=oc.w.length) return; [oc.w[i], oc.w[j]] = [oc.w[j], oc.w[i]]; S.ovl.w = oc.w; save(); renderOvlSet(); return; }
+  if((x = t.closest('[data-pnside]'))){ hostSend({t:'setcfg', cfg:{PanelSide: x.dataset.pnside}}); return; }
+});
+$('#ovlset').addEventListener('change', e => { const t = e.target;
+  if(t.id==='ovclick'){ hostSend({t:'setcfg', cfg:{Click: t.checked}}); return; }
+  if(t.id==='ovtray'){ hostSend({t:'setcfg', cfg:{Tray: t.checked}}); return; }
+  if(t.id==='ovop'){ hostSend({t:'setcfg', cfg:{Opacity: +t.value}}); return; }
+  if(t.id==='pnpct'){ hostSend({t:'setcfg', cfg:{PanelPct: +t.value}}); return; }
+  if(t.dataset.ovw!==undefined){ const oc = ovlCfg(); oc.w[+t.dataset.ovw].on = t.checked ? 1 : 0; S.ovl.w = oc.w; save(); return; }
+  if(t.dataset.ovg!==undefined){ const oc = ovlCfg(); const n = t.dataset.ovg; S.ovl.goals = t.checked ? [...new Set([...oc.goals, n])] : oc.goals.filter(x => x!==n); save(); return; }
+});
+$('#ovlset').addEventListener('input', e => { const t = e.target; if(t.id==='ovop') $('#ovopv').textContent = t.value + '%'; if(t.id==='pnpct') $('#pnpctv').textContent = t.value + '%'; });
+if(HOST){
+  window.chrome.webview.addEventListener('message', e => { const m = e.data; if(!m || !m.t) return;
+    if(m.t==='cfg'){ HCFG = m; if(OVL) renderOvl(); else { $('#dsecovl').hidden = false; renderPanelBar(); if(!$('#d-ovl').hidden && !HKCAP) renderOvlSet(); } return; }
+    if(m.t==='state' && OVL){ ovlReload(); return; }
+    if(m.t==='go' && !OVL){ if(m.sec) openDrawer(m.sec); return; }
+  });
+  hostSend({t:'hello'});
+}
+window.__ovlReady = true;
+if(OVL){ renderOvl(); setInterval(() => { const s = $('#ovsync'); if(s) s.textContent = ovlSyncText(); }, 15000); }
+
 
 /* ---------- GLOBAL SEARCH (Ctrl+K) ---------- */
 const TABN = { recipes:'Recipes', inventory:'Inventory', resources:'Where to find', portals:'Portals', galaxy:'My galaxy', quests:'Quests', pinned:'Pinned', tools:'Save tools' };
@@ -3490,10 +3673,10 @@ document.addEventListener('keydown', e => {
   if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
 });
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Show it with Ctrl+Shift+O.','Side panel: Ctrl+Shift+P pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (Ctrl+Shift+L), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
-if(S.seenVer !== APPVER){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }
+if(S.seenVer !== APPVER && !OVL){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }
 
 /* ---------- boot ---------- */
 renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderQuests();
@@ -3502,5 +3685,6 @@ let startTab = 'recipes'; { const t = tabGet(); if(t==='planner'){ if(!R.can) se
 const hash = (location.hash||'').slice(1); if(TABS.includes(hash)) startTab = hash;
 showTab(startTab);
 bootStep(DESK ? 'Almost there…' : 'Ready', 80); bootCheck();
+if(OVL){ bootDone(); renderOvl(); }
 })();
 </script>

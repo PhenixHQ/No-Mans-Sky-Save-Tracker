@@ -678,4 +678,59 @@ body.side-open .wrap{margin-right:380px}
 .recent{gap:6px}
 .edfind{display:grid; gap:4px; justify-items:start}
 @media (max-width:1500px){ body.side-open header.top .menubtn .mtxt{display:none} }
+
+/* ---------- 2.4.0: in-game overlay (?overlay=1) and side panel ---------- */
+html.ovl, html.ovl body{height:100%; margin:0; overflow:hidden; background:var(--bg)}
+html.ovl body > :not(#ovl):not(script){display:none !important}
+#ovl{display:flex; flex-direction:column; height:100vh; font-size:13px; color:var(--ink); background:var(--bg); font-family:var(--body)}
+#ovl[hidden]{display:none}
+.ovhead{display:flex; align-items:center; gap:4px; padding:4px 4px 4px 8px; background:var(--surface-2); border-bottom:1px solid var(--line); cursor:move; user-select:none; flex:none}
+.ovhead .ovt{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; line-height:1.15}
+.ovhead .ovt b{font:600 12px var(--display); letter-spacing:.04em; text-transform:uppercase; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ovhead .ovt span{font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ovb{appearance:none; border:1px solid transparent; background:none; color:var(--muted); width:26px; height:26px; border-radius:6px; display:grid; place-items:center; cursor:pointer; padding:0; flex:none}
+.ovb:hover{background:var(--surface); color:var(--ink); border-color:var(--line)}
+.ovb.on{color:var(--accent); border-color:var(--accent)}
+.ovb svg{width:15px; height:15px}
+.ovbody{flex:1 1 auto; overflow:auto; padding:8px; display:grid; gap:8px; align-content:start; scrollbar-width:thin}
+.ovw{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:7px 8px; display:grid; gap:6px}
+.ovw > .ovwt{font-size:.78em; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between; gap:6px}
+.ovgoal{display:grid; gap:5px}
+.ovgoal + .ovgoal{border-top:1px dashed var(--line); padding-top:6px}
+.ovgn{display:flex; justify-content:space-between; gap:6px; font-weight:600}
+.ovgn .done{color:var(--good)}
+.ovrow{display:grid; grid-template-columns:auto 1fr auto; gap:6px; align-items:center}
+.ovrow .ovl1{min-width:0; display:grid; gap:2px}
+.ovrow .ovl1 > span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ovrow .ivbar{height:4px}
+.ovrow.done .ovl1 > span{color:var(--muted); text-decoration:line-through}
+.ovrow .n{font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--muted)}
+.ovrow .n b{color:var(--ink)}
+.ovcur{display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; text-align:center}
+.ovcur div{display:grid; gap:1px}
+.ovcur small{color:var(--muted); font-size:.78em}
+.ovcur b{font-variant-numeric:tabular-nums}
+.ovchips{display:flex; flex-wrap:wrap; gap:4px}
+.ovempty{color:var(--muted); font-size:.92em; margin:0}
+.ovhint{font-size:11px; color:var(--muted); padding:4px 8px; border-top:1px solid var(--line); flex:none}
+/* side panel mode (the app docked over part of the screen) */
+.panelbar{display:none}
+body.panelmode .panelbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:5px 10px; margin:0 0 6px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; font-size:12.5px}
+.panelbar .grow1{flex:1 1 auto; color:var(--muted)}
+.panelbar .btn{padding:3px 10px; font-size:12.5px}
+body.panelmode header.top .tagline{display:none}
+body.panelmode header.top .menubtn .mtxt{display:none}
+body.panelmode .wrap{padding-top:8px}
+body.panelmode.side-open .wrap{margin-right:0}
+/* overlay settings */
+.ovset{display:grid; gap:12px}
+.ovset h3{margin:6px 0 0; font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+.hkrow{display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center}
+.hkrow kbd{font:600 12.5px var(--mono); padding:3px 8px; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; background:var(--surface); white-space:nowrap}
+.hkrow kbd.wait{border-color:var(--accent); color:var(--accent)}
+.hkbad{color:var(--bad); font-size:12px}
+.owl{display:grid; gap:4px}
+.owl .orow{display:grid; grid-template-columns:1fr auto auto; gap:4px; align-items:center}
+.ovset input[type=range]{width:100%}
 </style>
+<script>if(/[?&]overlay=1\b/.test(location.search)) document.documentElement.classList.add('ovl');</script>

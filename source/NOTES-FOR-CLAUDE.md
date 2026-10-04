@@ -16,7 +16,7 @@ An unofficial fan-made desktop companion for No Man's Sky (PC, Steam). Tabs: Rec
 
 Installed at `C:\NO MANS SKY COMPANION PROJECT\`:
 ```
-NMS Save Tracker.exe      app window (2.1.0): WinForms + WebView2, source in source\window\Window.cs
+NMS Save Tracker.exe      app window (2.4.0): WinForms + WebView2 + overlay/side panel/hotkeys/tray, source in source\window\Window.cs
 NMS Save Tracker.vbs      launcher: starts the .exe if present, else runs app\server.ps1 hidden (-STA)
 Voidigaunt Companion.vbs  old name, kept for old shortcuts (runs the helper, which opens the .exe)
 app\server.ps1            PowerShell helper: HttpListener on 127.0.0.1:47831 (-NoWindow = started by the .exe)
@@ -25,7 +25,7 @@ web\index.html            the whole app, one file, built from source\
 web\mapping.json          MBINCompiler key map to de-obfuscate save JSON
 web\config.json           {"githubRepo": "owner/repo"} for bug reports (empty = GitHub button hidden)
 web\icon.ico
-data\                     user data (never overwrite): companion.json (+.bak), paths.json, icons\ (game icon cache + index.json + pack.bin), backups\ (save backups, one folder each with info.json), reports\, window\ (Edge profile), helper.log
+data\                     user data (never overwrite): companion.json (+.bak), overlay.json (overlay/hotkey settings), paths.json, icons\ (game icon cache + index.json + pack.bin), backups\ (save backups, one folder each with info.json), reports\, window\ (Edge profile), helper.log
 source\                   this folder
 ```
 
@@ -138,6 +138,16 @@ pins, inv (manual planner list), pl (planner source), iv (inventory tab), addr (
 - **Trade goods** (`__TRADE__` = source/data/trade.json from bradhave94 Trade.json; economy mapping from the NMS wiki: Commodity→Trading, Alloy→Advanced Materials (Superconducting Fibre), Exotic→Scientific, Mineral→Mining, Component→Manufacturing, Tech→Technology, Energy→Power Generation, ILLEGAL_PROD→outlaw). Where to find → Trade goods: Near picker (current system, freighter, bases, tagged systems; `S.tnear`), closest 5 tagged places by distance (region distance × 400 ly), closest per economy. Economy tags in `S.econ[sysKey]`, set in Trade goods (current system) or My galaxy (`#gecon`). Sync now adds `fr` (FreighterUniverseAddress) and per-system `tr`/`tg` from TradingSupplyData. The save does NOT store system economies.
 - Economy symbols: IP gets pseudo-ids ECON_<k> → /textures/ui/frontend/systeminfo/economy.{trading,fusion(=Advanced Materials),scientific,mining,manufacturing,hightech,powergeneration}.dds and conflict.pirate.dds for outlaw (paths from METADATA/UI/GALAXYINFOICONS.MBIN). `ICONSET` (2) in the icon index makes existing installs fetch new non-item icons once (giBuild(false) is incremental).
 - Where to find cards: Freighter Stellar Extractor (output list from its entity file extrroom/.../extractorterminal.entity.mbin: STELLAR2 Chromatic Metal, GAS1 Sulphurine, GAS2 Radon, GAS3 Nitrogen, GAS4 Methane; Jay confirmed Chromatic Metal + Methane in game; an early version wrongly said star metals and no gases; build 60 Silver/45 Gold/40 Magnetised Ferrite) and gas sources (Atmosphere Harvester: 100 Ammonia, 2 Metal Plating, 2 Hermetic Seal; Nitrogen Lush/Toxic, Radon Radioactive/Frozen, Sulphurine Scorched/Desert).
+
+## 2.4.0 additions (in-game overlay)
+- **Window.cs** (exe 2.4.0, builds with `-r:System.Web.Extensions.dll` for JavaScriptSerializer): `OvCfg` in data\overlay.json (HkOverlay/HkPanel/HkClick, PanelSide, PanelPct 20–85, Opacity 30–100, Click, OverlayOn, OX/OY/OW/OH, Tray, TrayTip). One shared WebView2 environment (`Program.Env()`), `Program.Attach(web, role, url)`.
+- **Hotkeys**: `RegisterHotKey` on a hidden `NativeWindow` (ids 1 overlay, 2 panel, 3 click-through; MOD_NOREPEAT). Strings like `Ctrl+Shift+O`, `F9`, `Alt+Insert`; letters/digits need a modifier (page enforces). Status per hotkey: ok / taken / off.
+- **Overlay**: `OverlayForm`, borderless, WS_EX_TOOLWINDOW|TOPMOST, shows without activating (game keeps focus), 5 px edge = resize (WM_NCHITTEST), drag = page posts `drag` → ReleaseCapture + WM_NCLBUTTONDOWN/HTCAPTION. See-through/click-through = WS_EX_LAYERED (+WS_EX_TRANSPARENT) with SetLayeredWindowAttributes; layered is only applied when used, because WebView2 in layered windows was not tested on Jay's PC. Page = `/?overlay=1`.
+- **Side panel**: the main window turns borderless + topmost, docked to the left/right of the game's monitor (Screen.FromHandle of the previous foreground window), full height, width PanelPct; inner 6 px edge resizes and saves the %. Hiding it re-focuses the game window. "Normal window" restores the old bounds.
+- **Tray**: NotifyIcon (open, side panel, overlay, click-through, quit). Closing the window hides to tray when `Tray` (balloon tip once). A second launch sets the named event `NMSSaveTracker.Show` to show the window. The exe pings the helper every 10 s itself (hidden pages' timers get throttled) and restarts it if it stopped.
+- **Messages** (page → exe, JSON strings via chrome.webview.postMessage): hello, saved (main saved data → exe tells the overlay `state`), setcfg {cfg}, overlay {on}, click, drag, panel {on}, panel-exit, open {sec} (show panel + main page gets `go`), quit. Exe → page: cfg {cfg, hk, panel, overlay, ver}, state, go {sec}.
+- **Page**: `OVL` (?overlay=1) never writes (save/flush no-op, no icon builds, no news, boot hidden), always auto-syncs, light `setGalaxy` path, `ovlReload()` on `state` copies goals/pins/ovl/looks and a newer sync from /api/data. Overlay choices in `S.ovl = {w:[{k,on}], goals:[names], size}`; widgets goals, short, pins, cur, where (`OVW`). Main page: `body.panelmode` + `#panelbar`, Esc (capture phase) hides the panel when nothing else is open; Settings & help › Overlay (`renderOvlSet`, hotkey capture `HKCAP`). Test: `tools/tO.js` (fake chrome.webview).
+- Not yet seen on Jay's PC when shipped: hotkeys over the game, layered see-through/click-through with WebView2, panel docking on his monitor.
 
 ## Fact check, 3 Oct 2026 (Jay asked: verify everything against the game)
 Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game text (bradhave94 localization = game language files):

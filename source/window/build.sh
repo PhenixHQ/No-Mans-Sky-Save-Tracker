@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/../.."
 mcs -nologo -target:winexe -platform:anycpu -optimize+ -codepage:utf8 \
   -win32icon:web/icon.ico \
-  -r:System.dll -r:System.Drawing.dll -r:System.Windows.Forms.dll \
+  -r:System.dll -r:System.Drawing.dll -r:System.Windows.Forms.dll -r:System.Web.Extensions.dll \
   -r:app/lib/Microsoft.Web.WebView2.Core.dll -r:app/lib/Microsoft.Web.WebView2.WinForms.dll \
   -out:"NMS Save Tracker.exe" source/window/Window.cs
 ls -la "NMS Save Tracker.exe"
