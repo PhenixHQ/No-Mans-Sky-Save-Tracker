@@ -51,6 +51,7 @@ namespace NmsSaveTracker
     public int PanelPct = 40;                   // panel width, % of the screen
     public int Opacity = 100;                   // overlay opacity, 30..100 %
     public bool Click = false;                  // overlay ignores the mouse
+    public bool Pin = true;                     // overlay stays on screen when you go back to the game
     public bool OverlayOn = false;              // overlay was showing when the app closed
     public int OX, OY, OW, OH;                  // overlay bounds (0 = default)
     public bool Tray = true;                    // closing the window keeps the app in the tray
@@ -311,6 +312,7 @@ namespace NmsSaveTracker
               if ((n = N(c, "Opacity")) != null) { Cfg.Opacity = Math.Max(30, Math.Min(100, n.Value)); look = true; }
               bool? b;
               if ((b = B(c, "Tray")) != null) Cfg.Tray = b.Value;
+              if ((b = B(c, "Pin")) != null) Cfg.Pin = b.Value;
               if ((b = B(c, "Click")) != null) { Cfg.Click = b.Value; look = true; }
               if (keys) HK.RegisterAll();
               if (look && Overlay != null) Overlay.ApplyLook();
@@ -318,7 +320,8 @@ namespace NmsSaveTracker
               SaveCfg(); Broadcast();
               break;
             }
-          case "overlay": { bool? on = B(m, "on"); SetOverlay(on ?? !(Overlay != null && Overlay.Visible)); break; }
+          case "overlay": { bool? on = B(m, "on"); bool show = on ?? !(Overlay != null && Overlay.Visible); SetOverlay(show); if (!show && role == "overlay") BackToGame(false); break; }
+          case "game": if (role == "overlay") OverlayToGame(); break;
           case "click": ToggleClick(); break;
           case "opacity": { int? d = N(m, "d"); if (d != null) { Cfg.Opacity = Math.Max(30, Math.Min(100, Cfg.Opacity + d.Value)); if (Overlay != null) Overlay.ApplyLook(); SaveCfg(); Broadcast(); } break; }
           case "drag": if (role == "overlay" && Overlay != null) Overlay.StartDrag(); break;
@@ -343,6 +346,7 @@ namespace NmsSaveTracker
         { "hk", HK != null ? HK.Status : new Dictionary<string, string>() },
         { "panel", Win != null && Win.InPanel && Win.Visible },
         { "overlay", Overlay != null && Overlay.Visible },
+        { "inuse", Overlay != null && Overlay.Visible && Native.GetForegroundWindow() == Overlay.Handle },
         { "ver", "2.4.0" } };
       return Json.Serialize(d);
     }
@@ -366,6 +370,35 @@ namespace NmsSaveTracker
       else if (Overlay != null) Overlay.Hide();
       Cfg.OverlayOn = on; SaveCfg(); Broadcast();
     }
+    // The window that had focus before we took it (normally the game)
+    public static IntPtr Game = IntPtr.Zero;
+    public static void RememberGame()
+    {
+      var fg = Native.GetForegroundWindow();
+      if (fg != IntPtr.Zero && !Native.Ours(fg)) Game = fg;
+    }
+    public static void BackToGame(bool force)
+    {
+      if (Game != IntPtr.Zero && Native.IsWindow(Game)) Native.SetForegroundWindow(Game);
+    }
+    // F8: hidden -> show and take the mouse; in use -> back to the game; showing but the game has the mouse -> take it
+    public static void OverlayKey()
+    {
+      bool vis = Overlay != null && Overlay.Visible;
+      bool inUse = vis && Native.GetForegroundWindow() == Overlay.Handle;
+      if (inUse) { OverlayToGame(); return; }
+      RememberGame();
+      if (!vis) SetOverlay(true);
+      if (Cfg.Click) { Cfg.Click = false; Overlay.ApplyLook(); SaveCfg(); }
+      Overlay.TakeFocus();
+      Broadcast();
+    }
+    public static void OverlayToGame()
+    {
+      if (!Cfg.Pin && Overlay != null) { Overlay.Hide(); Cfg.OverlayOn = false; SaveCfg(); }
+      BackToGame(false);
+      Broadcast();
+    }
     public static void ToggleClick()
     {
       Cfg.Click = !Cfg.Click;
@@ -375,7 +408,7 @@ namespace NmsSaveTracker
     }
     public static void Hotkey(int id)
     {
-      if (id == 1) SetOverlay(!(Overlay != null && Overlay.Visible));
+      if (id == 1) OverlayKey();
       else if (id == 2) Win.TogglePanel();
       else if (id == 3) ToggleClick();
     }
@@ -456,7 +489,6 @@ namespace NmsSaveTracker
     // side panel
     public bool InPanel;
     Rectangle normalBounds; FormWindowState normalState = FormWindowState.Normal;
-    IntPtr prevFg = IntPtr.Zero;
     Screen panelScreen;
     int pad;
 
@@ -633,9 +665,9 @@ namespace NmsSaveTracker
 
     public void ShowPanel()
     {
-      var fg = Native.GetForegroundWindow();
-      if (fg != IntPtr.Zero && !Native.Ours(fg)) prevFg = fg;
-      var sc = prevFg != IntPtr.Zero && Native.IsWindow(prevFg) ? Screen.FromHandle(prevFg) : Screen.FromPoint(Cursor.Position);
+      Program.RememberGame();
+      var g = Program.Game;
+      var sc = g != IntPtr.Zero && Native.IsWindow(g) ? Screen.FromHandle(g) : Screen.FromPoint(Cursor.Position);
       if (!InPanel)
       {
         normalState = WindowState == FormWindowState.Minimized ? FormWindowState.Normal : WindowState;
@@ -677,7 +709,7 @@ namespace NmsSaveTracker
     {
       if (!InPanel) return;
       Hide();
-      if (prevFg != IntPtr.Zero && Native.IsWindow(prevFg)) Native.SetForegroundWindow(prevFg); // back to the game
+      Program.BackToGame(false);
       Program.Broadcast();
     }
 
@@ -739,6 +771,8 @@ namespace NmsSaveTracker
       Bounds = r;
       ResizeEnd += (s, e) => SaveBounds();
       Move += (s, e) => { if (Visible) SaveBoundsSoon(); };
+      Activated += (s, e) => Program.Broadcast();
+      Deactivate += (s, e) => { if (!Program.Quitting) Program.Broadcast(); };
       FormClosing += (s, e) => { SaveBounds(); if (!Program.Quitting && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Program.SetOverlay(false); } };
     }
 
@@ -779,6 +813,14 @@ namespace NmsSaveTracker
       Native.SetWindowLong(Handle, Native.GWL_EXSTYLE, ex);
       if (layered) Native.SetLayeredWindowAttributes(Handle, 0, (byte)Math.Round(c.Opacity * 255 / 100.0), 2 /* LWA_ALPHA */);
       Native.SetWindowPos(Handle, Native.HWND_TOPMOST, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x0020 /* frame changed */);
+    }
+
+    public void TakeFocus()
+    {
+      if (!Visible) Show();
+      Activate();
+      Native.SetForegroundWindow(Handle);
+      if (Web != null) Web.Focus();
     }
 
     public void StartDrag()
