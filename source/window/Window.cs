@@ -44,9 +44,9 @@ namespace NmsSaveTracker
   // Everything the overlay remembers (data\overlay.json)
   public class OvCfg
   {
-    public string HkOverlay = "Ctrl+Shift+O";   // show / hide the overlay
-    public string HkPanel = "Ctrl+Shift+P";     // show / hide the app as a side panel
-    public string HkClick = "Ctrl+Shift+L";     // overlay click-through on / off
+    public string HkOverlay = "F8";   // show / hide the overlay
+    public string HkPanel = "F9";     // show / hide the app as a side panel
+    public string HkClick = "F10";     // overlay click-through on / off
     public string PanelSide = "right";          // left | right
     public int PanelPct = 40;                   // panel width, % of the screen
     public int Opacity = 100;                   // overlay opacity, 30..100 %
@@ -252,6 +252,8 @@ namespace NmsSaveTracker
       cw.Settings.IsPasswordAutosaveEnabled = false;
       cw.Settings.IsGeneralAutofillEnabled = false;
       cw.Settings.IsZoomControlEnabled = role == "main";
+      // No browser shortcuts (Ctrl+P print, Ctrl+F find, F5 reload...): they clash with hotkeys and do nothing useful here
+      cw.Settings.AreBrowserAcceleratorKeysEnabled = false;
       cw.NewWindowRequested += (s, e) => { e.Handled = true; OpenExternal(e.Uri); };
       cw.NavigationStarting += (s, e) => {
         var u = e.Uri ?? "";
@@ -399,7 +401,7 @@ namespace NmsSaveTracker
       mods = 0; vk = 0;
       if (string.IsNullOrEmpty(s) || s == "None") return false;
       string key = null;
-      foreach (var raw in s.Split('+'))
+      foreach (var raw in s.Split(new[] { '+' }))
       {
         var p = raw.Trim(); var l = p.ToLowerInvariant();
         if (l == "ctrl" || l == "control") mods |= 2; else if (l == "shift") mods |= 4; else if (l == "alt") mods |= 1; else if (l == "win") mods |= 8; else key = p;
