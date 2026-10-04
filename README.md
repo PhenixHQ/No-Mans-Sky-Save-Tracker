@@ -19,8 +19,9 @@ An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your 
 - **Save tools (advanced, off by default):** for testing, restoring and fixing saves. Turn them on in **Settings & help → Game files → Advanced**. See below.
 
 ## In-game overlay (app window only)
-- **Overlay** (F8): a small window that stays on top of the game with your goals, what you still need for them, pinned recipes, units/nanites/quicksilver and where you are. It syncs by itself while you play. Drag its title bar to move it and any edge to resize it. It can be see-through and click-through (F10), so the mouse goes to the game.
-- **Side panel** (F9): the whole app over part of the screen (left or right, width of your choice). The same keys, Esc or Hide put you back in the game.
+- **Overlay**: a small window that stays on top of the game with your goals, what you still need for them, pinned recipes, units/nanites/quicksilver and where you are. It syncs by itself while you play. **F8** opens it and lets you click it (press F8 again any time to click back into it), **F9** closes it, Esc or clicking the game goes back to the game. Drag its title bar to move it and any edge to resize it; it can be see-through.
+- **How to get it**: click anything under Still needed for the recipes that make it (best first, with how many you can run now) and where it's found.
+- **Side panel** (**F10**): the whole app over part of the screen (left or right, width of your choice).
 - Set it up in Settings & help › Overlay, including your own hotkeys. Closing the window keeps the app in the tray so the hotkeys keep working; right-click the tray icon to quit.
 - No Man's Sky must run in **Borderless** mode. In exclusive Fullscreen, Windows can't show anything on top of the game.
 

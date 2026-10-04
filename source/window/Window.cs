@@ -36,21 +36,23 @@ using Microsoft.Web.WebView2.WinForms;
 [assembly: AssemblyTitle("NMS Save Tracker")]
 [assembly: AssemblyProduct("NMS Save Tracker")]
 [assembly: AssemblyDescription("Unofficial fan-made app for No Man's Sky")]
-[assembly: AssemblyVersion("2.4.0.0")]
-[assembly: AssemblyFileVersion("2.4.0.0")]
+[assembly: AssemblyVersion("2.4.1.0")]
+[assembly: AssemblyFileVersion("2.4.1.0")]
 
 namespace NmsSaveTracker
 {
   // Everything the overlay remembers (data\overlay.json)
   public class OvCfg
   {
-    public string HkOverlay = "F8";   // show / hide the overlay
-    public string HkPanel = "F9";     // show / hide the app as a side panel
-    public string HkClick = "F10";     // overlay click-through on / off
+    public int V;                               // settings version (2 = F8 open, F9 close, F10 panel, no click-through)
+    public string HkOverlay = "F8";             // open the overlay / click back into it
+    public string HkClose = "F9";               // close the overlay
+    public string HkPanel = "F10";              // show / hide the app as a side panel
+    public string HkClick;                      // old click-through key (2.4.0), no longer used
     public string PanelSide = "right";          // left | right
     public int PanelPct = 40;                   // panel width, % of the screen
     public int Opacity = 100;                   // overlay opacity, 30..100 %
-    public bool Click = false;                  // overlay ignores the mouse
+    public bool Click = false;                  // old click-through setting, always off now
     public bool Pin = true;                     // overlay stays on screen when you go back to the game
     public bool OverlayOn = false;              // overlay was showing when the app closed
     public int OX, OY, OW, OH;                  // overlay bounds (0 = default)
@@ -273,6 +275,14 @@ namespace NmsSaveTracker
       Cfg.PanelPct = Math.Max(20, Math.Min(85, Cfg.PanelPct));
       Cfg.Opacity = Math.Max(30, Math.Min(100, Cfg.Opacity));
       if (Cfg.PanelSide != "left") Cfg.PanelSide = "right";
+      if (Cfg.V < 2)
+      {
+        // 2.4.1 layout: F8 opens or focuses the overlay, F9 closes it, F10 is the side panel. Click-through is gone.
+        Cfg.HkOverlay = "F8"; Cfg.HkClose = "F9";
+        if (string.IsNullOrEmpty(Cfg.HkPanel) || Cfg.HkPanel == "F8" || Cfg.HkPanel == "F9" || Cfg.HkPanel == "Ctrl+Shift+P") Cfg.HkPanel = "F10";
+        Cfg.HkClick = null; Cfg.V = 2; SaveCfg();
+      }
+      Cfg.Click = false;
     }
     public static void SaveCfg()
     {
@@ -305,7 +315,7 @@ namespace NmsSaveTracker
               string s;
               if ((s = S(c, "HkOverlay")) != null) { Cfg.HkOverlay = s; keys = true; }
               if ((s = S(c, "HkPanel")) != null) { Cfg.HkPanel = s; keys = true; }
-              if ((s = S(c, "HkClick")) != null) { Cfg.HkClick = s; keys = true; }
+              if ((s = S(c, "HkClose")) != null) { Cfg.HkClose = s; keys = true; }
               if ((s = S(c, "PanelSide")) != null) { Cfg.PanelSide = s == "left" ? "left" : "right"; dock = true; }
               int? n;
               if ((n = N(c, "PanelPct")) != null) { Cfg.PanelPct = Math.Max(20, Math.Min(85, n.Value)); dock = true; }
@@ -313,7 +323,6 @@ namespace NmsSaveTracker
               bool? b;
               if ((b = B(c, "Tray")) != null) Cfg.Tray = b.Value;
               if ((b = B(c, "Pin")) != null) Cfg.Pin = b.Value;
-              if ((b = B(c, "Click")) != null) { Cfg.Click = b.Value; look = true; }
               if (keys) HK.RegisterAll();
               if (look && Overlay != null) Overlay.ApplyLook();
               if (dock) Win.Redock();
@@ -322,7 +331,6 @@ namespace NmsSaveTracker
             }
           case "overlay": { bool? on = B(m, "on"); bool show = on ?? !(Overlay != null && Overlay.Visible); SetOverlay(show); if (!show && role == "overlay") BackToGame(false); break; }
           case "game": if (role == "overlay") OverlayToGame(); break;
-          case "click": ToggleClick(); break;
           case "opacity": { int? d = N(m, "d"); if (d != null) { Cfg.Opacity = Math.Max(30, Math.Min(100, Cfg.Opacity + d.Value)); if (Overlay != null) Overlay.ApplyLook(); SaveCfg(); Broadcast(); } break; }
           case "drag": if (role == "overlay" && Overlay != null) Overlay.StartDrag(); break;
           case "panel": { bool? on = B(m, "on"); if (on == false) Win.HidePanel(); else Win.ShowPanel(); break; }
@@ -347,7 +355,7 @@ namespace NmsSaveTracker
         { "panel", Win != null && Win.InPanel && Win.Visible },
         { "overlay", Overlay != null && Overlay.Visible },
         { "inuse", Overlay != null && Overlay.Visible && Native.GetForegroundWindow() == Overlay.Handle },
-        { "ver", "2.4.0" } };
+        { "ver", "2.4.1" } };
       return Json.Serialize(d);
     }
     public static void SendCfg(WebView2 web) { Post(web, CfgJson()); }
@@ -381,17 +389,22 @@ namespace NmsSaveTracker
     {
       if (Game != IntPtr.Zero && Native.IsWindow(Game)) Native.SetForegroundWindow(Game);
     }
-    // F8: hidden -> show and take the mouse; in use -> back to the game; showing but the game has the mouse -> take it
+    // F8: opens the overlay and gives it the mouse; if it's already open, gives it the mouse again. Never closes it.
     public static void OverlayKey()
     {
       bool vis = Overlay != null && Overlay.Visible;
-      bool inUse = vis && Native.GetForegroundWindow() == Overlay.Handle;
-      if (inUse) { OverlayToGame(); return; }
       RememberGame();
       if (!vis) SetOverlay(true);
-      if (Cfg.Click) { Cfg.Click = false; Overlay.ApplyLook(); SaveCfg(); }
       Overlay.TakeFocus();
       Broadcast();
+    }
+    // F9: closes the overlay and gives the mouse back to the game
+    public static void CloseKey()
+    {
+      if (Overlay == null || !Overlay.Visible) return;
+      bool hadFocus = Native.GetForegroundWindow() == Overlay.Handle;
+      SetOverlay(false);
+      if (hadFocus) BackToGame(false);
     }
     public static void OverlayToGame()
     {
@@ -399,18 +412,11 @@ namespace NmsSaveTracker
       BackToGame(false);
       Broadcast();
     }
-    public static void ToggleClick()
-    {
-      Cfg.Click = !Cfg.Click;
-      if (Cfg.Click && (Overlay == null || !Overlay.Visible)) SetOverlay(true);
-      if (Overlay != null) Overlay.ApplyLook();
-      SaveCfg(); Broadcast();
-    }
     public static void Hotkey(int id)
     {
       if (id == 1) OverlayKey();
       else if (id == 2) Win.TogglePanel();
-      else if (id == 3) ToggleClick();
+      else if (id == 3) CloseKey();
     }
     public static void Quit()
     {
@@ -426,7 +432,7 @@ namespace NmsSaveTracker
   class Hotkeys : NativeWindow
   {
     public Dictionary<string, string> Status = new Dictionary<string, string>();
-    readonly string[] names = { "", "overlay", "panel", "click" };
+    readonly string[] names = { "", "overlay", "panel", "close" };
     public Hotkeys() { CreateHandle(new CreateParams()); }
 
     public static bool Parse(string s, out uint mods, out uint vk)
@@ -456,7 +462,7 @@ namespace NmsSaveTracker
     public void RegisterAll()
     {
       UnregisterAll();
-      string[] hk = { null, Program.Cfg.HkOverlay, Program.Cfg.HkPanel, Program.Cfg.HkClick };
+      string[] hk = { null, Program.Cfg.HkOverlay, Program.Cfg.HkPanel, Program.Cfg.HkClose };
       for (int id = 1; id <= 3; id++)
       {
         uint mods, vk;
@@ -481,7 +487,7 @@ namespace NmsSaveTracker
     Label status;
     string boundsFile;
     NotifyIcon tray;
-    ToolStripMenuItem miPanel, miOverlay, miClick;
+    ToolStripMenuItem miPanel, miOverlay;
     System.Windows.Forms.Timer keepAlive;
     bool reallyClose;
     float scale = 1f;
@@ -550,8 +556,7 @@ namespace NmsSaveTracker
       var open = new ToolStripMenuItem("Open NMS Save Tracker", null, (s, e) => ShowNormal()) { Font = new Font(SystemFonts.MenuFont, FontStyle.Bold) };
       miPanel = new ToolStripMenuItem("Side panel", null, (s, e) => TogglePanel());
       miOverlay = new ToolStripMenuItem("Overlay", null, (s, e) => Program.SetOverlay(!(Program.Overlay != null && Program.Overlay.Visible)));
-      miClick = new ToolStripMenuItem("Overlay click-through", null, (s, e) => Program.ToggleClick());
-      menu.Items.AddRange(new ToolStripItem[] { open, miPanel, miOverlay, miClick, new ToolStripSeparator(), new ToolStripMenuItem("Quit", null, (s, e) => Program.Quit()) });
+      menu.Items.AddRange(new ToolStripItem[] { open, miPanel, miOverlay, new ToolStripSeparator(), new ToolStripMenuItem("Quit", null, (s, e) => Program.Quit()) });
       menu.Opening += (s, e) => UpdateTray();
       tray = new NotifyIcon { Icon = Icon, Text = Program.AppName, ContextMenuStrip = menu, Visible = true };
       tray.DoubleClick += (s, e) => ShowNormal();
@@ -562,9 +567,8 @@ namespace NmsSaveTracker
       if (miPanel == null) return;
       var c = Program.Cfg;
       miPanel.Text = (InPanel && Visible ? "Hide side panel" : "Show as side panel") + Hk(c.HkPanel);
-      miOverlay.Text = (Program.Overlay != null && Program.Overlay.Visible ? "Hide overlay" : "Show overlay") + Hk(c.HkOverlay);
-      miClick.Text = "Overlay click-through" + Hk(c.HkClick);
-      miClick.Checked = c.Click;
+      bool ov = Program.Overlay != null && Program.Overlay.Visible;
+      miOverlay.Text = (ov ? "Close overlay" + Hk(c.HkClose) : "Show overlay" + Hk(c.HkOverlay));
     }
 
     void OnClosing(object s, FormClosingEventArgs e)
@@ -682,6 +686,7 @@ namespace NmsSaveTracker
       TopMost = true;
       BackColor = Color.FromArgb(0x3A, 0x4A, 0x50);
       Redock();
+      Program.Log("side panel: " + Bounds + " on " + sc.DeviceName + (Program.Game != IntPtr.Zero ? " (over the game)" : ""));
       if (!Visible) Show();
       Activate(); Native.SetForegroundWindow(Handle);
       if (Web != null) Web.Focus();
@@ -807,9 +812,9 @@ namespace NmsSaveTracker
       if (!IsHandleCreated) return;
       var c = Program.Cfg;
       int ex = Native.GetWindowLong(Handle, Native.GWL_EXSTYLE);
-      bool layered = c.Click || c.Opacity < 100;
+      bool layered = c.Opacity < 100;
       ex = layered ? ex | Native.WS_EX_LAYERED : ex & ~Native.WS_EX_LAYERED;
-      ex = c.Click ? ex | Native.WS_EX_TRANSPARENT : ex & ~Native.WS_EX_TRANSPARENT;
+      ex &= ~Native.WS_EX_TRANSPARENT; // click-through was removed in 2.4.1
       Native.SetWindowLong(Handle, Native.GWL_EXSTYLE, ex);
       if (layered) Native.SetLayeredWindowAttributes(Handle, 0, (byte)Math.Round(c.Opacity * 255 / 100.0), 2 /* LWA_ALPHA */);
       Native.SetWindowPos(Handle, Native.HWND_TOPMOST, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x0020 /* frame changed */);
