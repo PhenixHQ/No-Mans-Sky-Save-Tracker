@@ -4,6 +4,14 @@ An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your 
 
 > **Alpha test build (2.0.0).** Expect rough edges. Please report bugs from inside the app: **Settings & help → Report a bug → Report on GitHub**.
 
+## Beta: install on Windows
+1. Download **NMS-Save-Tracker-2.4.3-beta-Setup.exe** from [Releases](../../releases).
+2. Run it. Windows may say "Windows protected your PC" because the app isn't code-signed: click **More info**, then **Run anyway**.
+3. It installs for your user only (no admin needed), adds Start menu and desktop shortcuts, and can be removed from Windows Settings > Apps.
+4. Open it: it finds your saves and game folder by itself. For the in-game overlay (F8), set No Man's Sky to **Borderless**.
+
+Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Bountria Prime · Verdantia* (Euclid).
+
 ## Features
 - **Recipes:** every refiner, crafting and cooking recipe, sorted by value or profit, with pins and item cards that show how many of an item you own. Each recipe says how many you can make **now**, **with sub-crafts** (making missing ingredients one step down) and **from scratch** (all the way down to raw materials), with a crafting tree (what you have, what to make, what to gather), the steps in order, and what you'd need to gather for one more. Tick **Only recipes I can make now** to see what you can refine, craft or cook with the inventories you choose.
 - **Inventory:** your exosuit, starships, corvettes (plus their built storage), freighter and base storage containers, laid out like the in-game screen. The **Everything** view has filters: item kinds (raw, refined, basic/advanced crafted, trade goods, curiosities, food, fish, tech, base parts, corvette parts), which inventories count, hide corvette parts, only things used in recipes, and worth selling.
@@ -75,6 +83,8 @@ data\                  created on first run: your personal app data, icon cache 
 ```
 
 ## Building from source
+- Installer: `makensis source/installer/setup.nsi` (NSIS 3) writes `release/NMS-Save-Tracker-<version>-beta-Setup.exe`.
+
 Requires Python 3. Run `python source\build.py` to rebuild `web\index.html` from `source\src`. The app window is built from `source\window\Window.cs` with `source/window/build.sh` (Mono `mcs`). See `source\NOTES-FOR-CLAUDE.md` for how everything fits together.
 
 ## Credits

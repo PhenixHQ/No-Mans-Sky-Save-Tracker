@@ -2019,7 +2019,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.4.2';
+const APPVER = '2.4.3';
 // 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
 // ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
 const OVL = /[?&]overlay=1\b/.test(location.search);
@@ -2831,11 +2831,8 @@ document.addEventListener('keydown', e => {
 });
 function portalHex(p, sys){ const h=(v,n)=>(v & ((1<<(n*4))-1)).toString(16).toUpperCase().padStart(n,'0'); return h(p,1)+h(sys.s,3)+h(sys.y,2)+h(sys.z,3)+h(sys.x,3); }
 function defaultAddrs(){
-  const out = [];
-  const bount = GX.sys.find(s => s.n==='Bountria II');
-  if(bount){ [[1,'Emberwatch'],[2,'Cragthorn'],[3,'Galemere'],[4,'Sapphmere']].forEach(([p,n]) => out.push({n:`Bountria II · ${n}`, h: portalHex(p,bount), note: p===4?'Waterworld, no portal (seafloor drop)':''})); }
-  GX.sys.forEach(s => (s.b||[]).forEach(([n,t,p]) => { if(t==='Base' && p>0 && !(s.n==='Bountria II')) out.push({n:`${n}${s.n?' · '+s.n:''}`, h: portalHex(p,s), note:'Your base\'s planet'}); }));
-  return out;
+  // Shared with everyone: the Bountria Federation's capital world. Load it on the glyph pad to visit.
+  return [{ n:'Bountria Prime · Verdantia (Euclid)', h:'6413FDFF7FF9', note:'Capital of the Bountria Federation [BTRF], a lush world with a city base. Come visit!' }];
 }
 if(!S.addr){ S.addr = defaultAddrs(); save(); }
 function renderSaved(){
@@ -3002,12 +2999,7 @@ const BIO = {
   'Gas giant':['#D9B26B','Activated Quartzite, Crystallised Helium']
 };
 S.pnotes = S.pnotes || {};
-const PRESET = { '-4,-2,-9,1001': {
-  1:'Scan: High Temperature. Solanium, Activated Quartzite, Phosphorus, Silver. High Sentinel activity. Portal: 2-4-15-10-16-15-16-16-8-16-16-13.',
-  2:'Scan: Rocky. Cactus Flesh, Activated Quartzite, Pyrite, Salt. Dissonance. Portal + base here; Korvax monolith with Discordant Interface.',
-  3:'Scan: Waterworld. Activated Quartzite, Lithium, Magnetised Ferrite. Coastal storms, low Sentinels, no flora, high fauna. Has a portal.',
-  4:'Scan: Drowning Planet. Ancient Bones, Quartzite, Lithium, Magnetised Ferrite. Coastal storms, sparse Sentinels. No portal (seafloor drop).'
-}};
+const PRESET = {}; // planet notes that ship with the app (none)
 Object.entries(PRESET).forEach(([k,v]) => Object.entries(v).forEach(([p,t]) => { const key = k+','+p; if(S.pnotes[key]===undefined) S.pnotes[key] = t; }));
 const skey = s => `${s.x},${s.y},${s.z},${s.s}`;
 let selPlanet = null, showSystem = false;
@@ -3214,20 +3206,17 @@ try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change
 
 /* ---------- QUESTS ---------- */
 const QDEFAULT = [
-  {id:'core', t:'Reach the galactic core', d:'Travel to the centre of Euclid to move on to the next galaxy.', n:'About 4,000 ly left from Bountria II: two jumps with the Voidigaunt.', s:'doing'},
-  {id:'stellar', t:'In Stellar Multitudes', d:'The purple-system storyline from Worlds Part II. Finishing it opens up all purple systems.', n:'Mephenna is tethered. Next: seek out Yabli-α.', s:'doing'},
-  {id:'autophage', t:'They Who Returned (Autophage)', d:'Autophage story and standing. Rewards include Voltaic Staff parts.', n:'Mostly done. Keep raising Autophage standing for the Voltaic Staff head.', s:'doing'},
-  {id:'base', t:'Expanding the Base', d:'Hire base specialists at your base terminals to unlock blueprint trees.', n:'Overseer and Vy\'keen Armourer hired. Next: the Farmer, for plant blueprints and a Living Glass farm.', s:'doing'},
-  {id:'freighter', t:'Freighter Command', d:'Freighter questline started from the Navigator on your freighter bridge.', n:'Talk to the Navigator to continue.', s:'doing'},
-  {id:'sentinel', t:'Repair Sentinel ships', d:'Crashed Interceptors need a Harmonic Brain. Convert Hyaline Brains at a monolith in a Gek or Vy\'keen system.', n:'8 Hyaline Brains in hand. Convert them one at a time, stashing each Harmonic Brain in your trade rocket.', s:'doing'},
-  {id:'atlantid', t:'Atlantid multi-tool', d:'Korvax monoliths with a Discordant Interface give an Atlantid multi-tool (Runic Lens + cloaking) for Atlantideum.', n:'Found one on Cragthorn. The tool costs 504 nanites.', s:'doing'},
-  {id:'summon', t:'Exocraft Summoning Unit', d:'Summon exocraft anywhere, not just at a Geobay.', n:'Gather Activated Quartzite and Crystallised Helium (gas giants in purple systems have both).', s:'todo'},
-  {id:'dread', t:'S-class dreadnought freighter', d:'Upgrade from the A-class MS-5 Angotenr.', n:'Watch space battles and freighter offers for an S-class dreadnought.', s:'todo'},
-  {id:'qs', t:'Quicksilver Companion ships', d:'Unclaimed expedition ships at the Space Anomaly (about 1,400 nanites each).', n:'Golden Vector, Starborn Runner, Iron Vulture and more, when nanites allow.', s:'todo'},
-  {id:'artemis', t:'The Artemis Path', d:'The main story. Unlocks the Space Anomaly systems and the Atlas Path.', n:'Done: you chose to refuse the Atlas.', s:'done'},
-  {id:'atlas', t:'The Atlas Path', d:'Gather Atlas Seeds and visit Atlas Interfaces.', n:'Done: you birthed a new star.', s:'done'},
-  {id:'starbirth', t:'Starbirth (Living Ship)', d:'Hatch and grow a Living Ship from a Void Egg.', n:'Done: The Only Sebedya.', s:'done'},
-  {id:'station', t:'Claim a space station', d:'Run salvage contracts at a Deep Space Outpost until the station offers you director status.', n:'Done: Bountria Prism, alliance Bountria Federation [BTRF].', s:'done'},
+  {id:'artemis', t:'The Artemis Path', d:'The main story. Unlocks the Space Anomaly systems and the Atlas Path.', n:'', s:'todo'},
+  {id:'atlas', t:'The Atlas Path', d:'Gather Atlas Seeds and visit Atlas Interfaces.', n:'', s:'todo'},
+  {id:'core', t:'Reach the galactic core', d:'Travel to the centre of Euclid to move on to the next galaxy.', n:'', s:'todo'},
+  {id:'stellar', t:'In Stellar Multitudes', d:'The purple-system storyline from Worlds Part II. Finishing it opens up all purple systems.', n:'', s:'todo'},
+  {id:'autophage', t:'They Who Returned (Autophage)', d:'Autophage story and standing. Rewards include Voltaic Staff parts.', n:'', s:'todo'},
+  {id:'base', t:'Expanding the Base', d:'Hire base specialists at your base terminals to unlock blueprint trees.', n:'', s:'todo'},
+  {id:'freighter', t:'Freighter Command', d:'Freighter questline started from the Navigator on your freighter bridge.', n:'', s:'todo'},
+  {id:'starbirth', t:'Starbirth (Living Ship)', d:'Hatch and grow a Living Ship from a Void Egg.', n:'', s:'todo'},
+  {id:'sentinel', t:'Repair Sentinel ships', d:'Crashed Interceptors need a Harmonic Brain. Convert Hyaline Brains at a monolith in a Gek or Vy\'keen system.', n:'', s:'todo'},
+  {id:'station', t:'Claim a space station', d:'Run salvage contracts at a Deep Space Outpost until the station offers you director status.', n:'', s:'todo'},
+  {id:'summon', t:'Exocraft Summoning Unit', d:'Summon exocraft anywhere, not just at a Geobay.', n:'', s:'todo'},
 ];
 if(!S.quests){ S.quests = QDEFAULT; save(); }
 let QF = 'open';
@@ -4744,7 +4733,7 @@ function goalAddForm(gi){
 }
 // Items worth tracking as a goal: no installed tech, base parts, glyphs or other quest-only pieces, one entry per name.
 let GITEMS = null;
-const GOAL_SKIP = /^(MAINT_|FREIGHT_|BIOSHIP_COMP|UI_|TECHFRAG$|WORDSTONE|ATLAS_SEED)|_TOKEN$/;
+const GOAL_SKIP = /^(MAINT_|FREIGHT_|BIOSHIP_COMP|UI_|TECHFRAG$|WORDSTONE|ATLAS_SEED|ACCESS4$)|_TOKEN$/;
 function goalItems(){ if(GITEMS) return GITEMS; const seen = new Map();
   pickItems().forEach(x => { if(GOAL_SKIP.test(x.id) || x.c==='tech' || x.c==='basepart' || !/[a-z]/.test(x.n)) return; const k = x.n.toLowerCase(); const prev = seen.get(k);
     if(!prev || (IX[x.id]!==undefined && IX[prev.id]===undefined)) seen.set(k, x); });
@@ -5045,7 +5034,7 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER && !OVL){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }
