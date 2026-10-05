@@ -158,6 +158,11 @@ pins, inv (manual planner list), pl (planner source), iv (inventory tab), addr (
 - Mouse wheel scrolls rows with horizontal overflow (document wheel handler). Side panel logs its bounds ("side panel: …") because Jay's first F9 test showed nothing.
 - Tests: `tools/tP.js`.
 
+## 2.4.2 (save tools wrote to a save the game doesn't load)
+- Jay set Quicksilver 5,000 → 150,000 twice; the writes were fine but went into save.hg (auto-save, manifest time 23:47:34) while save2.hg (manual save at the Space Anomaly, 23:49:01) was newer, so the game loaded save2. Worse, after a write the file's modified time is "now", so the app then ranked save.hg as newest.
+- **The game picks a slot's save by the manifest time `v[89]`, not the file time.** `saveStamp(dir, name, mtime)` reads it from mf_*.hg (cached by name+mtime); `edFiles` and `syncNow` sort by it; `edLoadsInstead(name)` = the other save of the slot (`slotOf`) with a later time → red banner in the write bar with "Edit <newer> instead", plus a confirm before writing. **Every write now stamps `v[89]` = now** (`opts.stamp = true`), so what you edit is what the game loads.
+- Test: `tools/tQ.js` (with a copy of real saves; touch file times to the manifest times).
+
 ## Fact check, 3 Oct 2026 (Jay asked: verify everything against the game)
 Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game text (bradhave94 localization = game language files):
 - Stellar Extractor (FRE_ROOM_EXTR, MAINT_HOOVER): outputs STELLAR2, GAS1, GAS2, GAS3, GAS4, each cap 350, all with identical settings; text UI_SYSTEM_HOOVER_LABEL_<COLOUR> = "Processing <Colour>-Class Stellar Material", UI_HOOVER_TECH_DESC "varies with the local star classification". Output order = GcGalaxyStarTypes order (Yellow, Green, Blue, Red, Purple) → Chromatic, Sulphurine, Radon, Nitrogen, Methane; matches player reports for the first four. Old extractor records in Jay's save have 4 slots (no GAS4), and AmountAccumulators only grow one slot at a time.
