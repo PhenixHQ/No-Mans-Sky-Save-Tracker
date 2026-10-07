@@ -179,3 +179,6 @@ Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game t
 - Repo: `PhenixHQ/No-Mans-Sky-Save-Tracker` (private for now). The first alpha went to the `alpha` branch.
 - In the repo, `source/data/galaxy-snapshot.json` is an empty snapshot, so no personal save data is committed. Jay's local copy has his real snapshot.
 - Before going public, add third-party notices for fzstd and bcdec (both MIT) next to the LICENSE. Also check: Jay-specific defaults in `src/body.html` (QDEFAULT quests, PRESET planet notes for Bountria II, `defaultAddrs()`); licensing for the bradhave94/nms data (that repo has no license file) and for MBINCompiler's mapping.json; and adding a LICENSE file.
+
+## Galaxy map spread (after 2.4.3)
+- Systems only have region coordinates (≈400 ly cells), so systems in one region used to stack on one dot. `jit(s)` spreads each system inside its region (seeded by system index and region, WeakMap cache, ±0.425 region); `sp`/`spPlane` use it; distances still use region coords. Legend says spots inside a region are approximate.

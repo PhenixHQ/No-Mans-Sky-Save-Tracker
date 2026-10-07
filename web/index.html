@@ -2879,7 +2879,15 @@ camUpdate();
 // world (x, y up, z) -> [screen-x units, screen-y units, depth]
 function proj(x,y,z){ const x1 = x*cY - z*sY, z1 = x*sY + z*cY; return [x1, z1*sP - y*cP*HS, z1*cP + y*sP]; }
 function toScreen(x,y,z){ const a = proj(x-view.fx, y-view.fy, z-view.fz); return [W/2 + a[0]*view.scale, H/2 + a[1]*view.scale, a[2]]; }
-const sp = s => toScreen(s.x, s.y, s.z);
+// The save only says which region (about 400 ly across) a system is in, so every system in a region would sit on
+// the same spot. Spread them out inside their region, the same way every time, so stacked systems can be seen.
+const JIT = new WeakMap();
+function jit(s){ let j = JIT.get(s); if(j) return j;
+  let h = (Math.imul((s.s|0) + 1, 2654435761) ^ Math.imul(s.x|0, 73856093) ^ Math.imul(s.y|0, 19349663) ^ Math.imul(s.z|0, 83492791)) >>> 0;
+  const r = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296 - 0.5; };
+  j = [r() * 0.85, r() * 0.85, r() * 0.85]; JIT.set(s, j); return j; }
+const sp = s => { const j = jit(s); return toScreen(s.x + j[0], s.y + j[1], s.z + j[2]); };
+const spPlane = s => { const j = jit(s); return toScreen(s.x + j[0], 0, s.z + j[2]); };
 // screen pixels -> world offset (moves along the camera's right and screen-down directions)
 function panVec(dx, dy){ const k = 1/view.scale; return [(dx*cY + dy*sY*sP)*k, (-dy*cP/HS)*k, (-dx*sY + dy*cY*sP)*k]; }
 function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
@@ -2898,7 +2906,7 @@ function renderLegend(){
     ? [[COL.cur,'You are here'],[DCOL.you,'Discovered by you'],[DCOL.other,'Discovered by another player'],[DCOL.none,'No discovery record'],[COL.core,'Core']]
     : [[COL.cur,'You are here'],[COL.base,'Bases / stations'],[COL.tele,'Teleporter stops'],[COL.vis,'Visited'],[COL.core,'Core']];
   const mine = SY.filter(s=>s.v && s.by==='you').length, others = SY.filter(s=>s.v && s.by && s.by!=='you').length;
-  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '');
+  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '') + `<span class="muted" title="The save records only the region (about 400 ly across) each system is in, not its exact spot, so systems are spread out inside their region.">· ${SY.length} systems, spots inside a region are approximate</span>`;
 }
 const CAMS = { top:[0,90], iso:[-35,32], side:[0,0], front:[90,0] };
 const CAMNAME = { top:'Top-down view', iso:'Angled view', side:'Side view', front:'Front view' };
@@ -2955,10 +2963,10 @@ function draw(){
   // stalks down to the plane, so height reads at an angle
   if(!flat){
     ctx.strokeStyle = 'rgba(160,190,200,.28)'; ctx.lineWidth = 1; ctx.beginPath();
-    SY.forEach(s => { if(!s.y) return; const [x,y] = sp(s); const [px,py] = toScreen(s.x,0,s.z); if((x<-10&&px<-10)||(x>W+10&&px>W+10)) return; ctx.moveTo(x,y); ctx.lineTo(px,py); });
+    SY.forEach(s => { const [x,y] = sp(s); const [px,py] = spPlane(s); if((x<-10&&px<-10)||(x>W+10&&px>W+10)) return; ctx.moveTo(x,y); ctx.lineTo(px,py); });
     ctx.stroke();
     ctx.fillStyle = 'rgba(160,190,200,.35)';
-    SY.forEach(s => { if(!s.y) return; const [px,py] = toScreen(s.x,0,s.z); ctx.fillRect(px-1.5,py-0.5,3,1); });
+    SY.forEach(s => { const [px,py] = spPlane(s); ctx.fillRect(px-1.5,py-0.5,3,1); });
   }
   if(showPath && GX.path && GX.path.length>1){
     ctx.strokeStyle=COL.path; ctx.globalAlpha=.5; ctx.lineWidth=1.2; ctx.beginPath(); let pen=false;
