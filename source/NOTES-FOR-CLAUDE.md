@@ -186,3 +186,13 @@ Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game t
 ## Confirmed by Jay, 7 Oct 2026
 - Jay tested the open items and found nothing wrong: overlay over the game (F8/F9/F10, see-through, side panel), adding a settlement effect, multi-tool edits, the extractor by star colour.
 - The game keeps only the last 512 VisitedSystems (his save hit 512 on 7 Oct), so syncs must merge into a kept history (next batch).
+
+## 2.5.0 additions
+- **Galaxy history:** `keepHistory(g, save)` runs before `S.galaxy = g` in `syncNow`: systems from the previous galaxy that the new sync lacks are appended (`histCopy`, flag `old:1`, no bases/teleporters); missing names/dt/P are carried over. Per save slot: when the slot (dir + slotOf) changes, the old slot's systems go to `S.ghist[key]` and come back when that slot is synced again. The game caps VisitedSystems at 512.
+- **Discovery times:** savesync puts `e.dt` (your SolarSystem discovery TS) / `e.pend` (not uploaded) on systems and `stats.disc.p` = your Planet discovery TS list (0 = pending).
+- **Exploration card** (`#gexplore`, `renderExplore`): counts today/7 days/all from those; Coverage around an anchor (tradeAnchors, `S.covAt`) within `S.covR` (1000/2000/5000 ly): regions within radius (×400 ly), visited per region from GX.sys (incl. history), bucketed into 6 directions (core, away, up, down, side A/B = ±(c.z,0,−c.x)); "go this way" = highest untouched share. Show on map → `COV` arrow drawn in draw() and the view zooms to it.
+- **Wealth tags:** `S.wealth[sysKey]` = high/med/low/pirate (game words UI_ECON_LEVEL_*), icons WEALTH_* = systeminfo/stars.1-3/stars.pirate (ICONSET 3). Near list column + "top tier"; economy cards show the closest wealthy one.
+- **Session recap** (`#recap` at top of main): `recapUpdate(g)` on sync; a session starts when the last sync was >3 h ago (base = the previous synced galaxy); diff of units/nanites/quicksilver, your discovered systems, planets (`pl` null for older syncs), item totals. Hide / New session.
+- **Map colour mode Economy** (`data-gcol="econ"`, `ECOL`), gold ring for wealthy.
+- Update checker NOT built: the GitHub repo is private, so the app can't see releases without a token (Jay chose to wait / swap). Installer `source/installer/setup.nsi` still says 2.4.3.
+- Test: `tools/tR.js` (needs a "later" save made with mk2.js-style edits).

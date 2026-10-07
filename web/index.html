@@ -630,7 +630,10 @@ textarea.mono, .txt.mono{font:12.5px/1.4 var(--mono)}
 .tag.good{background:var(--good-soft); color:var(--good)} .tag.bad{background:var(--bad-soft); color:var(--bad)}
 .edrow-odd td{background:var(--accent-soft)}
 .econic{width:20px; height:20px; vertical-align:-4px; object-fit:contain} .econic.lg{width:26px; height:26px; vertical-align:-6px}
-.tradenear{display:grid; gap:8px} .econ{display:grid; gap:8px}
+.tradenear{display:grid; gap:8px}
+#gexplore{display:grid; gap:8px}
+.recap{display:grid; gap:8px; margin:0 0 12px} .recap h3{margin:0} .rrow{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.rchip{display:inline-flex; gap:5px; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:12px} .rchip.up b{color:var(--good)} .rchip.down b{color:var(--bad)} #gexplore h3{margin:0} .covgo td{background:var(--good-soft)} .econ{display:grid; gap:8px}
 .tgoods{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px}
 .tgood{display:flex; gap:8px; align-items:center; padding:8px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:13px}
 .edpicked{display:inline-flex; align-items:center; gap:10px; flex:1 1 220px}
@@ -865,6 +868,7 @@ body.panelmode.side-open .wrap{margin-right:0}
   </nav>
 
   <main class="scroller" id="scroller">
+  <div class="card recap" id="recap" hidden></div>
   <!-- RECIPES -->
   <section class="panel" id="p-recipes" role="tabpanel" aria-labelledby="t-recipes">
     <div class="controls">
@@ -1117,6 +1121,7 @@ body.panelmode.side-open .wrap{margin-right:0}
         <div class="seg" role="group" aria-label="Colour systems by">
           <button type="button" data-gcol="type" aria-pressed="true">Colour by type</button>
           <button type="button" data-gcol="disc" aria-pressed="false">Who discovered it</button>
+          <button type="button" data-gcol="econ" aria-pressed="false" title="Systems you've tagged with an economy in Trade goods or here">Economy</button>
         </div>
         <label class="toggle" for="gpath"><input type="checkbox" id="gpath"> Show travel path</label>
         <label class="toggle" for="gspread" title="On: systems in the same region are spread out so you can see each one (spots inside a region are approximate). Off: exact region positions only, so systems in one region share one dot with a count."><input type="checkbox" id="gspread" checked> Spread systems out</label>
@@ -1150,6 +1155,7 @@ body.panelmode.side-open .wrap{margin-right:0}
       <div class="legend" id="glegend"></div>
       <div class="maptip" id="maptip" hidden></div>
     </div>
+    <div class="card" id="gexplore"></div>
     <div class="card" id="gsystem" hidden></div>
     <div class="grid2">
       <div class="card info" id="ginfo"></div>
@@ -1595,7 +1601,7 @@ const SaveSync = (() => {
 
     // Records first, so visited systems can be matched to a galaxy.
     const recs = ((disc.Store||{}).Record || []).map(r => [r, false]).concat((disc.Available || []).map(r => [r, true]));
-    const decoded = [];
+    const decoded = []; const discP = []; // times you discovered planets and moons (0 = not uploaded yet)
     for(const [r, pending] of recs){ const dd = r.DD || {}; if(!dd.UA) continue; const a = decDisc(dd.UA); decoded.push([r, pending, a]); note(a); }
     const bases = [];
     (ps.PersistentPlayerBases || []).forEach(b => { const bt = (b.BaseType||{}).PersistentBaseTypes; if(bt === 'PlayerShipBase') return; const a = decDisc(b.GalacticAddress); bases.push([b, bt, a]); note(a); });
@@ -1620,8 +1626,8 @@ const SaveSync = (() => {
       if(!S.has(key(a)) && !mine) continue;
       const e = get(a);
       const planet = () => { e.P = e.P || {}; return e.P[a.p] = e.P[a.p] || {}; };
-      if(t === 'SolarSystem'){ if(cn) e.n = cn; e.by = by; }
-      else if(t === 'Planet'){ const pl = planet(); if(cn) pl.n = cn; pl.by = by; const vp = dd.VP || []; if(typeof vp[1] === 'number' && BIOME[vp[1]]) pl.bio = BIOME[vp[1]]; }
+      if(t === 'SolarSystem'){ if(cn) e.n = cn; e.by = by; if(mine){ if(ows.TS) e.dt = ows.TS; else if(pending) e.pend = 1; } }
+      else if(t === 'Planet'){ if(mine) (pending ? discP.push(0) : ows.TS && discP.push(ows.TS)); const pl = planet(); if(cn) pl.n = cn; pl.by = by; const vp = dd.VP || []; if(typeof vp[1] === 'number' && BIOME[vp[1]]) pl.bio = BIOME[vp[1]]; }
       else if(t === 'Animal' || t === 'Flora' || t === 'Mineral'){ const pl = planet(); const c = t==='Animal'?'fa':t==='Flora'?'fl':'mi'; const d = pl[c] = pl[c] || [0,0,[]]; d[0]++; if(mine) d[1]++; if(cn && d[2].length < 40) d[2].push([cn, by]); }
       else if(t === 'Sector'){ const pl = planet(); pl.wp = (pl.wp||0) + 1; }
     }
@@ -1645,6 +1651,7 @@ const SaveSync = (() => {
     // Freighter position, and the systems where you've traded at a terminal (last 100 trades the game keeps)
     const fr = ps.FreighterUniverseAddress ? fromUA(ps.FreighterUniverseAddress) : null;
     (ps.TradingSupplyData || []).forEach(t => { try { const a = decDisc(t.GalacticAddress); if(a.x === undefined) return; const k = key(a); if(!S.has(k)) return; const e = S.get(k); e.tr = (e.tr||0) + 1; const id = cleanId(t.Product); if(/^(TRA_|ILLEGAL_PROD)/.test(id)) (e.tg = e.tg || []).includes(id) || e.tg.push(id); } catch(err){} });
+    stats.disc = { p: discP };
     return { v:4, sys, cur, fr, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
   }
 
@@ -2020,7 +2027,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.4.3';
+const APPVER = '2.5.0';
 // 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
 // ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
 const OVL = /[?&]overlay=1\b/.test(location.search);
@@ -2177,9 +2184,11 @@ const IC = G.ic || {};
 /* ---------- GAME ICONS (read from the player's own install, never shipped with the app) ---------- */
 const IP = G.ip || {};
 // Economy symbols from the galaxy map (METADATA/UI/GALAXYINFOICONS: EconomyIcons, plus the pirate conflict icon for outlaw systems)
-const ICONSET = 2; // bump when icons that aren't items are added, so existing installs fetch them once
+const ICONSET = 3; // bump when icons that aren't items are added, so existing installs fetch them once
 Object.entries({ trading:'trading', adv:'fusion', sci:'scientific', mining:'mining', manu:'manufacturing', tech:'hightech', power:'powergeneration' }).forEach(([k, f]) => IP['ECON_' + k] = '/textures/ui/frontend/systeminfo/economy.' + f + '.dds');
 IP.ECON_outlaw = '/textures/ui/frontend/systeminfo/conflict.pirate.dds';
+// Wealth symbols (GALAXYINFOICONS WealthIcons: Poor, Average, Wealthy, Pirate)
+['low','med','high'].forEach((k, i) => IP['WEALTH_' + k] = '/textures/ui/frontend/systeminfo/stars.' + (i+1) + '.dds'); IP.WEALTH_pirate = '/textures/ui/frontend/systeminfo/stars.pirate.dds';
 const GI = { map: new Map(), state: 'idle', done: 0, total: 0, found: 0, msg: '', sig: '', ran: false };
 function giFull(rel){ return rel.charAt(0)==='/' ? rel.slice(1) : 'textures/ui/frontend/icons/' + rel; }
 function giUrl(id){ if(DSP.gameIcons===0 || !id) return null; const p = IP[id]; return p ? (GI.map.get(p) || null) : null; }
@@ -2718,6 +2727,16 @@ const sysName = s => s.n || s.dn || ((s.b||[])[0] ? (s.b[0][1]==='Freighter' ? '
 // Regions are about 400 light years apart; systems in the same region count as next door.
 const lyBetween = (a, b) => (a.g||0)!==(b.g||0) ? Infinity : Math.round(Math.hypot(a.x-b.x, a.y-b.y, a.z-b.z) * 400);
 const econIcon = (k, cls) => giImg('ECON_' + k, cls || 'econic') || '';
+// The game's own wealth words (UI_ECON_LEVEL_*): strong economies stock all five tiers of their trade goods
+const WEALTH = [{ k:'high', n:'Wealthy', alt:'Wealthy, Prosperous, Advanced, Affluent, Booming, Flourishing, High Supply, Opulent' },
+  { k:'med', n:'Average', alt:'Comfortable, Balanced, Promising, Developing, Medium Supply, Satisfactory, Sustainable, Adequate' },
+  { k:'low', n:'Poor', alt:'Struggling, Fledgling, Unpromising, Declining, Failing, Destitute, Low Supply, Unsuccessful' },
+  { k:'pirate', n:'Black Market', alt:'Outlaw (pirate) systems' }];
+const WBY = new Map(WEALTH.map(w => [w.k, w]));
+const wealthIcon = k => k ? (giImg('WEALTH_' + k, 'econic') || '') : '';
+function wealthOf(s){ return (S.wealth||{})[sysKey(s)] || ''; }
+function setWealth(s, k){ S.wealth = S.wealth || {}; if(k) S.wealth[sysKey(s)] = k; else delete S.wealth[sysKey(s)]; save(); uCount('wealth-tag'); }
+const wealthSel = (id, cur) => `<select id="${id}" aria-label="Wealth" title="The galaxy map shows it under the economy, e.g. Wealthy, Prosperous, Opulent"><option value="">Wealth…</option>${WEALTH.map(w => `<option value="${w.k}" ${cur===w.k?'selected':''} title="${esc(w.alt)}">${esc(w.n)}</option>`).join('')}</select>`;
 function econOf(s){ return (S.econ||{})[sysKey(s)] || ''; }
 function tradeAnchors(){ const out = []; const sys = (GX && GX.sys) || [];
   if(GX && GX.cur && GX.cur.x !== undefined) out.push({ k:'cur', l:'Where I am now', a:GX.cur });
@@ -2730,21 +2749,22 @@ function renderTrade(){
   const q = RS.q.trim().toLowerCase(); const anchors = tradeAnchors(); const ak = anchors.some(a => a.k===S.tnear) ? S.tnear : (anchors[0]||{}).k; const an = anchors.find(a => a.k===ak);
   const places = an ? tradePlaces().map(s => ({ s, d: lyBetween(s, an.a), e: econOf(s) })).filter(x => isFinite(x.d)).sort((a,b) => a.d - b.d) : [];
   const near = places.filter(x => x.e).slice(0, 5); const curSys = GX && GX.cur && (GX.sys||[]).find(s => sysKey(s)===sysKey(GX.cur));
-  const closest = k => places.find(x => x.e===k);
+  const closest = k => places.find(x => x.e===k); const closestTop = k => places.find(x => x.e===k && wealthOf(x.s)==='high');
   const goods = TRADE.goods.filter(g => !q || (g.n + ' ' + ECON.get(g.e).n + ' ' + ECON.get(g.e).alt).toLowerCase().includes(q));
   $('#rcount').textContent = `${goods.length} of ${TRADE.goods.length}`;
   $('#reslist').innerHTML = `<div class="card tradenear"><div class="row" style="justify-content:space-between"><h3>Places you know near</h3><select id="tnear" aria-label="Near which place">${anchors.map(a => `<option value="${esc(a.k)}" ${a.k===ak?'selected':''}>${esc(a.l)}</option>`).join('') || '<option>Sync first</option>'}</select></div>
-      ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Distance</th></tr></thead><tbody>${near.map(x => `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${econIcon(x.e)} ${esc(ECON.get(x.e).n)}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`).join('')}</tbody></table>`
+      ${near.length ? `<table class="t"><thead><tr><th>System</th><th>Economy</th><th>Wealth</th><th>Distance</th></tr></thead><tbody>${near.map(x => { const w = wealthOf(x.s); return `<tr><td>${esc(sysName(x.s))}${(x.s.b||[]).length ? ' <span class="tag cat">your base</span>' : ''}</td><td>${econIcon(x.e)} ${esc(ECON.get(x.e).n)}</td><td>${w ? `${wealthIcon(w)} ${esc(WBY.get(w).n)}${w==='high' ? ' <span class="tag good">top tier</span>' : ''}` : '<span class="muted small">not tagged</span>'}</td><td>${x.d < 400 ? 'same region' : '≈ ' + fmt(x.d) + ' ly'}</td></tr>`; }).join('')}</tbody></table>`
         : '<p class="muted small" style="margin:0">No systems with a known economy yet. When you see a system\'s economy in game (galaxy map or station), tag it here or in My galaxy and it shows up.</p>'}
-      ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span>${econIcon(econOf(curSys))}<select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select></div>` : ''}
-      <p class="muted small" style="margin:0">Strong economies (shown as Wealthy, Prosperous, Advanced, Affluent, Booming, Flourishing, High Supply or Opulent) stock all five tiers; weaker ones only the cheaper goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
+      ${curSys ? `<div class="row"><span class="small">Tag where you are now (${esc(sysName(curSys))}):</span>${econIcon(econOf(curSys))}<select id="tcurecon"><option value="">Economy…</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(curSys)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select>${wealthIcon(wealthOf(curSys))}${wealthSel('tcurwealth', wealthOf(curSys))}</div>` : ''}
+      <p class="muted small" style="margin:0">Strong economies (shown as Wealthy, Prosperous, Advanced, Affluent, Booming, Flourishing, High Supply or Opulent) stock all five tiers; weaker ones only the cheaper goods. Tag a system's wealth too and the app marks the ones with top-tier goods. Build a <b>Galactic Trade Terminal</b> on your freighter or a base (Construction Research Station on the Anomaly; 25 Magnetised Ferrite + 3 Microprocessors): it trades from the market of the system it's in, so a freighter terminal is a market you can take anywhere.</p></div>
     ${TRADE.econ.map(e => { const gs = goods.filter(g => g.e===e.k); if(!gs.length) return ''; const c = closest(e.k);
       return `<div class="card econ"><div class="row" style="justify-content:space-between"><h3>${econIcon(e.k, 'econic lg')} ${esc(e.n)}</h3><span class="muted small">${esc(e.alt)}</span></div>
-        ${c ? `<p class="small" style="margin:0">Closest you know: <b>${esc(sysName(c.s))}</b> · ${c.d < 400 ? 'same region' : '≈ ' + fmt(c.d) + ' ly'}</p>` : ''}
+        ${c ? `<p class="small" style="margin:0">Closest you know: <b>${esc(sysName(c.s))}</b> · ${c.d < 400 ? 'same region' : '≈ ' + fmt(c.d) + ' ly'}${(() => { const ct = closestTop(e.k); return ct ? (ct===c ? ' · <span class="tag good">top tier</span>' : ` · closest with all five tiers: <b>${esc(sysName(ct.s))}</b> (${ct.d < 400 ? 'same region' : '≈ ' + fmt(ct.d) + ' ly'})`) : ''; })()}</p>` : ''}
         <div class="tgoods">${gs.map(g => `<div class="tgood" title="${esc(g.d)}">${itemIconHTML(g.id,'sm')}<span><b>${esc(g.n)}</b><br><span class="muted small">tier ${g.t} · ~${fmt(g.v)} u</span></span></div>`).join('')}</div></div>`; }).join('')}`;
 }
 $('#reslist').addEventListener('change', e => { const t = e.target;
   if(t.id==='tnear'){ S.tnear = t.value; save(); renderTrade(); }
+  if(t.id==='tcurwealth'){ const cs = (GX.sys||[]).find(s => sysKey(s)===sysKey(GX.cur)); if(cs) setWealth(cs, t.value); renderTrade(); }
   if(t.id==='tcurecon'){ const cs = (GX.sys||[]).find(s => sysKey(s)===sysKey(GX.cur)); if(cs) setEcon(cs, t.value); renderTrade(); } });
 function setEcon(s, k){ S.econ = S.econ || {}; if(k) S.econ[sysKey(s)] = k; else delete S.econ[sysKey(s)]; save(); uCount('econ-tag'); }
 function renderRes(){
@@ -2901,13 +2921,15 @@ const COL = { cur:MAPDEF.cur, base:MAPDEF.base, tele:MAPDEF.tele, vis:MAPDEF.vis
 const DCOL = { you:MAPDEF.you, other:MAPDEF.other, none:MAPDEF.none };
 let colMode = 'type';
 function disc(s){ return s.by==='you' ? 'you' : s.by ? 'other' : 'none'; }
-function dotCol(s){ const k = kind(s); if(k==='cur') return COL.cur; return colMode==='disc' ? DCOL[disc(s)] : COL[k]; }
+const ECOL = { trading:'#E8C54A', adv:'#C77DFF', sci:'#4FB0E8', mining:'#C98A4B', manu:'#9AA5AE', tech:'#4FD1A5', power:'#F06A5A', outlaw:'#E04A8A' };
+function dotCol(s){ const k = kind(s); if(k==='cur') return COL.cur; if(colMode==='econ'){ const e = econOf(s); return e ? ECOL[e] : 'rgba(127,163,174,.35)'; } return colMode==='disc' ? DCOL[disc(s)] : COL[k]; }
 function renderLegend(){
-  const items = colMode==='disc'
+  const items = colMode==='econ' ? [[COL.cur,'You are here']].concat(TRADE.econ.map(e => [ECOL[e.k], e.n]), [['rgba(127,163,174,.6)','Not tagged']])
+    : colMode==='disc'
     ? [[COL.cur,'You are here'],[DCOL.you,'Discovered by you'],[DCOL.other,'Discovered by another player'],[DCOL.none,'No discovery record'],[COL.core,'Core']]
     : [[COL.cur,'You are here'],[COL.base,'Bases / stations'],[COL.tele,'Teleporter stops'],[COL.vis,'Visited'],[COL.core,'Core']];
   const mine = SY.filter(s=>s.v && s.by==='you').length, others = SY.filter(s=>s.v && s.by && s.by!=='you').length;
-  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '') + (S.mapStack ? `<span class="muted">· ${SY.length} systems, shown by region (×n = systems sharing that region)</span>` : `<span class="muted" title="The save records only the region (about 400 ly across) each system is in, not its exact spot, so systems are spread out inside their region.">· ${SY.length} systems, spots inside a region are approximate</span>`);
+  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '') + (colMode==='econ' ? `<span>· gold ring = Wealthy (all five tiers) · ${SY.filter(x => econOf(x)).length} tagged</span>` : '') + (S.mapStack ? `<span class="muted">· ${SY.length} systems, shown by region (×n = systems sharing that region)</span>` : `<span class="muted" title="The save records only the region (about 400 ly across) each system is in, not its exact spot, so systems are spread out inside their region.">· ${SY.length} systems, spots inside a region are approximate</span>`);
 }
 const CAMS = { top:[0,90], iso:[-35,32], side:[0,0], front:[90,0] };
 const CAMNAME = { top:'Top-down view', iso:'Angled view', side:'Side view', front:'Front view' };
@@ -2979,7 +3001,8 @@ function draw(){
     if(!flat) list.sort((a,b) => a[1][2]-b[1][2]);
     list.forEach(([s,[x,y]]) => { if(x<-10||y<-10||x>W+10||y>H+10) return;
       const r = k==='vis'? (s.n?3:2.2) : k==='cur'? 5 : 4; ctx.fillStyle = dotCol(s); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-      if(k==='cur'){ ctx.strokeStyle=COL.cur; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.stroke(); } });
+      if(k==='cur'){ ctx.strokeStyle=COL.cur; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.stroke(); }
+      if(colMode==='econ' && wealthOf(s)==='high'){ ctx.strokeStyle='#F6E27A'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,r+3.5,0,Math.PI*2); ctx.stroke(); } });
   });
   // stacked mode: how many systems share each region dot
   if(S.mapStack){ const cnt = new Map(); SY.forEach(s => { const k = s.x+','+s.y+','+s.z; cnt.set(k, (cnt.get(k)||0) + 1); });
@@ -2996,6 +3019,10 @@ function draw(){
     if(placed.some(p => !(box[2]<p[0]||box[0]>p[2]||box[3]<p[1]||box[1]>p[3]))) return;
     placed.push(box); const k = kind(s);
     ctx.fillStyle = s===sel?'#FFFFFF': k==='cur'?'#F6C27A': k==='base'?'#9FE0E3': k==='tele'?'#D5C4F5':'#C9D6D9'; ctx.fillText(lab, x+7, y-6); });
+  if(COV && (COV.a.g||0)===galView){ const a = COV.a, d = COV.d, L = COV.r/400; const [x0,y0] = toScreen(a.x, a.y, a.z), [x1,y1] = toScreen(a.x + d[0]*L, a.y + d[1]*L, a.z + d[2]*L);
+    ctx.strokeStyle = '#F6C27A'; ctx.lineWidth = 2.5; ctx.setLineDash([7,5]); ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.setLineDash([]);
+    const ang = Math.atan2(y1-y0, x1-x0); ctx.fillStyle = '#F6C27A'; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1-12*Math.cos(ang-0.4), y1-12*Math.sin(ang-0.4)); ctx.lineTo(x1-12*Math.cos(ang+0.4), y1-12*Math.sin(ang+0.4)); ctx.fill();
+    ctx.font = '600 11.5px "IBM Plex Sans", sans-serif'; ctx.fillText(COV.l, x1 + 8, y1 + 4); }
   if(sel && (sel.g||0)===galView){ const [x,y]=sp(sel); ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.stroke(); }
   // corner label: galaxy + camera
   ctx.font='600 11px "IBM Plex Mono", monospace'; ctx.fillStyle='#95A7AE';
@@ -3027,12 +3054,13 @@ function renderInfo(){
   const nameNote = s.n ? '' : s.dn ? '<p class="muted small" style="margin:0">Name taken from this system\'s space station.</p>' : `<p class="muted small" style="margin:0">${(s.b||s.t) ? 'Shown by the name of your base or teleporter here. ' : ''}The game makes up system names as you arrive and doesn't store them in your save.</p>`;
   el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${sysHead(s)}</h2>${isCur(s)?'<span class="tag nan">You are here</span>':''}</div>${nameNote}
     <div class="kv">${DSP.loc!=='game' ? `<span><b>To core</b>≈ ${fmt(dist(s))} ly</span>` : ''}<span><b>Discovered by</b>${esc(byLabel(s.by))}</span>${DSP.loc!=='ly' ? `<span><b>Coords</b>X ${s.x} · Y ${s.y} · Z ${s.z}</span><span><b>System</b>#${s.s}</span>` : ''}${DSP.loc!=='game' ? `<span><b>Height</b>${s.y ? '≈ '+fmt(Math.abs(s.y)*LY)+' ly '+(s.y>0?'above':'below')+' the plane' : 'on the plane'}</span>` : ''}</div>
-    <div class="row"><label class="lbl" for="gecon">Economy</label><span id="geconic">${econIcon(econOf(s))}</span><select id="gecon"><option value="">Not tagged</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(s)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select>${s.tr ? `<span class="muted small">you've traded here</span>` : ''}</div>
+    <div class="row"><label class="lbl" for="gecon">Economy</label><span id="geconic">${econIcon(econOf(s))}</span><select id="gecon"><option value="">Not tagged</option>${TRADE.econ.map(e => `<option value="${e.k}" ${econOf(s)===e.k?'selected':''}>${esc(e.n)}</option>`).join('')}</select><span id="gwealthic">${wealthIcon(wealthOf(s))}</span>${wealthSel('gwealth', wealthOf(s))}${s.tr ? `<span class="muted small">you've traded here</span>` : ''}</div>
     ${bases?`<div><div class="lbl" style="margin-bottom:4px">Your bases</div><ul style="margin:0; padding-left:18px">${bases}</ul></div>`:''}
     ${tele?`<div><div class="lbl" style="margin-bottom:4px">Teleporter stops</div><ul style="margin:0; padding-left:18px">${tele}</ul></div>`:''}
     <div class="row"><button class="btn primary" type="button" id="gsysbtn" aria-pressed="${showSystem}">${showSystem?'Hide system view':'Open system view'}${np?` (${np} planet${np>1?'s':''})`:''}</button>
     <button class="btn" type="button" id="gsend">Planet 1 address → Portals</button></div>`;
   $('#gecon').addEventListener('change', e => { setEcon(s, e.target.value); $('#geconic').innerHTML = econIcon(e.target.value); });
+  $('#gwealth').addEventListener('change', e => { setWealth(s, e.target.value); $('#gwealthic').innerHTML = wealthIcon(e.target.value); });
   $('#gsend').addEventListener('click', () => { addr = portalHex(1,s).split('').map(c=>parseInt(c,16)); renderAddr(); showTab('portals'); });
   $('#gsysbtn').addEventListener('click', () => { showSystem = !showSystem; renderInfo(); if(showSystem) $('#gsystem').scrollIntoView({block:'nearest', behavior:'smooth'}); });
   renderSystem();
@@ -3205,6 +3233,46 @@ function renderGalSelect(){
 $('#ggal').addEventListener('change', e => { galView = +e.target.value; filterGal(); camUpdate(); sel = SY.find(isCur) || SY.find(s=>s.b) || SY[0] || null; selPlanet = null; showSystem = false; fitAll(); renderList(); renderInfo(); renderLegend(); snapText(); draw(); uCount('galaxy-switch'); });
 function snapText(){ const n = SY.filter(s=>s.v).length; $('#gsnap').textContent = DESK ? `${n} visited system${n===1?'':'s'} in ${galName(galView)}.` : `Snapshot from your save on ${GX.snap}: ${n} visited systems in ${galName(galView)}.`; }
 renderGalSelect(); snapText();
+/* ---------- exploration stats ---------- */
+let COV = null; // direction arrow on the map {a, d, r, l}
+function dayStart(daysAgo){ const d = new Date(); d.setHours(0,0,0,0); return d.getTime()/1000 - daysAgo*86400; }
+function renderExplore(){
+  const el = $('#gexplore'); if(!el || OVL) return; const sys = (GX && GX.sys) || [];
+  const mine = sys.filter(s => s.by==='you'); const pts = ((GX.stats||{}).disc||{}).p || [];
+  const cnt = (list, from) => list.filter(t => t && t >= from).length;
+  const sT = mine.map(s => s.dt||0), t0 = dayStart(0), t7 = dayStart(6);
+  const pend = mine.filter(s => s.pend).length + pts.filter(t => !t).length;
+  const anchors = tradeAnchors(); const ak = anchors.some(a => a.k===S.covAt) ? S.covAt : (anchors[0]||{}).k; const an = anchors.find(a => a.k===ak); const R = S.covR || 1000;
+  let cov = '';
+  if(an){ const A = an.a, g = A.g||0; const reach = Math.floor(R/400);
+    let c = [-A.x, -A.y, -A.z]; const cn = Math.hypot(...c) || 1; c = c.map(v => v/cn);
+    let side = [c[2], 0, -c[0]]; const sn = Math.hypot(...side) || 1; side = side.map(v => v/sn);
+    const DIRS = [['core','Toward the core', c], ['away','Away from the core', c.map(v => -v)], ['up','Above the plane', [0,1,0]], ['down','Below the plane', [0,-1,0]], ['sa','To the side (A)', side], ['sb','To the side (B)', side.map(v => -v)]];
+    const visited = new Map(); sys.forEach(s => { if((s.g||0)!==g) return; const k = (s.x-A.x)+','+(s.y-A.y)+','+(s.z-A.z); visited.set(k, (visited.get(k)||0) + 1); });
+    const B = {}; DIRS.forEach(([k]) => B[k] = { sys:0, reg:0, empty:0 }); let here = visited.get('0,0,0') || 0, totReg = 0, seen = 0;
+    for(let dx=-reach; dx<=reach; dx++) for(let dy=-reach; dy<=reach; dy++) for(let dz=-reach; dz<=reach; dz++){
+      if(Math.hypot(dx,dy,dz)*400 > R) continue; totReg++; const n = visited.get(dx+','+dy+','+dz) || 0; if(n) seen++; if(!dx && !dy && !dz) continue;
+      const o = [dx,dy,dz]; let best = null, bv = -2; DIRS.forEach(([k,,v]) => { const dot = (o[0]*v[0] + o[1]*v[1] + o[2]*v[2]) / Math.hypot(dx,dy,dz); if(dot > bv){ bv = dot; best = k; } });
+      B[best].reg++; B[best].sys += n; if(!n) B[best].empty++; }
+    const go = DIRS.slice().sort((a,b) => (B[b[0]].empty/(B[b[0]].reg||1)) - (B[a[0]].empty/(B[a[0]].reg||1)) || B[a[0]].sys - B[b[0]].sys)[0];
+    cov = `<div class="row" style="justify-content:space-between"><h3>Coverage</h3><span class="row"><select id="gcovat" aria-label="Around">${anchors.map(a => `<option value="${esc(a.k)}" ${a.k===ak?'selected':''}>${esc(a.l)}</option>`).join('')}</select>
+        <select id="gcovr" aria-label="Within">${[1000,2000,5000].map(r => `<option value="${r}" ${r===R?'selected':''}>within ${fmt(r)} ly</option>`).join('')}</select></span></div>
+      <p class="small" style="margin:0">You've been to <b>${seen}</b> of the <b>${totReg}</b> regions (about 400 ly each) within ${fmt(R)} ly, with ${here} system${here===1?'':'s'} in its own region.</p>
+      <table class="t"><thead><tr><th>Direction</th><th>Your systems</th><th>Untouched regions</th><th></th></tr></thead><tbody>
+      ${DIRS.map(([k,l,v]) => `<tr${k===go[0] ? ' class="covgo"' : ''}><td>${esc(l)}${k===go[0] ? ' <span class="tag good">go this way</span>' : ''}</td><td>${B[k].sys}</td><td>${B[k].empty} of ${B[k].reg}</td><td><button type="button" class="linkbtn" data-gcov="${k}">Show on map</button></td></tr>`).join('')}</tbody></table>
+      <p class="muted small" style="margin:0">Each region holds hundreds of systems, so this shows how spread out your exploring is, not how much is left. "To the side" A and B are opposite directions around the core; Show on map draws the arrow.</p>`;
+    window.__covDirs = { A, R, dirs: Object.fromEntries(DIRS.map(([k,l,v]) => [k, [l, v]])) };
+  }
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>Exploration</h2>${pend ? `<span class="small muted">${pend} discover${pend===1?'y':'ies'} not uploaded yet</span>` : ''}</div>
+    <div class="kv"><span><b>Systems today</b>${cnt(sT, t0)}</span><span><b>Last 7 days</b>${cnt(sT, t7)}</span><span><b>All time</b>${mine.length}</span>
+      <span><b>Planets &amp; moons today</b>${cnt(pts, t0)}</span><span><b>Last 7 days</b>${cnt(pts, t7)}</span><span><b>All time</b>${pts.length}</span></div>
+    <p class="muted small" style="margin:0">Systems discovered by you, counted from your save's discovery records; "today" is your local day.</p>${cov}`;
+}
+$('#gexplore').addEventListener('change', e => { const t = e.target;
+  if(t.id==='gcovat'){ S.covAt = t.value; save(); COV = null; renderExplore(); draw(); }
+  if(t.id==='gcovr'){ S.covR = +t.value; save(); COV = null; renderExplore(); draw(); } });
+$('#gexplore').addEventListener('click', e => { const b = e.target.closest('[data-gcov]'); if(!b || !window.__covDirs) return; const D = window.__covDirs, [l, v] = D.dirs[b.dataset.gcov];
+  COV = COV && COV.k===b.dataset.gcov ? null : { k: b.dataset.gcov, a: D.A, d: v, r: D.R, l }; if(COV){ view.fx = D.A.x; view.fy = D.A.y; view.fz = D.A.z; if(W) view.scale = (Math.min(W, H) * 0.38) / (D.R / LY); } draw(); $('#map').scrollIntoView({ block:'nearest', behavior:'smooth' }); });
 function setGalaxy(g){
   if(OVL){ GX = g; ALLSY = g.sys; cur = g.cur || {}; HAVE = stock(); MK = new Map(); CANN = new Map(); renderOvl(); return; }
   const prevG = cur.g||0;
@@ -3213,7 +3281,7 @@ function setGalaxy(g){
   filterGal(); camUpdate();
   if(sel) sel = SY.find(s => s.x===sel.x && s.y===sel.y && s.z===sel.z && s.s===sel.s) || null;
   if(!sel) sel = SY.find(isCur) || null;
-  renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); draw();
+  renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); renderExplore(); renderRecap(); draw();
   if(current==='inventory') renderInventory();
   renderPlanner(); if(current==='recipes' && !R.can) itemCard(); if(typeof renderSide==='function') renderSide();
 }
@@ -3422,6 +3490,50 @@ function renderSync(msg, bad){
   sync('every', String(syncEvery()));
   if(OVL && window.__ovlReady) renderOvl();
 }
+/* ---------- session recap: what changed since this play session started ---------- */
+// A session starts when the app syncs after 3 hours with no new save. The starting point is the save from before.
+function recapSnap(g){ const inv = {}; const D = g && g.inv; if(D) Object.values(D).forEach(list => (list||[]).forEach(c => c.it.forEach(([id,a]) => { inv[id] = (inv[id]||0) + a; })));
+  const st = (g && g.stats) || {}; return { t: Date.now(), u: st.units||0, n: st.nanites||0, q: st.quicksilver||0, sys: ((g && g.sys)||[]).filter(x => x.by==='you').length, pl: st.disc ? st.disc.p.length : null, inv }; }
+function recapUpdate(g){
+  if(OVL) return; S.recap = S.recap || {}; const R = S.recap, now = Date.now();
+  if(!R.base || !R.seen || now - R.seen > 3*3600*1000){ R.base = recapSnap(S.galaxy && S.galaxy.sys ? S.galaxy : g); R.hide = 0; }
+  R.seen = now; R.now = recapSnap(g); if(R.base.pl==null) R.base.pl = R.now.pl; // older syncs didn't count planets
+}
+function recapDiff(){ const R = S.recap; if(!R || !R.base || !R.now) return null; const b = R.base, c = R.now;
+  const items = []; const ids = new Set(Object.keys(b.inv).concat(Object.keys(c.inv)));
+  ids.forEach(id => { const d = (c.inv[id]||0) - (b.inv[id]||0); if(d) items.push([id, d]); });
+  items.sort((x,y) => Math.abs(y[1]) - Math.abs(x[1]));
+  return { since: b.t, u: c.u - b.u, n: c.n - b.n, q: c.q - b.q, sys: c.sys - b.sys, pl: c.pl - b.pl, items }; }
+function renderRecap(){ const el = $('#recap'); if(!el || OVL) return; const d = recapDiff();
+  if(!d || S.recap.hide || (!d.u && !d.n && !d.q && !d.sys && !d.pl && !d.items.length)){ el.hidden = true; return; }
+  const sg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + fmtBig(Math.abs(v));
+  const up = d.items.filter(x => x[1] > 0).slice(0, 8), down = d.items.filter(x => x[1] < 0).slice(0, 8);
+  const chip = ([id, v]) => `<span class="rchip ${v>0?'up':'down'}">${itemIconHTML(id,'sm')}${esc(itemInfo(id).n || id)} <b>${sg(v)}</b></span>`;
+  el.hidden = false;
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><h3>This session <span class="muted small">since ${new Date(d.since).toLocaleString([], {weekday:'short', hour:'numeric', minute:'2-digit'})}</span></h3>
+      <span class="row"><button type="button" class="btn ghost" id="recapnew" title="Start counting from now">New session</button><button type="button" class="btn ghost" id="recaphide">Hide</button></span></div>
+    <div class="kv">${d.sys ? `<span><b>Systems discovered</b>${sg(d.sys)}</span>` : ''}${d.pl ? `<span><b>Planets &amp; moons</b>${sg(d.pl)}</span>` : ''}${d.u ? `<span><b>Units</b>${sg(d.u)}</span>` : ''}${d.n ? `<span><b>Nanites</b>${sg(d.n)}</span>` : ''}${d.q ? `<span><b>Quicksilver</b>${sg(d.q)}</span>` : ''}</div>
+    ${up.length ? `<div class="rrow"><span class="lbl">Gained</span>${up.map(chip).join('')}</div>` : ''}${down.length ? `<div class="rrow"><span class="lbl">Used or sold</span>${down.map(chip).join('')}</div>` : ''}
+    <p class="muted small" style="margin:0">From your saves: counts change each time the game saves and the app syncs. A new session starts after 3 hours without a new save.</p>`; }
+document.addEventListener('click', e => { if(e.target.closest('#recaphide')){ S.recap.hide = 1; save(); renderRecap(); } if(e.target.closest('#recapnew')){ S.recap.base = S.recap.now || recapSnap(GX); S.recap.hide = 0; save(); renderRecap(); } });
+// The game keeps only your last 512 visited systems. Each sync adds the systems the app saw before, so the map
+// and stats keep everything you've been to. Histories are kept per save slot (another playthrough isn't mixed in).
+function histKey(x){ return (x.dir||'') + ':' + (slotOf(x.name) || 1); }
+function keepHistory(g, s){
+  const prev = S.galaxy, hk = histKey(s); S.ghist = S.ghist || {};
+  const prevKey = S.lastSync ? histKey(S.lastSync) : null;
+  let old = [];
+  if(prev && prev.sys && prevKey===hk) old = prev.sys;
+  else { if(prev && prev.sys && prevKey) S.ghist[prevKey] = prev.sys.map(histCopy); old = S.ghist[hk] || []; delete S.ghist[hk]; }
+  const kk = e => `${e.g||0}:${e.x},${e.y},${e.z},${e.s}`;
+  const have = new Map(g.sys.map(e => [kk(e), e]));
+  let added = 0;
+  old.forEach(o => { const k = kk(o), e = have.get(k);
+    if(e){ ['n','dn','dt'].forEach(f => { if(o[f] && !e[f]) e[f] = o[f]; }); if(o.P && !e.P) e.P = o.P; return; }
+    const c = histCopy(o); c.old = 1; g.sys.push(c); have.set(k, c); added++; });
+  if(added) vcLog('sync', `kept ${added} systems from earlier syncs`);
+}
+function histCopy(o){ const c = {}; ['x','y','z','s','g','v','n','dn','by','P','tr','tg','dt','old'].forEach(f => { if(o[f]!==undefined) c[f] = o[f]; }); c.v = 1; return c; }
 async function syncNow(manual){
   if(!DESK || syncing) return;
   syncing = true; renderSync('Reading your save…'); const t0 = performance.now();
@@ -3438,6 +3550,8 @@ async function syncNow(manual){
     const r = await api(`/api/save?dir=${encodeURIComponent(s.dir)}&name=${encodeURIComponent(s.name)}`);
     if(!r.ok) throw new Error('Could not read the save file (helper answered ' + r.status + ').');
     const g = SaveSync.parse(await r.arrayBuffer(), MAPPING);
+    try { keepHistory(g, s); } catch(e){ vcLog('sync', 'history: ' + e.message); }
+    try { recapUpdate(g); } catch(e){ vcLog('sync', 'recap: ' + e.message); }
     S.galaxy = g; S.lastSync = { name:s.name, dir:s.dir, mtime:s.mtime, at:Date.now() };
     U.syncOk = (U.syncOk||0)+1; save();
     vcLog('sync', `ok in ${Math.round(performance.now()-t0)} ms${manual?' (manual)':' (auto)'}`);
@@ -5049,13 +5163,13 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.5.0': ['My galaxy keeps every system you have been to: the game only remembers your last 512 visits, so the app now keeps the older ones from earlier syncs.','Exploration card in My galaxy: systems and planets discovered today, this week and all time, and how well you have covered each direction around any base, with an arrow on the map.','Trade goods: tag a system\'s wealth (Wealthy, Prosperous…) as well as its economy, and the app marks the places that sell all five tiers.','This session: after each sync, a card shows what changed since you started playing (discoveries, units, nanites, quicksilver and items).','Galaxy map: colour systems by the economy you tagged, with a gold ring on wealthy ones.'], '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER && !OVL){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }
 
 /* ---------- boot ---------- */
-renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderQuests();
+renderFilters(); renderRecipes(); updatePinCount(); renderRes(); renderAddr(); renderSaved(); renderList(); renderInfo(); renderLegend(); renderExplore(); renderRecap(); renderQuests();
 renderPlanner();
 let startTab = 'recipes'; { const t = tabGet(); if(t==='planner'){ if(!R.can) setCan(true); } else if(t && TABS.includes(t) && (t!=='tools' || edOn())) startTab = t; }
 const hash = (location.hash||'').slice(1); if(TABS.includes(hash)) startTab = hash;

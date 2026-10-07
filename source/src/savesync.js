@@ -131,7 +131,7 @@ const SaveSync = (() => {
 
     // Records first, so visited systems can be matched to a galaxy.
     const recs = ((disc.Store||{}).Record || []).map(r => [r, false]).concat((disc.Available || []).map(r => [r, true]));
-    const decoded = [];
+    const decoded = []; const discP = []; // times you discovered planets and moons (0 = not uploaded yet)
     for(const [r, pending] of recs){ const dd = r.DD || {}; if(!dd.UA) continue; const a = decDisc(dd.UA); decoded.push([r, pending, a]); note(a); }
     const bases = [];
     (ps.PersistentPlayerBases || []).forEach(b => { const bt = (b.BaseType||{}).PersistentBaseTypes; if(bt === 'PlayerShipBase') return; const a = decDisc(b.GalacticAddress); bases.push([b, bt, a]); note(a); });
@@ -156,8 +156,8 @@ const SaveSync = (() => {
       if(!S.has(key(a)) && !mine) continue;
       const e = get(a);
       const planet = () => { e.P = e.P || {}; return e.P[a.p] = e.P[a.p] || {}; };
-      if(t === 'SolarSystem'){ if(cn) e.n = cn; e.by = by; }
-      else if(t === 'Planet'){ const pl = planet(); if(cn) pl.n = cn; pl.by = by; const vp = dd.VP || []; if(typeof vp[1] === 'number' && BIOME[vp[1]]) pl.bio = BIOME[vp[1]]; }
+      if(t === 'SolarSystem'){ if(cn) e.n = cn; e.by = by; if(mine){ if(ows.TS) e.dt = ows.TS; else if(pending) e.pend = 1; } }
+      else if(t === 'Planet'){ if(mine) (pending ? discP.push(0) : ows.TS && discP.push(ows.TS)); const pl = planet(); if(cn) pl.n = cn; pl.by = by; const vp = dd.VP || []; if(typeof vp[1] === 'number' && BIOME[vp[1]]) pl.bio = BIOME[vp[1]]; }
       else if(t === 'Animal' || t === 'Flora' || t === 'Mineral'){ const pl = planet(); const c = t==='Animal'?'fa':t==='Flora'?'fl':'mi'; const d = pl[c] = pl[c] || [0,0,[]]; d[0]++; if(mine) d[1]++; if(cn && d[2].length < 40) d[2].push([cn, by]); }
       else if(t === 'Sector'){ const pl = planet(); pl.wp = (pl.wp||0) + 1; }
     }
@@ -181,6 +181,7 @@ const SaveSync = (() => {
     // Freighter position, and the systems where you've traded at a terminal (last 100 trades the game keeps)
     const fr = ps.FreighterUniverseAddress ? fromUA(ps.FreighterUniverseAddress) : null;
     (ps.TradingSupplyData || []).forEach(t => { try { const a = decDisc(t.GalacticAddress); if(a.x === undefined) return; const k = key(a); if(!S.has(k)) return; const e = S.get(k); e.tr = (e.tr||0) + 1; const id = cleanId(t.Product); if(/^(TRA_|ILLEGAL_PROD)/.test(id)) (e.tg = e.tg || []).includes(id) || e.tg.push(id); } catch(err){} });
+    stats.disc = { p: discP };
     return { v:4, sys, cur, fr, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
   }
 
