@@ -182,3 +182,7 @@ Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game t
 
 ## Galaxy map spread (after 2.4.3)
 - Systems only have region coordinates (≈400 ly cells), so systems in one region used to stack on one dot. `jit(s)` spreads each system inside its region (seeded by system index and region, WeakMap cache, ±0.425 region); `sp`/`spPlane` use it; distances still use region coords. Legend says spots inside a region are approximate. Toggle "Spread systems out" (`#gspread`, S.mapStack=1 means stacked) switches back to exact region dots with ×n counts.
+
+## Confirmed by Jay, 7 Oct 2026
+- Jay tested the open items and found nothing wrong: overlay over the game (F8/F9/F10, see-through, side panel), adding a settlement effect, multi-tool edits, the extractor by star colour.
+- The game keeps only the last 512 VisitedSystems (his save hit 512 on 7 Oct), so syncs must merge into a kept history (next batch).
