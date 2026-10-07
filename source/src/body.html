@@ -372,6 +372,7 @@
           <button type="button" data-gcol="disc" aria-pressed="false">Who discovered it</button>
         </div>
         <label class="toggle" for="gpath"><input type="checkbox" id="gpath"> Show travel path</label>
+        <label class="toggle" for="gspread" title="On: systems in the same region are spread out so you can see each one (spots inside a region are approximate). Off: exact region positions only, so systems in one region share one dot with a count."><input type="checkbox" id="gspread" checked> Spread systems out</label>
       </div>
     </div>
     <div class="mapbar">
@@ -1609,7 +1610,7 @@ function toScreen(x,y,z){ const a = proj(x-view.fx, y-view.fy, z-view.fz); retur
 // The save only says which region (about 400 ly across) a system is in, so every system in a region would sit on
 // the same spot. Spread them out inside their region, the same way every time, so stacked systems can be seen.
 const JIT = new WeakMap();
-function jit(s){ let j = JIT.get(s); if(j) return j;
+function jit(s){ if(S.mapStack) return [0,0,0]; let j = JIT.get(s); if(j) return j;
   let h = (Math.imul((s.s|0) + 1, 2654435761) ^ Math.imul(s.x|0, 73856093) ^ Math.imul(s.y|0, 19349663) ^ Math.imul(s.z|0, 83492791)) >>> 0;
   const r = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296 - 0.5; };
   j = [r() * 0.85, r() * 0.85, r() * 0.85]; JIT.set(s, j); return j; }
@@ -1633,7 +1634,7 @@ function renderLegend(){
     ? [[COL.cur,'You are here'],[DCOL.you,'Discovered by you'],[DCOL.other,'Discovered by another player'],[DCOL.none,'No discovery record'],[COL.core,'Core']]
     : [[COL.cur,'You are here'],[COL.base,'Bases / stations'],[COL.tele,'Teleporter stops'],[COL.vis,'Visited'],[COL.core,'Core']];
   const mine = SY.filter(s=>s.v && s.by==='you').length, others = SY.filter(s=>s.v && s.by && s.by!=='you').length;
-  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '') + `<span class="muted" title="The save records only the region (about 400 ly across) each system is in, not its exact spot, so systems are spread out inside their region.">· ${SY.length} systems, spots inside a region are approximate</span>`;
+  $('#glegend').innerHTML = items.map(([c,l]) => `<span><span class="dot" style="background:${c}"></span>${l}</span>`).join('') + (colMode==='disc' ? `<span>· ${mine} yours / ${others} others'</span>` : '') + (S.mapStack ? `<span class="muted">· ${SY.length} systems, shown by region (×n = systems sharing that region)</span>` : `<span class="muted" title="The save records only the region (about 400 ly across) each system is in, not its exact spot, so systems are spread out inside their region.">· ${SY.length} systems, spots inside a region are approximate</span>`);
 }
 const CAMS = { top:[0,90], iso:[-35,32], side:[0,0], front:[90,0] };
 const CAMNAME = { top:'Top-down view', iso:'Angled view', side:'Side view', front:'Front view' };
@@ -1707,6 +1708,10 @@ function draw(){
       const r = k==='vis'? (s.n?3:2.2) : k==='cur'? 5 : 4; ctx.fillStyle = dotCol(s); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
       if(k==='cur'){ ctx.strokeStyle=COL.cur; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.stroke(); } });
   });
+  // stacked mode: how many systems share each region dot
+  if(S.mapStack){ const cnt = new Map(); SY.forEach(s => { const k = s.x+','+s.y+','+s.z; cnt.set(k, (cnt.get(k)||0) + 1); });
+    ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillStyle = '#95A7AE'; const done = new Set(), cboxes = [];
+    SY.forEach(s => { const k = s.x+','+s.y+','+s.z, n = cnt.get(k); if(n < 2 || done.has(k)) return; done.add(k); const [x,y] = sp(s); if(x<-10||y<-10||x>W+10||y>H+10) return; if(cboxes.some(([bx,by]) => Math.abs(bx-x) < 22 && Math.abs(by-y) < 12)) return; cboxes.push([x,y]); ctx.fillText('×' + n, x + 6, y + 12); }); }
   // labels: priority order, skip any that would overlap one already placed
   ctx.font='600 11.5px "IBM Plex Sans", sans-serif';
   const rank = s => s===sel?0 : isCur(s)?1 : s.b?2 : s.t?3 : 4;
@@ -1846,6 +1851,8 @@ $('#gsptbl').addEventListener('click', e => { const tr = e.target.closest('[data
 $('#glist').addEventListener('click', e => { const b = e.target.closest('[data-sys]'); if(!b) return; sel = SY[+b.dataset.sys]; selPlanet = null; focusOn(sel, 3); draw(); renderInfo(); });
 $('#gsearch').addEventListener('input', renderList);
 $('#gpath').addEventListener('change', e => { showPath = e.target.checked; draw(); });
+$('#gspread').checked = !S.mapStack;
+$('#gspread').addEventListener('change', e => { S.mapStack = e.target.checked ? 0 : 1; save(); renderLegend(); draw(); uCount('map-spread-' + (e.target.checked ? 'on' : 'off')); });
 function zoom(f, px, py){
   px = px===undefined? W/2:px; py = py===undefined? H/2:py;
   const s1 = view.scale, s2 = Math.min(60, Math.max(0.02, s1*f));
