@@ -3,8 +3,8 @@ Unicode true
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 !define APP "NMS Save Tracker"
-!define VER "2.9.0"
-!define VERFULL "2.9.0.0"
+!define VER "2.10.0"
+!define VERFULL "2.10.0.0"
 !define UNKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\NMSSaveTracker"
 !define ROOT "..\.."
 

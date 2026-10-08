@@ -38,7 +38,7 @@ var GameData = (function(){
     var m = new Mb(buf); check(m, 'product', label); var L = m.list(0x20), out = [];
     for(var i = 0; i < L.n; i++){ var o = L.at + i * 0x300;
       out.push({ id: m.str(o + 0x150, 0x10), name: m.str(o + 0x1F0, 0x80), nameL: m.str(o + 0x270, 0x80), sub: m.vstr(o + 0x170), desc: m.vstr(o + 0x120),
-        icon: m.vstr(o + 0xC8), value: m.i32(o + 0x194), type: m.u32(o + 0x1E8), cat: m.u32(o + 0x198), corv: m.u32(o + 0x1A4), legal: m.u32(o + 0x1C8),
+        icon: m.vstr(o + 0xC8), value: m.i32(o + 0x194), type: m.u32(o + 0x1E8), food: m.u32(o + 0x1BC), cat: m.u32(o + 0x198), corv: m.u32(o + 0x1A4), legal: m.u32(o + 0x1C8),
         req: reqs(m, o + 0x160), deploys: m.str(o + 0x110, 0x10), shipTech: m.str(o + 0x100, 0x10), techbox: !!m.b[o + 0x2F6], craftable: !!m.b[o + 0x2F5],
         colour: colour(m, o) }); }
     return out;
@@ -102,7 +102,7 @@ var GameData = (function(){
       else if(p.type === 3 && /SHIP/.test(sub)){ c = 'Starship'; k = 's'; }
       else if(p.type === 4){ if(/FIREWORK_PACK/.test(sub)){ c = 'Other'; k = 'o'; } else { c = 'Base part'; k = 'b'; } }
       else { c = PCAT[p.type] || 'Other'; k = PKIND[p.type] || 'o'; }
-      add(p.id, { n: tr(p.nameL) || tr(p.name), g: tr(p.sub), v: p.value, c: c, d: tr(p.desc), k: k, col: p.colour, ip: p.icon, req: p.req, t: 'P' });
+      add(p.id, { n: tr(p.nameL) || tr(p.name), g: tr(p.sub), v: p.value, c: c, d: tr(p.desc), k: k, col: p.colour, ip: p.icon, req: p.req, t: 'P', fx: p.food || 0 });
     }
     T.products.forEach(function(p){ prod(p, 'p'); });
     (T.baseparts || []).forEach(function(p){ prod(p, 'bp'); });
@@ -125,10 +125,13 @@ var GameData = (function(){
     rows.forEach(function(r){ if(!r.req || !r.req.length || r.req.some(function(x){ return !seen.has(x[0]); })) return;
       craft.push([idx(r.id), 1, r.req.map(function(x){ return [idx(x[0]), x[1]]; }), r.c]); });
     // items used in recipes get an index; everything else goes in xi by id
-    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {};
+    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {}, fx = {};
+    // raw cooking ingredients (used by cooking, made by none of it) keep their description: it says where they come from
+    var cookOut = new Set(cook.map(function(e){ return e[1][0]; })), cookRaw = new Set(); cook.forEach(function(e){ e[0].forEach(function(x){ if(!cookOut.has(x[0])) cookRaw.add(x[0]); }); });
     rows.forEach(function(r){
-      if(used.has(r.id)){ ix[r.id] = items.length; var it = { n: r.n, g: r.g, v: r.v, c: r.c }; if(r.d && r.c === 'Raw') it.d = r.d; items.push(it); }
+      if(used.has(r.id)){ ix[r.id] = items.length; var it = { n: r.n, g: r.g, v: r.v, c: r.c }; if(r.d && (r.c === 'Raw' || cookRaw.has(r.id))) it.d = r.d; items.push(it); }
       else xi[r.id] = [r.n, r.g, r.v, r.c];
+      if(r.fx && r.c === 'Food') fx[r.id] = r.fx; // GcStatsTypes value of the food's bonus
       if(r.t === 'T') ty[r.id] = 1; // installed as Technology (everything else: Substance if kind 'r', else Product)
       var e = [r.k, r.col]; if(r.sym && r.sym.length <= 5) e.push(r.sym); ic[r.id] = e;
       if(r.ip){ var pth = r.ip.toLowerCase(); ip[r.id] = /^textures\/ui\/frontend\/icons\//.test(pth) ? pth.slice(27) : '/' + pth; }
@@ -138,7 +141,7 @@ var GameData = (function(){
     return { items: items, refine: refine.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       cook: cook.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       craft: craft.map(function(e){ return [I(e[0]), e[1], fix(e[2]), e[3]]; }),
-      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, src: 'game' };
+      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, fx: fx, src: 'game' };
   }
 
   var FILES = {
