@@ -2,7 +2,7 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Beta (2.7.0).** Expect rough edges.
+> **Beta (2.8.0).** Expect rough edges.
 
 > **Note:** Made with the help of AI and tested in my own game. Found a bug? Please [open an issue](../../issues/new?labels=bug) (or use **Settings & help → Report a bug** in the app) with what happened and how to repeat it. Comments about how it was made won't be responded to.
 
@@ -21,13 +21,13 @@ Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Boun
 - **Where to find:** a star class decoder (G7pf and so on), resources by star colour and biome, the freighter Stellar Extractor and gas sources, fish, and **Trade goods**: which economy sells each good, and the closest systems you've tagged (economy and wealth) near you, your freighter or a base.
 - **Portals:** a glyph keypad with replace/insert editing, keyboard input and saved addresses, using the game's own glyph pictures from your install. **Your places** lists the portal address of where you are, your freighter and every base, and any address you enter shows whether you've been there, how far it is from you and your nearest base, and where it is on the map.
 - **My galaxy:** a map of every system you've explored (kept across syncs, past the game's 512-visit memory), colourable by type, discoverer or the economy you tagged, with an **Exploration** card (discoveries today/this week/all time, and coverage by direction around any base with an arrow on the map), with top-down, angled, side and front views, adjustable height stretch, a galaxy switcher, hover details, a system view, and how many species you've scanned on each planet.
-- **Collection:** every starship, multi-tool and exocraft with class, slots, supercharged slots, built-in bonuses and installed technology (and which ones have room for more upgrades); your frigates with role, class, expedition stats, fuel cost and traits, the best frigate for each kind of expedition, and expeditions under way; and your companions with trust, traits, age and last egg.
+- **Collection:** every starship, multi-tool and exocraft with class, slots, supercharged slots, built-in bonuses and installed technology (and which ones have room for more upgrades); your frigates with role, class, expedition stats, fuel cost and traits, the best frigate for each kind of expedition, and expeditions under way; your companions with trust, traits, age and last egg; your freighter and its rooms; the settlements you run (population, effects, production, debt, decisions); ship and multi-tool seeds; and a **Needs your attention** card (also in the overlay) for settlement decisions, full production, damaged frigates, finished expeditions and discoveries you haven't uploaded.
 - **Game data from your install:** item names, values and every refiner, crafting and cooking recipe are read from your own No Man's Sky files (like the icons), so they match your game, even right after a game update. The app also ships with a copy read from the game's files, used until then.
 - **Game icons:** the real item icons, copied from your own No Man's Sky install the first time the app runs (no game artwork ships with the app), packed into one file so they all appear at start-up. A loading screen with tips shows while the app loads.
 - **Quests:** a quest board with notes.
 - **This session:** after each sync, a card shows what changed since you started playing: discoveries, units, nanites, quicksilver and items.
 - **Goals sidebar:** press **Goals** (or G) for a side panel with your pinned recipes and your own goals. Add rows for items and amounts, money, recipes you want to be able to make, or quests to finish; every row updates from your save and ticks itself off.
-- **Search everything:** Ctrl+K finds items, systems, bases, goals, tabs and settings. Number keys 1–9 switch tabs.
+- **Search everything:** Ctrl+K finds items, systems, bases, ships, frigates, settlements, companions, goals, tabs and settings. Number keys 1–9 switch tabs.
 - **Little helpers:** recently viewed items, your own notes on any item, and Copy as text for crafting trees (handy for Discord).
 - **Settings:** themes (with 5 custom slots), display options, auto-sync timing, and game/save folder detection.
 - **Save tools (advanced, off by default):** for testing, restoring and fixing saves. Turn them on in **Settings & help → Game files → Advanced**. See below.

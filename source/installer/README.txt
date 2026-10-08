@@ -1,4 +1,4 @@
-NMS Save Tracker 2.7.0 (beta)
+NMS Save Tracker 2.8.0 (beta)
 An unofficial, fan-made companion app for No Man's Sky on PC (Steam/GOG). Not made by or affiliated with Hello Games.
 
 WHAT IT DOES
