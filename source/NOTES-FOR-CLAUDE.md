@@ -230,3 +230,9 @@ Checked against his install (NMSARC.Precache/globals/MetadataEtc) and the game t
 - Tab `cook` (`renderCook`, `CK`, sections now/fx/plan/ing/kit in `S.cksec`): reuses `row()`, `mkDetail()`, `HAVE`, `CANN`. Labels `FXL`/`FXG` (GcStatsTypes indices 3,11,58,61,62,63,78,79,80,81,94–98,100,102,104,112), defined before the row renderer so cooking rows show a green effect tag. Wild plant biome from the id (FOOD_P_HOTWILD → scorched, etc.).
 - Fixed: cooking recipe keys were 'c:' like crafting, so ALL/CANN/pins mixed them up; cooking now uses 'k:'.
 - Test: `tools/tK.js`.
+
+## 2.11.0 additions (cooking out of Recipes, sort, back/forward)
+- Recipes no longer has a Cooking type; `renderPlanner` sets cnt.cook = 0. `isCookItem(i)` (Food, or only made by cooking) and `goCookItem(i, find)` route foods: global `data-item` clicks, global search Item results and `goFind` open Cooking › Plan a dish (if cookable) or Ingredients. Item card has "Open in Cooking" (`data-gocook`).
+- Cooking sort: `CK.sort` (S.cksort), `CKSORT`, `ckKey` value/profit/money (count×value)/count, `ckSortBar()` in Cook now and By effect, click `data-cksort`.
+- Back/forward: `var NAV` (var + guard, because render functions run before it's defined), `navState`/`navSig` (only what matters on that tab), `navSoon` (650 ms debounce) called from showTab, setQuery, renderCook, renderFleet, renderRes; `navGo(d)` restores R/CK/RS/FS/ivQ and scroll, `NAV.lock` stops it re-recording. Header `#navback`/`#navfwd`, Alt+Left/Right, mouse buttons 3/4.
+- Test: `tools/tB.js` (needs the helper running, like tK).

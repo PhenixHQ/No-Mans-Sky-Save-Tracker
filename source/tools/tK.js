@@ -12,5 +12,5 @@ await p.click('[data-cksec="plan"]'); await p.fill('#ckq','Ice Cream'); await p.
 await p.click('[data-cksec="ing"]'); await p.waitForTimeout(300); console.log('ING:', (await txt()).slice(0,700));
 await p.fill('#ckingq','milk'); await p.waitForTimeout(300); console.log('ING milk:', (await txt()).slice(0,500));
 await p.click('[data-cksec="kit"]'); await p.waitForTimeout(300); console.log('KIT:', (await txt()).slice(0,700)); await p.screenshot({path:'/tmp/claude-0/tK-kit.png', fullPage:true});
-await p.click('#t-recipes'); await p.click('[data-rtype="cook"]'); await p.fill('#q','Ice Cream'); await p.waitForTimeout(400); console.log('card:', (await p.innerText('#itemcard')).replace(/\s+/g,' ').slice(0,300));
+await p.click('#t-recipes'); await p.fill('#q','Ice Cream'); await p.waitForTimeout(400); console.log('card:', (await p.innerText('#itemcard')).replace(/\s+/g,' ').slice(0,300));
 console.log('errors', errs); await b.close();})();
