@@ -278,6 +278,44 @@ function Read-Body($req, [int]$max) {
   try { return $sr.ReadToEnd() } finally { $sr.Dispose() }
 }
 
+# ---------- updates (GitHub releases of the public repo in web\config.json) ----------
+# Only this asks the internet anything, and only when the app checks for updates (it can be turned off).
+function Get-Repo {
+  try { $c = Get-Content -Raw -LiteralPath (Join-Path $WebDir 'config.json') | ConvertFrom-Json; if ($c.githubRepo -match '^[\w.-]+/[\w.-]+$') { return $c.githubRepo } } catch {}
+  return $null
+}
+function Get-LatestRelease {
+  $repo = Get-Repo; if (-not $repo) { throw 'no repo set' }
+  [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+  $h = @{ 'User-Agent' = 'NMS-Save-Tracker'; 'Accept' = 'application/vnd.github+json' }
+  $rels = Invoke-RestMethod -UseBasicParsing -Uri "https://api.github.com/repos/$repo/releases?per_page=10" -Headers $h -TimeoutSec 10
+  $rel = @($rels) | Where-Object { -not $_.draft } | Select-Object -First 1
+  if (-not $rel) { return $null }
+  $a = @($rel.assets) | Where-Object { $_.name -match '^NMS-Save-Tracker-\d[\w.\-]*-Setup\.exe$' } | Select-Object -First 1
+  $notes = [string]$rel.body; if ($notes.Length -gt 4000) { $notes = $notes.Substring(0, 4000) }
+  $asset = $null
+  if ($a) { $asset = @{ name = [string]$a.name; size = [int64]$a.size; url = [string]$a.browser_download_url; digest = [string]$a.digest } }
+  return @{ tag = [string]$rel.tag_name; name = [string]$rel.name; notes = $notes; page = [string]$rel.html_url; pre = [bool]$rel.prerelease; asset = $asset; repo = $repo }
+}
+function Install-Update {
+  $r = Get-LatestRelease
+  if (-not $r -or -not $r.asset) { throw 'The latest release has no installer to download.' }
+  $u = $r.asset.url
+  if ($u -notmatch ('^https://github\.com/' + [regex]::Escape($r.repo) + '/releases/download/')) { throw 'Unexpected download address.' }
+  $out = Join-Path $env:TEMP 'NMS-Save-Tracker-Update-Setup.exe'
+  $pp = $ProgressPreference; $ProgressPreference = 'SilentlyContinue'
+  try { Invoke-WebRequest -UseBasicParsing -Uri $u -OutFile $out -Headers @{ 'User-Agent' = 'NMS-Save-Tracker' } -TimeoutSec 120 } finally { $ProgressPreference = $pp }
+  $len = (Get-Item -LiteralPath $out).Length
+  if ($len -ne $r.asset.size) { Remove-Item -LiteralPath $out -Force; throw 'The download was incomplete.' }
+  if ($r.asset.digest -match '^sha256:([0-9a-f]{64})$') {
+    $want = $Matches[1]; $got = (Get-FileHash -Algorithm SHA256 -LiteralPath $out).Hash.ToLower()
+    if ($got -ne $want) { Remove-Item -LiteralPath $out -Force; throw 'The download did not match GitHub''s checksum.' }
+  }
+  Write-Log "update: starting installer for $($r.tag)"
+  Start-Process -FilePath $out
+  return $r.tag
+}
+
 function Read-Shared([string]$path) {
   $fs = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
   try { $ms = New-Object System.IO.MemoryStream; $fs.CopyTo($ms); return ,$ms.ToArray() } finally { $fs.Dispose() }
@@ -290,7 +328,7 @@ function Handle($ctx) {
     if ($req.Headers['X-VC'] -ne '1') { SendText $ctx 403 '{"error":"forbidden"}'; return }
     $script:lastPing = Get-Date
     switch ($path) {
-      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":7}'; return }
+      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":8}'; return }
       '/api/gamerunning' { SendJson $ctx @{ running = (Test-GameRunning) }; return }
       '/api/savefiles' {
         # Every save, manifest and account file in one account folder (for the save tools).
@@ -472,9 +510,21 @@ function Handle($ctx) {
       }
       '/api/open' {
         $u = $req.QueryString['url']
-        if ($u -notmatch '^https://github\.com/[\w.-]+/[\w.-]+/issues/new\?') { SendText $ctx 400 '{"error":"only GitHub issue links"}'; return }
+        $repo = Get-Repo
+        $okRel = $repo -and ($u -match ('^https://github\.com/' + [regex]::Escape($repo) + '/releases(/|$)'))
+        if (-not $okRel -and $u -notmatch '^https://github\.com/[\w.-]+/[\w.-]+/issues/new\?') { SendText $ctx 400 '{"error":"only GitHub issue and release links"}'; return }
         Start-Process $u
         SendText $ctx 200 '{"ok":true}'; return
+      }
+      '/api/update/check' {
+        try { $r = Get-LatestRelease; if (-not $r) { SendJson $ctx @{ ok = $true; none = $true } } else { $r.ok = $true; SendJson $ctx $r } }
+        catch { SendJson $ctx @{ ok = $false; error = $_.Exception.Message } }
+        return
+      }
+      '/api/update/install' {
+        if ($req.HttpMethod -ne 'POST') { SendText $ctx 405 '{"error":"post only"}'; return }
+        try { $tag = Install-Update; SendJson $ctx @{ ok = $true; tag = $tag } } catch { Write-Log "update: $($_.Exception.Message)"; SendJson $ctx @{ ok = $false; error = $_.Exception.Message } }
+        return
       }
       '/api/shortcut' { New-Shortcut; SendText $ctx 200 '{"ok":true}'; return }
       '/api/report' {

@@ -1,0 +1,13 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const errs=[];const p=await b.newPage({viewport:{width:1300,height:950}});
+await p.route('**/api/update/check', r => r.fulfill({contentType:'application/json', body: JSON.stringify({ok:true,tag:'v2.6.1-beta',notes:'- Fixed a thing\n- Added another',page:'https://github.com/x/y/releases/tag/v2.6.1',asset:{name:'a',size:1}})}));
+await p.route('**/api/update/install', r => r.fulfill({contentType:'application/json', body: JSON.stringify({ok:false,error:'The download was incomplete.'})}));
+p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+await p.goto('http://127.0.0.1:47831/'); await p.waitForSelector('#boot',{state:'hidden',timeout:30000}); if(await p.isVisible('#newsok')) await p.click('#newsok');
+await p.waitForTimeout(6000);
+console.log('auto: pill', await p.isVisible('#updpill'));
+console.log('pill', await p.isVisible('#updpill'), await p.textContent('#updpilltxt'));
+await p.click('#updpill'); await p.waitForTimeout(500); await p.click('.updnotes summary');
+await p.screenshot({path:'/tmp/claude-0/tU.png'});
+await p.click('#updinst'); await p.waitForTimeout(800); console.log('install:', (await p.innerText('#updbox')).replace(/\s+/g,' '));
+console.log('errors', errs); await b.close();})();

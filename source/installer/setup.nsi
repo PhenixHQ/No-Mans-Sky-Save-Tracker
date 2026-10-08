@@ -3,8 +3,8 @@ Unicode true
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 !define APP "NMS Save Tracker"
-!define VER "2.4.3"
-!define VERFULL "2.4.3.0"
+!define VER "2.6.0"
+!define VERFULL "2.6.0.0"
 !define UNKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\NMSSaveTracker"
 !define ROOT "..\.."
 
@@ -43,13 +43,16 @@ VIAddVersionKey "LegalCopyright" "Unofficial fan-made app for No Man's Sky"
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Install"
-  ; close a running copy (it would lock the exe)
+  ; close a running copy (it would lock the exe) and its background helper
+  nsExec::Exec 'powershell.exe -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing -Method Post -Uri http://127.0.0.1:47831/api/quit -Headers @{ \"X-VC\" = \"1\" } -TimeoutSec 3 | Out-Null } catch {}"'
   nsExec::Exec 'taskkill /IM "${APP}.exe" /F'
   Sleep 800
   SetOutPath "$INSTDIR"
   File "/oname=${APP}.exe" "${ROOT}\NMS Save Tracker.exe"
   File "/oname=${APP}.vbs" "${ROOT}\NMS Save Tracker.vbs"
   File "README.txt"
+  File "/oname=LICENSE.txt" "${ROOT}\LICENSE"
+  File "/oname=THIRD-PARTY-NOTICES.txt" "${ROOT}\THIRD-PARTY-NOTICES.md"
   SetOutPath "$INSTDIR\app"
   File "${ROOT}\app\server.ps1"
   SetOutPath "$INSTDIR\app\lib"
@@ -81,6 +84,7 @@ Section "Install"
 SectionEnd
 
 Section "Uninstall"
+  nsExec::Exec 'powershell.exe -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing -Method Post -Uri http://127.0.0.1:47831/api/quit -Headers @{ \"X-VC\" = \"1\" } -TimeoutSec 3 | Out-Null } catch {}"'
   nsExec::Exec 'taskkill /IM "${APP}.exe" /F'
   Sleep 800
   Delete "$SMPROGRAMS\${APP}.lnk"
@@ -90,6 +94,8 @@ Section "Uninstall"
   Delete "$INSTDIR\${APP}.exe"
   Delete "$INSTDIR\${APP}.vbs"
   Delete "$INSTDIR\README.txt"
+  Delete "$INSTDIR\LICENSE.txt"
+  Delete "$INSTDIR\THIRD-PARTY-NOTICES.txt"
   Delete "$INSTDIR\Uninstall.exe"
   MessageBox MB_YESNO|MB_ICONQUESTION "Also delete your app data (goals, notes, settings, icon cache and save backups)?$\r$\n$\r$\nYour No Man's Sky saves are not touched either way." /SD IDNO IDNO keep
     RMDir /r "$INSTDIR\data"

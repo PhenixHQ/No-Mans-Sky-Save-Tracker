@@ -2,13 +2,16 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Alpha test build (2.0.0).** Expect rough edges. Please report bugs from inside the app: **Settings & help → Report a bug → Report on GitHub**.
+> **Beta (2.6.0).** Expect rough edges.
 
-## Beta: install on Windows
-1. Download **NMS-Save-Tracker-2.4.3-beta-Setup.exe** from [Releases](../../releases).
+> **Note:** Made with the help of AI and tested in my own game. Found a bug? Please [open an issue](../../issues/new?labels=bug) (or use **Settings & help → Report a bug** in the app) with what happened and how to repeat it. Comments about how it was made won't be responded to.
+
+## Install on Windows
+1. Download **NMS-Save-Tracker-Setup.exe** from [Releases](../../releases). This small installer always downloads and installs the newest version, so it needs an internet connection while it runs. Each release also has a full installer (**NMS-Save-Tracker-&lt;version&gt;-Setup.exe**) that works offline.
 2. Run it. Windows may say "Windows protected your PC" because the app isn't code-signed: click **More info**, then **Run anyway**.
 3. It installs for your user only (no admin needed), adds Start menu and desktop shortcuts, and can be removed from Windows Settings > Apps.
 4. Open it: it finds your saves and game folder by itself. For the in-game overlay (F8), set No Man's Sky to **Borderless**.
+5. Updates: the app checks GitHub for a newer version when it opens and shows an **Update** button at the top when there is one (turn this off in **Settings & help → Help**). Nothing about you or your save is sent.
 
 Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Bountria Prime · Verdantia* (Euclid).
 
@@ -16,7 +19,7 @@ Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Boun
 - **Recipes:** every refiner, crafting and cooking recipe, sorted by value or profit, with pins and item cards that show how many of an item you own. Each recipe says how many you can make **now**, **with sub-crafts** (making missing ingredients one step down) and **from scratch** (all the way down to raw materials), with a crafting tree (what you have, what to make, what to gather), the steps in order, and what you'd need to gather for one more. Tick **Only recipes I can make now** to see what you can refine, craft or cook with the inventories you choose.
 - **Inventory:** your exosuit, starships, corvettes (plus their built storage), freighter and base storage containers, laid out like the in-game screen. The **Everything** view has filters: item kinds (raw, refined, basic/advanced crafted, trade goods, curiosities, food, fish, tech, base parts, corvette parts), which inventories count, hide corvette parts, only things used in recipes, and worth selling.
 - **Where to find:** a star class decoder (G7pf and so on), resources by star colour and biome, the freighter Stellar Extractor and gas sources, fish, and **Trade goods**: which economy sells each good, and the closest systems you've tagged (economy and wealth) near you, your freighter or a base.
-- **Portals:** a glyph keypad with replace/insert editing, keyboard input and saved addresses.
+- **Portals:** a glyph keypad with replace/insert editing, keyboard input and saved addresses, using the game's own glyph pictures from your install. **Your places** lists the portal address of where you are, your freighter and every base, and any address you enter shows whether you've been there, how far it is from you and your nearest base, and where it is on the map.
 - **My galaxy:** a map of every system you've explored (kept across syncs, past the game's 512-visit memory), colourable by type, discoverer or the economy you tagged, with an **Exploration** card (discoveries today/this week/all time, and coverage by direction around any base with an arrow on the map), with top-down, angled, side and front views, adjustable height stretch, a galaxy switcher, hover details, a system view, and how many species you've scanned on each planet.
 - **Game icons:** the real item icons, copied from your own No Man's Sky install the first time the app runs (no game artwork ships with the app), packed into one file so they all appear at start-up. A loading screen with tips shows while the app loads.
 - **Quests:** a quest board with notes.
@@ -57,7 +60,7 @@ How it keeps your save safe:
 
 Use them at your own risk, and keep your own copy of anything important.
 
-## Install (Windows)
+## Run from source (Windows)
 1. Download this repository (**Code → Download ZIP**) and unzip it anywhere.
 2. Double-click **`NMS Save Tracker.exe`**. The app opens in its own window (Microsoft WebView2, part of Windows 10 and 11). The .exe isn't code-signed, so the first time Windows may say "Windows protected your PC": click **More info → Run anyway**. `NMS Save Tracker.vbs` still works too.
 3. Press **Sync** to read your latest save. Tick **Auto-sync** next to it to keep every tab updated while you play.
@@ -70,6 +73,7 @@ The app finds your saves in `%APPDATA%\HelloGames\NMS` automatically. If yours a
 - Everything runs on your PC. A small helper (`app\server.ps1`) serves the app to `127.0.0.1` only, so nothing is reachable from other devices.
 - Your app data (pins, notes, settings, last sync) is stored in the `data\` folder next to the app. Nothing is uploaded.
 - Bug reports only go out when you choose to submit one, and the attached log leaves out save data, names, coordinates and file paths.
+- The only time the app goes online by itself is the update check: it asks GitHub for the latest release, and you can turn it off.
 
 ## Folder layout
 ```
@@ -84,9 +88,13 @@ data\                  created on first run: your personal app data, icon cache 
 ```
 
 ## Building from source
-- Installer: `makensis source/installer/setup.nsi` (NSIS 3) writes `release/NMS-Save-Tracker-<version>-beta-Setup.exe`.
+- Full installer: `makensis source/installer/setup.nsi` (NSIS 3) writes `release/NMS-Save-Tracker-<version>-beta-Setup.exe`.
+- Web installer: `makensis source/installer/web-setup.nsi` writes `release/NMS-Save-Tracker-Setup.exe`. It has no app inside: it downloads the full installer from the newest GitHub release (matched by the name `NMS-Save-Tracker-<version>-Setup.exe`, checked against GitHub's SHA-256) and runs it silently. Attach both files to every release.
 
 Requires Python 3. Run `python source\build.py` to rebuild `web\index.html` from `source\src`. The app window is built from `source\window\Window.cs` with `source/window/build.sh` (Mono `mcs`). See `source\NOTES-FOR-CLAUDE.md` for how everything fits together.
+
+## License
+The app's own code is under the [MIT License](LICENSE). Third-party parts keep their own licenses: see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## Credits
 - Save decoding key map: [MBINCompiler](https://github.com/monkeyman192/MBINCompiler) `mapping.json`.

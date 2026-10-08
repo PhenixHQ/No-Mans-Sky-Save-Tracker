@@ -260,6 +260,9 @@ body.nav-bottom nav.tabs{order:3; border-top:1px solid var(--line); border-botto
 }
 .syncbar{gap:10px}
 .syncpill{color:var(--teal)}
+.updpill{color:var(--accent); border-color:var(--accent)}
+.updbox{display:grid; gap:8px}
+.updnotes pre{white-space:pre-wrap; font:13px/1.45 var(--body); margin:6px 0 0; max-height:260px; overflow:auto; padding:8px 10px; background:var(--surface-2); border-radius:8px}
 .autopill{display:inline-flex; align-items:center; gap:6px; cursor:pointer; color:var(--muted); user-select:none}
 .autopill input{width:15px; height:15px; margin:0; accent-color:var(--teal); cursor:pointer}
 .autopill.on{color:var(--teal); border-color:var(--teal)}
@@ -345,6 +348,9 @@ section.panel > *, .card > *{min-width:0}
 .gaddr{display:grid; gap:2px; margin-top:2px}
 .gaddr .cd{font:600 13px var(--mono); color:var(--teal)}
 .gaddr .cd.hex{color:var(--muted)}
+img.gpic{object-fit:contain; background:#121722; border-radius:4px; padding:1px; box-sizing:border-box}
+.gwhere{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2)}
+.gwhere .gwtxt{font-size:13.5px; line-height:1.5}
 .gpreview{display:flex; gap:10px}
 .gprev{display:inline-flex; flex-direction:column; align-items:center; gap:2px; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:var(--surface); font:600 13px var(--mono)}
 .gprev .gsv{width:26px; height:26px}
@@ -839,6 +845,7 @@ body.panelmode.side-open .wrap{margin-right:0}
       <label class="menubtn autopill" id="autopill" for="autosync3" hidden title="Re-read your save by itself while you play. Every tab updates: inventory, recipes you can make, map and stats.">
         <input type="checkbox" id="autosync3"> <span class="mtxt">Auto-sync</span>
       </label>
+      <button type="button" class="menubtn updpill" id="updpill" hidden title="A newer version of the app is out"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M3 13.5h10"/></svg><span class="mtxt" id="updpilltxt">Update</span></button>
       <button type="button" class="menubtn" id="gsbtn" title="Search everything (Ctrl+K)"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="mtxt">Search</span></button>
       <button type="button" class="menubtn" id="sidebtn" aria-pressed="false" aria-controls="side" title="Goals and pinned recipes (G)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><span class="mtxt">Goals</span></button>
       <button type="button" class="menubtn" id="menubtn" aria-haspopup="dialog" aria-controls="drawer" aria-expanded="false" aria-label="Settings and help">
@@ -1097,6 +1104,7 @@ body.panelmode.side-open .wrap{margin-right:0}
         <button class="btn" id="gload" type="button">Load</button>
       </div>
       <div class="codes" id="gcodes"></div>
+      <div class="gwhere" id="gwhere" hidden></div>
       <div class="row">
         <span class="lbl">Same system, other planet</span>
         <div class="seg" id="gplanet" role="group" aria-label="Planet number"></div>
@@ -1106,6 +1114,11 @@ body.panelmode.side-open .wrap{margin-right:0}
         <button class="btn primary" id="gsave" type="button">Save address</button>
       </div>
       <p class="muted small" style="margin:0">The first glyph is the planet number inside the system. The other eleven are the system's location, so every planet in a system shares them. Waterworlds often have no portal, and dialing one drops you on the seafloor.</p>
+    </div>
+    <div class="card" id="gplacecard" hidden>
+      <div class="row" style="justify-content:space-between"><h2>Your places</h2><span class="small muted" id="gplacenote"></span></div>
+      <p class="muted small" style="margin:0">Straight from your save: where you are now, your freighter and every base. Load one on the keypad above, or copy it to share.</p>
+      <div class="saved" id="gplaces"></div>
     </div>
     <div class="card">
       <h2>Saved addresses</h2>
@@ -1330,9 +1343,10 @@ body.panelmode.side-open .wrap{margin-right:0}
         <label class="toggle" for="dg-num"><input type="checkbox" id="dg-num" data-disp="gNum"> Numbers (1–16)</label>
         <label class="toggle" for="dg-name"><input type="checkbox" id="dg-name" data-disp="gName"> Names</label>
         <label class="toggle" for="dg-hex"><input type="checkbox" id="dg-hex" data-disp="gHex"> Hex code (0–F)</label>
+        <label class="toggle" for="dg-game"><input type="checkbox" id="dg-game" data-disp="gGame"> Use the game's glyph pictures</label>
       </div>
       <div class="gpreview" id="gpreview"></div>
-      <p class="muted small" style="margin:0">Used everywhere glyphs appear: the address bar, keypad, saved addresses and the system view. The icons are drawn for this app to match each glyph's name, so they look close to the game's but not identical.</p>
+      <p class="muted small" style="margin:0">Used everywhere glyphs appear: the address bar, keypad, saved addresses and the system view. With “Use the game's glyph pictures” on, the icons are read from your own game install once the game icons are set up; otherwise they're drawn for this app to match each glyph's name.</p>
     </div>
     <div class="field">
       <span class="lbl">Big numbers (units, totals)</span>
@@ -1443,13 +1457,19 @@ body.panelmode.side-open .wrap{margin-right:0}
   </div>
 
   <div class="dsec" id="d-help" hidden>
+    <div class="field" id="updfield" hidden>
+      <span class="lbl">Updates</span>
+      <div id="updbox" class="updbox"></div>
+      <div class="row"><button type="button" class="btn" id="updcheck">Check for updates</button><label class="toggle" for="updauto"><input type="checkbox" id="updauto"> Check when the app opens</label></div>
+      <p class="muted small" style="margin:0">Asks GitHub for the newest release of the app. Nothing about you or your save is sent.</p>
+    </div>
     <details open><summary>Recipes</summary><p>Pick Refiner, Crafting or Cooking, then search any item. <b>Uses it</b> shows recipes that need the item, <b>Makes it</b> shows recipes that produce it. Searching an exact item name shows an info card. Click any item chip to jump to it. ☆ pins a recipe to the Pinned tab.</p><p>The <b>×</b> number is output value ÷ input value, so above ×1 makes you money. <b>Profit / run</b> is units gained each run. <b>Items in → out</b> ignores value and just counts items.</p></details>
     <details><summary>Recipes you can make now</summary><p>In Recipes, tick <b>Only recipes I can make now</b>. The list then only shows recipes you have the materials for, with how many times you can run each one, and the counts appear on the Refiner, Crafting and Cooking buttons. Search still works on top of it.</p><p>Choose <b>From my save</b> and tick which inventories count (exosuit, ships, corvettes, freighter, base storage, exocraft), or <b>My own list</b> to type items and amounts in yourself.</p></details>
     <details><summary>How many can I make</summary><p>Every recipe shows three counts worked out from what you have: <b>now</b> (only the ingredients you already carry), <b>with sub-crafts</b> (also making missing ingredients from what you have, one step down) and <b>from scratch</b> (all the way down to raw materials). Materials shared between ingredients are only counted once. Click the counts for the full ingredient tree, where each ingredient is stored, and exactly what you're short to make one more. Untick <b>Show how many I can make</b> to hide them.</p></details>
     <details><summary>Where to find</summary><p>A star class guide (type a code like G7pf to decode it), tables for star colours and planet types, plus the game's own description for every raw material. Switch to Fish to search by biome.</p></details>
     <details><summary>Item icons</summary><p>In the desktop app, the real item icons are copied out of your own No Man's Sky install the first time it runs. It takes a few minutes in the background, and you can watch it in Settings &amp; help, Game files. They're kept in the app's data folder and refreshed by themselves after a game update. Nothing in your game folder is changed, and no game artwork comes with the app.</p></details>
     <details><summary>Inventory</summary><p>Your exosuit, starships, corvettes (their own inventories plus the storage units built into them), freighter and base storage containers, read from your save. <b>Everything</b> adds up each item across all of them and shows where it is. Click an item to see its recipes. It refreshes whenever the app syncs.</p><p>In <b>Everything</b>, the filters narrow the list by kind (raw, refined, basic or advanced crafted, trade goods, curiosities, food, fish, tech, base parts, corvette parts) and by which inventories count, including corvette workshop storage. <b>Hide corvette parts</b>, <b>Only things used in recipes</b> and <b>Worth selling</b> work on top. Your filters are remembered; <b>Clear filters</b> resets them.</p><p>In <b>Recipes</b>, tick <b>Only recipes I can make now</b> to see what you can make with what you actually have.</p></details>
-    <details><summary>Portals</summary><p>Tap glyphs on the keypad (numbered 1–16 like the portal) or paste a code. Each glyph pops into the address bar, which stays in view while you scroll. Tap any of the 12 spots to pick it: with <b>Replace</b> the next glyph overwrites that spot, with <b>Insert</b> it goes in before it and the rest move along. The × on a spot removes that glyph. Undo steps back through your changes. On a keyboard, type the hex code (0–9, A–F).</p><p>The first glyph is the planet, and the planet buttons swap it to reach other planets in the same system. Save addresses with a name; Copy puts the numbers on your clipboard.</p></details>
+    <details><summary>Portals</summary><p>Tap glyphs on the keypad (numbered 1–16 like the portal) or paste a code. Each glyph pops into the address bar, which stays in view while you scroll. Tap any of the 12 spots to pick it: with <b>Replace</b> the next glyph overwrites that spot, with <b>Insert</b> it goes in before it and the rest move along. The × on a spot removes that glyph. Undo steps back through your changes. On a keyboard, type the hex code (0–9, A–F).</p><p>The first glyph is the planet, and the planet buttons swap it to reach other planets in the same system. Save addresses with a name; Copy puts the numbers on your clipboard.</p><p><b>Your places</b> lists the address of where you are, your freighter and every base, straight from your save. Once all 12 glyphs are in, the box under the codes says whether you've been to that system, how far it is from you and your nearest base, and <b>Show on map</b> marks it on My galaxy. Portals keep you in the galaxy you're in, so it assumes that one.</p></details>
     <details><summary>My galaxy</summary><p>Drag to pan, scroll or pinch to zoom; arrow keys work too. Pick a camera: <b>Top down</b>, <b>Angled</b>, <b>Side</b> or <b>Front</b>, or turn it freely with the sliders, Right-drag or Shift-drag (Q and E turn it with the keyboard). <b>Height</b> stretches the galaxy's thickness so you can see which systems sit above or below the plane. The <b>Galaxy</b> list switches between the galaxies your save has data for.</p><p>Click a system for details, then <b>Open system view</b> for its planets. Switch between colouring by type and by who discovered it.</p></details>
     <details><summary>Sync</summary><p>In the desktop app, Sync reads your newest save. Tick <b>Auto-sync</b> next to the Sync button at the top, and every tab keeps itself up to date while you play: inventory, recipes you can make, the map and your stats. Pick how often it checks in the Sync section of this menu. The game only writes a new save when you land, get out of your ship, warp or save manually, so changes show up after that.</p></details>
     <details><summary>Save tools (advanced)</summary><p>Off by default. Turn them on in Settings &amp; help, Game files, Advanced. A Save tools tab appears with: <b>Saves &amp; backups</b> (back up any save, restore a backup, or make an older save the one the game loads), <b>Inventories</b> (any item and amount in any slot, unlock slots), <b>Currencies</b>, <b>Settlements</b> (finish construction, debt, name, stats, buildings, perks, production, timers, or the whole entry raw), <b>Quests</b> (change a step, remove a mission, or restore missions from a backup), <b>Timers</b> (move any date in the save back, like the clock trick) and <b>Everything (raw)</b> to browse and change any value.</p><p>Changes wait in a list until you press <b>Write to save</b>. The app refuses to write while No Man's Sky is running, backs the save up to data\backups first, then reads it back to check it. If anything looks wrong in game, restore the backup.</p></details>
@@ -2027,7 +2047,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.5.0';
+const APPVER = '2.6.0';
 // 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
 // ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
 const OVL = /[?&]overlay=1\b/.test(location.search);
@@ -2160,7 +2180,8 @@ const GLYPH_SVG = [
   // 15 Atlas: nested triangles
   '<path d="M12 3.5l8.5 15h-17z"/><path d="M8.5 11.5h7L12 17.5z"/>'
 ];
-function glyphSvg(v, cls){ return `<svg class="${cls||'gsv'}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${GLYPH_SVG[v]||''}</svg>`; }
+var GREADY = false; // galaxy data is set up
+function glyphSvg(v, cls){ const u = DSP.gGame ? giUrl('GLYPH_' + v) : null; if(u) return `<img class="${cls||'gsv'} gpic" src="${u}" alt="" draggable="false">`; return `<svg class="${cls||'gsv'}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${GLYPH_SVG[v]||''}</svg>`; }
 // Item category pictograms, drawn for this app.
 const KIND_SVG = {
   p:'<circle cx="12" cy="12" r="3"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9L18 18M6 18l2.1-2.1M15.9 8.1L18 6"/>',
@@ -2184,9 +2205,11 @@ const IC = G.ic || {};
 /* ---------- GAME ICONS (read from the player's own install, never shipped with the app) ---------- */
 const IP = G.ip || {};
 // Economy symbols from the galaxy map (METADATA/UI/GALAXYINFOICONS: EconomyIcons, plus the pirate conflict icon for outlaw systems)
-const ICONSET = 3; // bump when icons that aren't items are added, so existing installs fetch them once
+const ICONSET = 4; // bump when icons that aren't items are added, so existing installs fetch them once
 Object.entries({ trading:'trading', adv:'fusion', sci:'scientific', mining:'mining', manu:'manufacturing', tech:'hightech', power:'powergeneration' }).forEach(([k, f]) => IP['ECON_' + k] = '/textures/ui/frontend/systeminfo/economy.' + f + '.dds');
 IP.ECON_outlaw = '/textures/ui/frontend/systeminfo/conflict.pirate.dds';
+// Portal glyphs, the same pictures the game's portal keypad uses (GLYPH ONE … SIXTEEN)
+for(let i=0;i<16;i++) IP['GLYPH_' + i] = '/textures/ui/frontend/icons/update3/portalsymbol.' + i.toString(16) + '.dds';
 // Wealth symbols (GALAXYINFOICONS WealthIcons: Poor, Average, Wealthy, Pirate)
 ['low','med','high'].forEach((k, i) => IP['WEALTH_' + k] = '/textures/ui/frontend/systeminfo/stars.' + (i+1) + '.dds'); IP.WEALTH_pirate = '/textures/ui/frontend/systeminfo/stars.pirate.dds';
 const GI = { map: new Map(), state: 'idle', done: 0, total: 0, found: 0, msg: '', sig: '', ran: false };
@@ -2204,7 +2227,7 @@ function itemIconHTML(id, size){
 
 /* ---------- DISPLAY SETTINGS (how multi-format things are shown) ---------- */
 S.settings = S.settings || {};
-const DSP = S.settings.disp = Object.assign({ gIcon:1, gNum:1, gName:1, gHex:0, big:'full', loc:'both', invView:'grid', gridNames:0, gameIcons:1 }, S.settings.disp || {});
+const DSP = S.settings.disp = Object.assign({ gIcon:1, gGame:1, gNum:1, gName:1, gHex:0, big:'full', loc:'both', invView:'grid', gridNames:0, gameIcons:1 }, S.settings.disp || {});
 function fmtBig(n){ if(DSP.big!=='short' || Math.abs(n) < 10000) return fmt(n); const a = Math.abs(n); const [d,s] = a>=1e9 ? [1e9,'B'] : a>=1e6 ? [1e6,'M'] : [1e3,'k']; return (n<0?'−':'') + (a/d).toFixed(a/d>=100?0:a/d>=10?1:2).replace(/\.?0+$/,'') + s; }
 // One glyph written out the ways the person has chosen.
 function glyphParts(v){ const out = []; if(DSP.gIcon) out.push(glyphSvg(v,'gsv')); if(DSP.gNum) out.push(`<b>${v+1}</b>`); if(DSP.gHex) out.push(`<code>${v.toString(16).toUpperCase()}</code>`); if(DSP.gName) out.push(`<i>${esc(GLYPHS[v][0])}</i>`); return out.join(''); }
@@ -2816,6 +2839,7 @@ function renderAddr(){
       DSP.gName ? `<div><span>Names</span>${addr.map(v=>GLYPHS[v][0]).join(' · ')}</div>` : ''].join('') : `<div class="muted small">${12-n} glyph${12-n===1?'':'s'} to go.</div>`;
   $('#gplanet').innerHTML = [1,2,3,4,5,6].map(p => `<button type="button" data-gp="${p}" aria-pressed="${done && addr[0]===p}" ${done?'':'disabled'}>${p}</button>`).join('');
   $('#gback').disabled = !ghist.length;
+  renderWhere();
 }
 function pressGlyph(v){
   const n = addr.length; const mode = gonce || gmode;
@@ -2893,10 +2917,11 @@ function calcAutoHS(){ let h = 50, v = 1; SY.forEach(s => { h = Math.max(h, Math
 // Auto stretch follows the zoom: zoomed out it stretches a lot, zoomed in to a few systems it stretches less.
 function autoFromView(){ if(MV.hs!=='auto' || !W) return; const half = W/2/view.scale; const h = Math.round(Math.max(1, Math.min(300, half/Math.max(maxY,1)*0.35))); if(h!==HS){ HS = h; } }
 const fmtLy = ly => { const a = Math.abs(ly); return a>=10000 ? fmt(a/1000)+'k' : a>=1000 ? (a/1000).toFixed(1).replace(/\.0$/,'')+'k' : fmt(a); };
-let view = { fx:0, fy:0, fz:0, scale:1 }; let W=0, H=0, dpr=1; let sel = SY.find(isCur) || null; let showPath=false;
+let view = { fx:0, fy:0, fz:0, scale:1 }; let W=0, H=0, dpr=1; let sel = SY.find(isCur) || null; let showPath=false; let PTARGET = null;
 let cY=1, sY=0, cP=0, sP=1;
 function camUpdate(){ HS = MV.hs==='auto' ? autoHS : MV.hs; const t = MV.yaw*Math.PI/180, p = MV.pitch*Math.PI/180; cY=Math.cos(t); sY=Math.sin(t); cP=Math.cos(p); sP=Math.sin(p); }
 camUpdate();
+GREADY = true;
 // world (x, y up, z) -> [screen-x units, screen-y units, depth]
 function proj(x,y,z){ const x1 = x*cY - z*sY, z1 = x*sY + z*cY; return [x1, z1*sP - y*cP*HS, z1*cP + y*sP]; }
 function toScreen(x,y,z){ const a = proj(x-view.fx, y-view.fy, z-view.fz); return [W/2 + a[0]*view.scale, H/2 + a[1]*view.scale, a[2]]; }
@@ -3023,6 +3048,8 @@ function draw(){
     ctx.strokeStyle = '#F6C27A'; ctx.lineWidth = 2.5; ctx.setLineDash([7,5]); ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.setLineDash([]);
     const ang = Math.atan2(y1-y0, x1-x0); ctx.fillStyle = '#F6C27A'; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1-12*Math.cos(ang-0.4), y1-12*Math.sin(ang-0.4)); ctx.lineTo(x1-12*Math.cos(ang+0.4), y1-12*Math.sin(ang+0.4)); ctx.fill();
     ctx.font = '600 11.5px "IBM Plex Sans", sans-serif'; ctx.fillText(COV.l, x1 + 8, y1 + 4); }
+  if(PTARGET && (PTARGET.g||0)===galView){ const [x,y] = toScreen(PTARGET.x, PTARGET.y, PTARGET.z); ctx.strokeStyle = '#F6C27A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2); ctx.moveTo(x-17,y); ctx.lineTo(x-6,y); ctx.moveTo(x+6,y); ctx.lineTo(x+17,y); ctx.moveTo(x,y-17); ctx.lineTo(x,y-6); ctx.moveTo(x,y+6); ctx.lineTo(x,y+17); ctx.stroke();
+    ctx.font = '600 11.5px "IBM Plex Sans", sans-serif'; ctx.fillStyle = '#F6C27A'; ctx.fillText('Portal address', x + 14, y - 12); }
   if(sel && (sel.g||0)===galView){ const [x,y]=sp(sel); ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.stroke(); }
   // corner label: galaxy + camera
   ctx.font='600 11px "IBM Plex Mono", monospace'; ctx.fillStyle='#95A7AE';
@@ -3273,6 +3300,62 @@ $('#gexplore').addEventListener('change', e => { const t = e.target;
   if(t.id==='gcovr'){ S.covR = +t.value; save(); COV = null; renderExplore(); draw(); } });
 $('#gexplore').addEventListener('click', e => { const b = e.target.closest('[data-gcov]'); if(!b || !window.__covDirs) return; const D = window.__covDirs, [l, v] = D.dirs[b.dataset.gcov];
   COV = COV && COV.k===b.dataset.gcov ? null : { k: b.dataset.gcov, a: D.A, d: v, r: D.R, l }; if(COV){ view.fx = D.A.x; view.fy = D.A.y; view.fz = D.A.z; if(W) view.scale = (Math.min(W, H) * 0.38) / (D.R / LY); } draw(); $('#map').scrollIntoView({ block:'nearest', behavior:'smooth' }); });
+/* ---------- portal addresses from the save: your places + "where is this address" ---------- */
+function addrDecode(arr){ const h = toHex(arr); if(h.length!==12) return null; const n = (a,b) => parseInt(h.slice(a,b),16); const sg = (v,b) => v >= (1<<(b-1)) ? v-(1<<b) : v;
+  return { p:n(0,1), s:n(1,4), y:sg(n(4,6),8), z:sg(n(6,9),12), x:sg(n(9,12),12) }; }
+const sameSys = (a, b) => a.x===b.x && a.y===b.y && a.z===b.z && a.s===b.s && (a.g||0)===(b.g||0);
+function placesList(){
+  const out = []; const all = (GX && GX.sys) || []; const find = a => all.find(s => sameSys(s, a));
+  if(cur && cur.x!==undefined){ const s = find(cur) || cur; out.push({ k:'cur', n:'Where you are now', sub: sysTitle(s) + (cur.p ? ' · planet ' + cur.p : ' · in space') + ' · ' + galName(cur.g||0), h: portalHex(cur.p||1, cur), sys: s }); }
+  const fr = GX && GX.fr; if(fr && fr.x!==undefined){ const s = find(fr) || fr; out.push({ k:'fr', n:'Your freighter', sub: sysTitle(s) + ' · ' + galName(fr.g||0), h: portalHex(1, fr), sys: s }); }
+  all.forEach(s => (s.b||[]).forEach(([n, t, p]) => { if(t==='Freighter') return; out.push({ k:'b', n: n || 'Base', sub: `${t==='Station' ? 'Station base' : 'Base'} · ${sysTitle(s)}${p ? ' · planet ' + p : ''} · ${galName(s.g||0)}`, h: portalHex(p||1, s), sys: s }); }));
+  return out;
+}
+var PLACES = [];
+function renderPlaces(){
+  const card = $('#gplacecard'); if(!card || !GREADY) return;
+  PLACES = placesList(); card.hidden = !PLACES.length; if(!PLACES.length) return;
+  $('#gplacenote').textContent = `${PLACES.length} place${PLACES.length===1?'':'s'}`;
+  $('#gplaces').innerHTML = PLACES.map((a, i) => { const arr = a.h.split('').map(c => parseInt(c,16));
+    return `<div class="srow"><div><div class="nm">${a.k==='cur' ? '<span class="tag nan">Now</span> ' : a.k==='fr' ? '<span class="tag cat">Freighter</span> ' : ''}${esc(a.n)}</div><div class="small muted">${esc(a.sub)}</div><div class="gaddr">${addrStrip(arr)}</div></div>
+    <div class="acts"><button class="btn" type="button" data-pl="${i}">Load</button><button class="btn ghost" type="button" data-pcopy="${i}">Copy</button><button class="btn ghost" type="button" data-pmap="${i}">Map</button></div></div>`; }).join('');
+}
+function copyAddr(btn, name, h){ const txt = `${name}: ${toNums(h.split('').map(x => parseInt(x,16)))} (${h})`;
+  const done = () => { btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => { btn.textContent = 'Select text'; }); }
+$('#gplaces').addEventListener('click', e => {
+  const l = e.target.closest('[data-pl]'); if(l){ gsnap(); addr = PLACES[+l.dataset.pl].h.split('').map(c => parseInt(c,16)); gcur = null; renderAddr(); $('#gslots').scrollIntoView({block:'center', behavior:'smooth'}); uCount('place-load'); return; }
+  const c = e.target.closest('[data-pcopy]'); if(c){ const a = PLACES[+c.dataset.pcopy]; copyAddr(c, a.n, a.h); uCount('place-copy'); return; }
+  const m = e.target.closest('[data-pmap]'); if(m){ goSys(PLACES[+m.dataset.pmap].sys); uCount('place-map'); }
+});
+function goSys(sy){
+  showTab('galaxy');
+  if((sy.g||0)!==galView){ const gs = $('#ggal'); if(gs && [...gs.options].some(o => o.value===String(sy.g||0))){ gs.value = String(sy.g||0); gs.dispatchEvent(new Event('change')); } }
+  const t2 = SY.find(z => sameSys(z, sy));
+  if(t2){ PTARGET = null; sel = t2; selPlanet = null; focusOn(t2, 3); draw(); renderInfo(); }
+  else { PTARGET = { x: sy.x, y: sy.y, z: sy.z, g: sy.g||0 }; focusOn(PTARGET, 3); draw(); }
+}
+function renderWhere(){
+  const el = $('#gwhere'); if(!el) return;
+  if(!GREADY || addr.length!==12 || !cur || cur.x===undefined){ el.hidden = true; return; }
+  const a = addrDecode(addr); if(!a){ el.hidden = true; return; } a.g = cur.g||0;
+  const all = (GX && GX.sys) || [];
+  const same = all.find(s => sameSys(s, a));
+  const region = all.filter(s => (s.g||0)===a.g && s.x===a.x && s.y===a.y && s.z===a.z && s.s!==a.s);
+  const pl = same && a.p && same.P && same.P[a.p];
+  const here = sameSys(a, cur);
+  const near = PLACES.filter(p => p.k==='b' && (p.sys.g||0)===a.g && !sameSys(p.sys, a)).map(p => [p, lyBetween(p.sys, a)]).sort((x,y) => x[1]-y[1])[0];
+  const lines = [];
+  lines.push(here ? `<b>This is the system you're in now.</b>` : same ? `<b>You've been here:</b> ${esc(sysTitle(same))}` : region.length ? `<b>Not a system in your save,</b> but you've been to ${region.length} other system${region.length>1?'s':''} in the same region.` : `<b>Not in your save.</b> A region you haven't explored yet.`);
+  if(a.p) lines.push(`Planet ${a.p}${pl && pl.n ? `: ${esc(pl.n)}` : ''}${pl && pl.bio ? ` · ${esc(pl.bio)}` : ''}`);
+  else lines.push('The planet glyph is 0 (space), which the portal treats as planet 1.');
+  if(!here) lines.push(`≈ ${fmt(lyBetween(a, cur))} ly from you${near && near[1]!==Infinity ? (near[1] ? ` · ≈ ${fmt(near[1])} ly from your base “${esc(near[0].n)}”` : ` · same region as your base “${esc(near[0].n)}”`) : ''} · ≈ ${fmt(dist(a))} ly to the core`);
+  else lines.push(`≈ ${fmt(dist(a))} ly to the core`);
+  el.innerHTML = `<div class="gwtxt">${lines.join('<br>')}</div><button class="btn" type="button" id="gwmap">Show on map</button>
+    <p class="muted small" style="margin:0; flex-basis:100%">Portals keep you in the galaxy you're in, so this assumes ${esc(galName(a.g))}. Distances go by region (each about 400 ly across), so they're close, not exact.</p>`;
+  el.hidden = false; $('#gwmap').onclick = () => { goSys(same || a); uCount('glyph-where-map'); };
+}
+renderPlaces(); renderWhere();
 function setGalaxy(g){
   if(OVL){ GX = g; ALLSY = g.sys; cur = g.cur || {}; HAVE = stock(); MK = new Map(); CANN = new Map(); renderOvl(); return; }
   const prevG = cur.g||0;
@@ -3281,7 +3364,7 @@ function setGalaxy(g){
   filterGal(); camUpdate();
   if(sel) sel = SY.find(s => s.x===sel.x && s.y===sel.y && s.z===sel.z && s.s===sel.s) || null;
   if(!sel) sel = SY.find(isCur) || null;
-  renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); renderExplore(); renderRecap(); draw();
+  renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); renderExplore(); renderRecap(); renderPlaces(); renderWhere(); draw();
   if(current==='inventory') renderInventory();
   renderPlanner(); if(current==='recipes' && !R.can) itemCard(); if(typeof renderSide==='function') renderSide();
 }
@@ -3435,7 +3518,7 @@ function renderDisp(){
   $('#gpreview').innerHTML = [3,4,15].map(v => `<span class="gprev">${slotFace(v)}${DSP.gName ? `<i>${GLYPHS[v][0]}</i>` : ''}</span>`).join('');
 }
 function applyDisp(){
-  renderDisp(); renderPad(); renderAddr(); renderSaved(); renderInfo(); renderSync();
+  renderDisp(); renderPad(); renderAddr(); renderSaved(); renderPlaces(); renderInfo(); renderSync();
   if(current==='inventory') renderInventory();
   const ic = $('#itemcard'); if(ic && ic.firstChild) itemCard();
   save();
@@ -3699,7 +3782,7 @@ function giRender(){
   $('#girun').disabled = false; $('#girun').textContent = n ? 'Reload icons from my game' : 'Load icons from my game';
   st.innerHTML = GI.state==='error' ? `<span style="color:var(--bad)">⚠ ${esc(GI.msg)}</span>` : n ? `<span style="color:var(--good)">✓ ${fmt(n)} icons loaded from your game.</span>${GI.msg ? ' <span class="muted">'+esc(GI.msg)+'</span>' : ''}` : 'Not loaded yet.';
 }
-function giRefresh(){ if(current==='recipes') renderRecipes(); if(current==='inventory') renderInventory(); if(current==='pinned') renderPinned(); }
+function giRefresh(){ if(DSP.gGame && DSP.gIcon && typeof GREADY!=='undefined' && GREADY){ renderPad(); renderAddr(); renderSaved(); renderPlaces(); if(sel) renderInfo(); } if(current==='recipes') renderRecipes(); if(current==='inventory') renderInventory(); if(current==='pinned') renderPinned(); }
 let giRT = null; function giSoon(){ clearTimeout(giRT); giRT = setTimeout(giRefresh, 600); }
 async function giLoadIndex(){
   if(!DESK) return null;
@@ -5163,7 +5246,45 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.5.0': ['My galaxy keeps every system you have been to: the game only remembers your last 512 visits, so the app now keeps the older ones from earlier syncs.','Exploration card in My galaxy: systems and planets discovered today, this week and all time, and how well you have covered each direction around any base, with an arrow on the map.','Trade goods: tag a system\'s wealth (Wealthy, Prosperous…) as well as its economy, and the app marks the places that sell all five tiers.','This session: after each sync, a card shows what changed since you started playing (discoveries, units, nanites, quicksilver and items).','Galaxy map: colour systems by the economy you tagged, with a gold ring on wealthy ones.'], '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.6.0': ['Updates: the app checks for a newer version when it opens and shows an Update button at the top. Download and install it from Settings & help › Help, or turn the check off there.','Portals › Your places: the portal address of where you are now, your freighter and every base, ready to load or copy.','Type or paste any portal address and the app says whether you have been there, how far it is from you and your nearest base, and shows it on the map.','Portal glyphs now use the game\'s own glyph pictures from your install (switch back to the drawn ones in Settings & help › Display).'], '2.5.0': ['My galaxy keeps every system you have been to: the game only remembers your last 512 visits, so the app now keeps the older ones from earlier syncs.','Exploration card in My galaxy: systems and planets discovered today, this week and all time, and how well you have covered each direction around any base, with an arrow on the map.','Trade goods: tag a system\'s wealth (Wealthy, Prosperous…) as well as its economy, and the app marks the places that sell all five tiers.','This session: after each sync, a card shows what changed since you started playing (discoveries, units, nanites, quicksilver and items).','Galaxy map: colour systems by the economy you tagged, with a gold ring on wealthy ones.'], '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+/* ---------- updates (desktop: the helper asks GitHub releases) ---------- */
+const UPD = { st:'', r:null, busy:false, inst:'' };
+function verNum(v){ const m = String(v||'').match(/(\d+)\.(\d+)(?:\.(\d+))?/); return m ? [+m[1], +m[2], +(m[3]||0)] : null; }
+function verNewer(a, b){ const x = verNum(a), y = verNum(b); if(!x || !y) return false; for(let i=0;i<3;i++){ if(x[i]!==y[i]) return x[i] > y[i]; } return false; }
+async function checkUpdate(manual){
+  if(!DESK || HELPER < 8 || UPD.busy) return; UPD.busy = true; UPD.st = 'Checking…'; renderUpd();
+  try { const r = await api('/api/update/check'); const j = await r.json();
+    if(!j.ok){ UPD.st = !manual ? '' : /404/.test(j.error||'') ? 'No releases found. The project page may not be public yet.' : `Couldn't reach GitHub. Check your internet connection. (${j.error||'no answer'})`; vcLog('update', 'check failed: ' + (j.error||'')); }
+    else if(j.none){ UPD.st = 'No releases have been published yet.'; }
+    else { UPD.r = j; UPD.st = verNewer(j.tag, APPVER) ? '' : `You're up to date (${APPVER}).`; vcLog('update', 'latest ' + j.tag); }
+  } catch(e){ UPD.st = manual ? 'Couldn\'t check for updates.' : ''; }
+  UPD.busy = false; renderUpd();
+}
+function renderUpd(){
+  const r = UPD.r, newer = !!(r && verNewer(r.tag, APPVER));
+  const pill = $('#updpill'); if(pill){ pill.hidden = !newer || OVL; if(newer) $('#updpilltxt').textContent = 'Update ' + verNum(r.tag).join('.'); }
+  const f = $('#updfield'); if(!f) return; f.hidden = !DESK || HELPER < 8;
+  $('#updauto').checked = ST.updAuto !== 0; $('#updcheck').disabled = UPD.busy;
+  const notes = newer && r.notes ? `<details class="updnotes"><summary>What's new in ${esc(r.tag)}</summary><pre>${esc(r.notes)}</pre></details>` : '';
+  $('#updbox').innerHTML = newer ? `<div><b>Version ${esc(verNum(r.tag).join('.'))} is out.</b> You have ${esc(APPVER)}.</div>${notes}
+      <div class="row">${r.asset ? `<button type="button" class="btn primary" id="updinst" ${UPD.inst==='busy'?'disabled':''}>${UPD.inst==='busy' ? 'Downloading…' : 'Download and install'}</button>` : ''}<button type="button" class="btn ghost" id="updpage">Release page</button></div>
+      ${UPD.inst && UPD.inst!=='busy' ? `<div class="small" style="color:${UPD.inst.startsWith('!') ? 'var(--bad)' : 'var(--teal)'}">${esc(UPD.inst.replace(/^!/,''))}</div>` : ''}
+      <p class="muted small" style="margin:0">The installer closes the app while it updates. Your goals, notes, settings and backups are kept.</p>`
+    : UPD.st ? `<div class="small muted">${esc(UPD.st)}</div>` : `<div class="small muted">Version ${esc(APPVER)}.</div>`;
+}
+$('#updpill').addEventListener('click', () => { openDrawer('help'); setTimeout(() => $('#updfield').scrollIntoView({block:'start', behavior:'smooth'}), 50); uCount('update-pill'); });
+$('#updcheck').addEventListener('click', () => { checkUpdate(true); uCount('update-check'); });
+$('#updauto').addEventListener('change', e => { ST.updAuto = e.target.checked ? 1 : 0; save(); uCount('update-auto-' + ST.updAuto); });
+$('#updbox').addEventListener('click', async e => {
+  if(e.target.closest('#updpage') && UPD.r){ try { await api('/api/open?url=' + encodeURIComponent(UPD.r.page), {method:'POST'}); } catch(err) {} uCount('update-page'); return; }
+  if(e.target.closest('#updinst') && UPD.inst!=='busy'){ UPD.inst = 'busy'; renderUpd(); uCount('update-install');
+    try { const r = await api('/api/update/install', {method:'POST'}); const j = await r.json();
+      UPD.inst = j.ok ? `The ${j.tag} installer is open. Follow it through; it will close this app and you can open the new version at the end.` : '!' + (j.error || 'The download failed.'); }
+    catch(err){ UPD.inst = '!The download failed. Try again, or use the release page.'; }
+    renderUpd(); }
+});
+renderUpd();
+if(DESK && !OVL && ST.updAuto !== 0) setTimeout(() => { if(HELPER >= 8) checkUpdate(false); }, 5000);
 function showNews(){ const v = APPVER; const list = NEWS[v]; if(!list) return; $('#newsv').textContent = v; $('#newslist').innerHTML = list.map(t => `<li>${esc(t)}</li>`).join(''); $('#newsbox').hidden = false; }
 $('#newsok').addEventListener('click', () => { $('#newsbox').hidden = true; S.seenVer = APPVER; save(); });
 if(S.seenVer !== APPVER && !OVL){ if(!S.seenVer && (U.sessions||1) <= 1) { S.seenVer = APPVER; save(); } else setTimeout(() => { if(BOOT.done) showNews(); else { const iv = setInterval(() => { if(BOOT.done){ clearInterval(iv); showNews(); } }, 300); } }, 500); }

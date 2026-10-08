@@ -1,4 +1,4 @@
-NMS Save Tracker 2.4.3 (beta)
+NMS Save Tracker 2.6.0 (beta)
 An unofficial, fan-made companion app for No Man's Sky on PC (Steam/GOG). Not made by or affiliated with Hello Games.
 
 WHAT IT DOES
@@ -22,9 +22,18 @@ VISIT US
 Portals tab > saved addresses: "Bountria Prime - Verdantia", the capital of the Bountria Federation.
 Load it on the glyph pad and dial it at any portal.
 
+UPDATES
+- The app checks GitHub for a newer version when it opens and shows an "Update" button at the top
+  when there is one. Settings & help > Help > Updates can turn this off or check by hand.
+  Only the request for the latest release is sent; nothing about you or your save.
+
 YOUR DATA
 Everything stays on your PC, in the "data" folder inside the install folder.
 Uninstalling asks whether to keep it.
 
 BUGS
 Settings & help > Report a bug.
+
+LICENSE
+The app's code is MIT licensed (LICENSE.txt). Parts made by others keep their own licenses
+(THIRD-PARTY-NOTICES.txt). No Man's Sky and its game data belong to Hello Games.
