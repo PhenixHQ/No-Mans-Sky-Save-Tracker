@@ -79,7 +79,7 @@
     <div class="toprow">
       <div class="brand">
         <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><circle cx="16" cy="16" r="7.5" fill="var(--accent)"/><circle cx="13.5" cy="13.5" r="2.4" fill="#fff" opacity=".35"/><ellipse cx="16" cy="16" rx="13.5" ry="4.6" fill="none" stroke="var(--teal)" stroke-width="2" transform="rotate(-22 16 16)"/></svg></span>
-        <div class="bt"><h1>NMS Save Tracker</h1><div class="tagline">Your No Man's Sky save at a glance <span class="dotsep">·</span> <span class="eyebrow">Cosmos 7.x · game data 7.00</span></div></div>
+        <div class="bt"><h1>NMS Save Tracker</h1><div class="tagline">Your No Man's Sky save at a glance <span class="dotsep">·</span> <span class="eyebrow" id="gdtag">Cosmos 7.x</span></div></div>
       </div>
       <div class="row" style="gap:8px; flex-wrap:nowrap">
       <button type="button" class="menubtn syncpill" id="syncpill" hidden title="Sync from your No Man's Sky save">
@@ -107,13 +107,14 @@
     <button role="tab" id="t-resources" data-tab="resources" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Where to find</button>
     <button role="tab" id="t-portals" data-tab="portals" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="6" ry="8.5"/><ellipse cx="12" cy="12" rx="2.5" ry="4.5"/></svg>Portals</button>
     <button role="tab" id="t-galaxy" data-tab="galaxy" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 12c4-1 7 1 7 4M12 12c1 4-1 7-4 7M12 12c-4 1-7-1-7-4M12 12c-1-4 1-7 4-7"/></svg>My galaxy</button>
+    <button role="tab" id="t-fleet" data-tab="fleet" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l9-10 9 10-9 4z"/><path d="M12 5v14"/></svg>Collection</button>
     <button role="tab" id="t-quests" data-tab="quests" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4M6 4h11l-2 4 2 4H6"/></svg>Quests</button>
     <button role="tab" id="t-pinned" data-tab="pinned" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>Pinned<span class="n" id="pincount">0</span></button>
     <button role="tab" id="t-tools" data-tab="tools" aria-selected="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>Save tools</button>
     <label class="navsel"><span class="lbl">Section</span>
       <select id="navselect" aria-label="Go to section">
         <option value="recipes">Recipes</option><option value="inventory">Inventory</option><option value="resources">Where to find</option>
-        <option value="portals">Portals</option><option value="galaxy">My galaxy</option><option value="quests">Quests</option><option value="pinned">Pinned</option><option value="tools" id="navtools" hidden disabled>Save tools</option>
+        <option value="portals">Portals</option><option value="galaxy">My galaxy</option><option value="fleet">Collection</option><option value="quests">Quests</option><option value="pinned">Pinned</option><option value="tools" id="navtools" hidden disabled>Save tools</option>
       </select>
     </label>
   </nav>
@@ -449,6 +450,21 @@
   </section>
 
   <!-- QUESTS -->
+  <!-- COLLECTION -->
+  <section class="panel" id="p-fleet" role="tabpanel" aria-labelledby="t-fleet" hidden>
+    <div class="row" style="justify-content:space-between">
+      <p class="lede small" style="flex:1 1 380px; margin:0">Your starships, multi-tools, exocraft, frigates and companions, read from your save. <span id="fleetsnap"></span></p>
+      <div class="seg" role="group" aria-label="Collection section" id="fleetsec">
+        <button type="button" data-fsec="ships" aria-pressed="true">Starships</button>
+        <button type="button" data-fsec="tools" aria-pressed="false">Multi-tools</button>
+        <button type="button" data-fsec="veh" aria-pressed="false">Exocraft</button>
+        <button type="button" data-fsec="frig" aria-pressed="false">Frigates</button>
+        <button type="button" data-fsec="pets" aria-pressed="false">Companions</button>
+      </div>
+    </div>
+    <div id="fleetbody"></div>
+  </section>
+
   <section class="panel" id="p-quests" role="tabpanel" aria-labelledby="t-quests" hidden>
     <div class="row">
       <p class="lede small" style="flex:1 1 380px">Your quest lines and goals, filled in from where you're at. Change the status or notes as you go; it's remembered in this browser.</p>
@@ -477,6 +493,8 @@
       <button type="button" data-edsec="set" aria-pressed="false">Settlements</button>
       <button type="button" data-edsec="quest" aria-pressed="false">Quests</button>
       <button type="button" data-edsec="time" aria-pressed="false">Timers</button>
+      <button type="button" data-edsec="bases" aria-pressed="false">Bases</button>
+      <button type="button" data-edsec="pets" aria-pressed="false">Companions</button>
       <button type="button" data-edsec="cmp" aria-pressed="false">Compare</button>
       <button type="button" data-edsec="raw" aria-pressed="false">Everything (raw)</button>
     </div>
@@ -490,7 +508,7 @@
   </section>
 
   <footer>
-    <div>Recipes and item values come from the game files (version 7.00) via <a href="https://github.com/bradhave94/nms" target="_blank" rel="noopener">bradhave94/nms</a>. Values are base prices; real prices shift with each system's economy.</div>
+    <div>Item names, values and recipes are read from No Man's Sky's own files: <span id="gdfoot">your copy of the game</span>. Values are base prices; real prices shift with each system's economy.</div>
     <div>The desktop app keeps your pins, lists, addresses, notes and settings in its data folder, and reads your save to fill in the map and inventories. It never changes your game files, and only writes to a save if you turn on the save tools and press Write to save. <button type="button" class="linkbtn" id="bugbtn">Report a bug</button></div>
     <div>NMS Save Tracker is an unofficial fan-made app. It is not affiliated with or endorsed by Hello Games. No Man's Sky is a trademark of Hello Games.</div>
   </footer>
@@ -676,6 +694,16 @@
         <label class="toggle" for="giuse"><input type="checkbox" id="giuse" checked> Use game icons</label>
       </div>
     </div>
+    <div class="field pathbox" id="gdbox">
+      <span class="lbl">Item and recipe data from your game</span>
+      <p class="muted small" style="margin:0">Item names, values and every refiner, crafting and cooking recipe are read from your own No Man's Sky files, so they match your game, even right after a game update. Until that's done, or if an update changes how the game stores them, the app uses the copy it comes with.</p>
+      <div class="small" id="gdstat"></div>
+      <div class="row">
+        <button type="button" class="btn" id="gdrun">Read again from my game</button>
+        <button type="button" class="btn primary" id="gdreload" hidden>Restart the app to use it</button>
+        <button type="button" class="btn ghost" id="gdoff">Use the app's own copy</button>
+      </div>
+    </div>
     <details class="advbox"><summary>Advanced</summary>
       <label class="toggle" for="edon"><input type="checkbox" id="edon"> Save tools (for testing, restoring and fixing saves)</label>
       <p class="muted small" style="margin:0">Adds a Save tools tab: edit inventories, currencies, settlements, quests and timers, browse everything in the save, and keep backups. It only writes when you press Write to save, never while the game is running, and backs the save up first.</p>
@@ -715,11 +743,12 @@
     <details><summary>Inventory</summary><p>Your exosuit, starships, corvettes (their own inventories plus the storage units built into them), freighter and base storage containers, read from your save. <b>Everything</b> adds up each item across all of them and shows where it is. Click an item to see its recipes. It refreshes whenever the app syncs.</p><p>In <b>Everything</b>, the filters narrow the list by kind (raw, refined, basic or advanced crafted, trade goods, curiosities, food, fish, tech, base parts, corvette parts) and by which inventories count, including corvette workshop storage. <b>Hide corvette parts</b>, <b>Only things used in recipes</b> and <b>Worth selling</b> work on top. Your filters are remembered; <b>Clear filters</b> resets them.</p><p>In <b>Recipes</b>, tick <b>Only recipes I can make now</b> to see what you can make with what you actually have.</p></details>
     <details><summary>Portals</summary><p>Tap glyphs on the keypad (numbered 1–16 like the portal) or paste a code. Each glyph pops into the address bar, which stays in view while you scroll. Tap any of the 12 spots to pick it: with <b>Replace</b> the next glyph overwrites that spot, with <b>Insert</b> it goes in before it and the rest move along. The × on a spot removes that glyph. Undo steps back through your changes. On a keyboard, type the hex code (0–9, A–F).</p><p>The first glyph is the planet, and the planet buttons swap it to reach other planets in the same system. Save addresses with a name; Copy puts the numbers on your clipboard.</p><p><b>Your places</b> lists the address of where you are, your freighter and every base, straight from your save. Once all 12 glyphs are in, the box under the codes says whether you've been to that system, how far it is from you and your nearest base, and <b>Show on map</b> marks it on My galaxy. Portals keep you in the galaxy you're in, so it assumes that one.</p></details>
     <details><summary>My galaxy</summary><p>Drag to pan, scroll or pinch to zoom; arrow keys work too. Pick a camera: <b>Top down</b>, <b>Angled</b>, <b>Side</b> or <b>Front</b>, or turn it freely with the sliders, Right-drag or Shift-drag (Q and E turn it with the keyboard). <b>Height</b> stretches the galaxy's thickness so you can see which systems sit above or below the plane. The <b>Galaxy</b> list switches between the galaxies your save has data for.</p><p>Click a system for details, then <b>Open system view</b> for its planets. Switch between colouring by type and by who discovered it.</p></details>
+    <details><summary>Collection</summary><p>Everything you own that isn't an item, read from your save. <b>Starships</b>, <b>Multi-tools</b> and <b>Exocraft</b> show class, slots, supercharged slots, the built-in bonuses the save stores, and the installed technology; <b>Room for more upgrades</b> lists technology that has one or two upgrade modules, since the game allows three of a kind. <b>Frigates</b> lists your fleet with role, class, the four expedition stats, fuel cost and traits (names from your game; green helps, red hurts), the best frigate for each kind of expedition, and expeditions under way. <b>Companions</b> shows each one's trust, traits, when it was adopted and when it last laid an egg.</p></details>
     <details><summary>Sync</summary><p>In the desktop app, Sync reads your newest save. Tick <b>Auto-sync</b> next to the Sync button at the top, and every tab keeps itself up to date while you play: inventory, recipes you can make, the map and your stats. Pick how often it checks in the Sync section of this menu. The game only writes a new save when you land, get out of your ship, warp or save manually, so changes show up after that.</p></details>
-    <details><summary>Save tools (advanced)</summary><p>Off by default. Turn them on in Settings &amp; help, Game files, Advanced. A Save tools tab appears with: <b>Saves &amp; backups</b> (back up any save, restore a backup, or make an older save the one the game loads), <b>Inventories</b> (any item and amount in any slot, unlock slots), <b>Currencies</b>, <b>Settlements</b> (finish construction, debt, name, stats, buildings, perks, production, timers, or the whole entry raw), <b>Quests</b> (change a step, remove a mission, or restore missions from a backup), <b>Timers</b> (move any date in the save back, like the clock trick) and <b>Everything (raw)</b> to browse and change any value.</p><p>Changes wait in a list until you press <b>Write to save</b>. The app refuses to write while No Man's Sky is running, backs the save up to data\backups first, then reads it back to check it. If anything looks wrong in game, restore the backup.</p></details>
+    <details><summary>Save tools (advanced)</summary><p>Off by default. Turn them on in Settings &amp; help, Game files, Advanced. A Save tools tab appears with: <b>Saves &amp; backups</b> (back up any save, restore a backup, or make an older save the one the game loads), <b>Inventories</b> (any item and amount in any slot, unlock slots), <b>Currencies</b>, <b>Settlements</b> (finish construction, debt, name, stats, buildings, perks, production, timers, or the whole entry raw), <b>Quests</b> (change a step, remove a mission, or restore missions from a backup), <b>Timers</b> (move any date in the save back, like the clock trick), <b>Bases</b> (export a base to a file, or import one into a base of yours), <b>Companions</b> (name them) and <b>Everything (raw)</b> to browse and change any value.</p><p>Changes wait in a list until you press <b>Write to save</b>. The app refuses to write while No Man's Sky is running, backs the save up to data\backups first, then reads it back to check it. If anything looks wrong in game, restore the backup.</p></details>
     <details><summary>Reporting a bug</summary><p>Open <b>Report a bug</b> in this menu, say what happened and how, and save, copy or download the report. The attached log has no save data, names, locations or personal details; you can read all of it before sending.</p></details>
     <details><summary>Quests</summary><p>Change a quest's status with its dropdown and write your next step in the notes. <b>Add a goal</b> makes your own card; double-click a title to rename it.</p></details>
-    <details id="helpkeys"><summary>Keyboard shortcuts</summary><p><b>Ctrl+K</b> search everything · <b>1–8</b> switch tabs · <b>/</b> jump to the search box · <b>G</b> open or close Goals · <b>?</b> this help · <b>Esc</b> close a panel. In the app window: <b>F8</b> open the overlay or click back into it, <b>F9</b> close it, <b>F10</b> side panel (change them in Settings &amp; help &gt; Overlay).</p></details>
+    <details id="helpkeys"><summary>Keyboard shortcuts</summary><p><b>Ctrl+K</b> search everything · <b>1–9</b> switch tabs · <b>/</b> jump to the search box · <b>G</b> open or close Goals · <b>?</b> this help · <b>Esc</b> close a panel. In the app window: <b>F8</b> open the overlay or click back into it, <b>F9</b> close it, <b>F10</b> side panel (change them in Settings &amp; help &gt; Overlay).</p></details>
     <details><summary>Goals</summary><p>Press <b>Goals</b> at the top (or G) for a side panel with your pinned recipes and your own goals. Make a goal, then add rows: an item and how many, money, a recipe to be able to make, or a quest to finish. Every row updates by itself from your save, ticks off when done, and the panel lists what you still need to gather. Drag goals to reorder them.</p></details>
     <details><summary>Display</summary><p>Settings → Display picks how portal glyphs show (icons, numbers, names, hex), whether big numbers are written in full or short (1.37B), how a system's location is given, and whether inventories show as a grid like in the game or as a list.</p></details>
     <details><summary>Item cards</summary><p>Search an item by its exact name to get its card. <b>You own</b> adds it up across all your inventories; click it to see where it's stored. <b>Where to find</b> (or double-click the card) jumps to where it's gathered, or to the recipes that make it.</p></details>
@@ -738,6 +767,9 @@ __SAVESYNC__
 __GAMEICONS__
 </script>
 <script>
+__GAMEDATA__
+</script>
+<script>
 __SAVETOOLS__
 </script>
 <script>
@@ -751,7 +783,15 @@ window.addEventListener('unhandledrejection', function(e){ VC_LOG.err++; var r =
 <script>
 (function(){
 "use strict";
-const G = JSON.parse(document.getElementById('gamedata').textContent);
+const GDFMT = 1; // bump when the app needs something new in the item data read from the game
+const G = (function(){
+  const emb = JSON.parse(document.getElementById('gamedata').textContent);
+  // Desktop: item data read earlier from the player's own game files, if there is a copy
+  try { if(/^https?:$/.test(location.protocol)){ const x = new XMLHttpRequest(); x.open('GET', '/api/gamedata', false); x.setRequestHeader('X-VC', '1'); x.send();
+    if(x.status === 200){ const d = JSON.parse(x.responseText); if(d && d.src === 'game' && d.fmt === GDFMT && d.items && d.items.length > 1000 && d.ix && d.craft){ d.emb = emb.version; return d; } } } } catch(e) {}
+  return emb;
+})();
+const DATAV = G.src === 'game' ? G.version : (G.version || 'built in');
 let GX = JSON.parse(document.getElementById('galaxydata').textContent);
 const I = G.items;
 const $ = s => document.querySelector(s);
@@ -764,7 +804,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.6.0';
+const APPVER = '2.7.0';
 // 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
 // ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
 const OVL = /[?&]overlay=1\b/.test(location.search);
@@ -960,7 +1000,7 @@ function addrStrip(arr){
 }
 
 /* ---------- tabs ---------- */
-const TABS = ['recipes','inventory','resources','portals','galaxy','quests','pinned','tools'];
+const TABS = ['recipes','inventory','resources','portals','galaxy','fleet','quests','pinned','tools'];
 let current = 'recipes';
 function showTab(t){
   current = t;
@@ -973,6 +1013,7 @@ function showTab(t){
   if(t==='inventory') renderInventory();
   if(t==='portals') renderAddr();
   if(t==='tools') edRender();
+  if(t==='fleet') renderFleet();
   U.tabs = U.tabs || {}; U.tabs[t] = (U.tabs[t]||0)+1; vcLog('tab', t);
 }
 $$('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
@@ -1119,8 +1160,8 @@ function itemInfo(id){
   if(i !== undefined) f = { n: I[i].n, v: I[i].v||0, g: I[i].g||'', i };
   else if(XI[id]) f = { n: XI[id][0], g: XI[id][1], v: XI[id][2]||0, i: null };
   else if(UNIQUE[id]) f = { n: UNIQUE[id], g: 'Unique item: its in-game name is generated, and the save only stores its type', v: 0, i: null, u: 1 };
-  else if(id !== '?' && /^[\x20-\x7e]+$/.test(id)) f = { n: id, g: 'Not in the game data this app uses (7.00)', v: 0, i: null, unk: 1 };
-  else f = { n: 'Unrecognised item', g: 'Not in the game data this app uses (7.00)', v: 0, i: null, unk: 1 };
+  else if(id !== '?' && /^[\x20-\x7e]+$/.test(id)) f = { n: id, g: 'Not in the game data this app uses (' + DATAV + ')', v: 0, i: null, unk: 1 };
+  else f = { n: 'Unrecognised item', g: 'Not in the game data this app uses (' + DATAV + ')', v: 0, i: null, unk: 1 };
   infoCache.set(id, f); return f;
 }
 const IVG = [['exo','Exosuit'],['ships','Starships'],['corv','Corvettes'],['freighter','Freighter'],['base','Base storage'],['exocraft','Exocraft']];
@@ -2082,6 +2123,7 @@ function setGalaxy(g){
   if(sel) sel = SY.find(s => s.x===sel.x && s.y===sel.y && s.z===sel.z && s.s===sel.s) || null;
   if(!sel) sel = SY.find(isCur) || null;
   renderGalSelect(); renderList(); renderInfo(); renderLegend(); snapText(); renderExplore(); renderRecap(); renderPlaces(); renderWhere(); draw();
+  if(current==='fleet') renderFleet();
   if(current==='inventory') renderInventory();
   renderPlanner(); if(current==='recipes' && !R.can) itemCard(); if(typeof renderSide==='function') renderSide();
 }
@@ -2345,7 +2387,7 @@ async function syncNow(manual){
     await Promise.all(list.slice().sort((a,b) => b.mtime - a.mtime).slice(0, 8).map(async x => { x.when = await saveStamp(x.dir, x.name, x.mtime); }));
     list.sort((a,b) => (b.when||b.mtime) - (a.when||a.mtime));
     const s = list[0];
-    if(!manual && S.lastSync && S.lastSync.name===s.name && S.lastSync.dir===s.dir && S.lastSync.mtime===s.mtime && S.galaxy && S.galaxy.v===4){ syncing = false; renderSync(); return; }
+    if(!manual && S.lastSync && S.lastSync.name===s.name && S.lastSync.dir===s.dir && S.lastSync.mtime===s.mtime && S.galaxy && S.galaxy.v===5){ syncing = false; renderSync(); return; }
     if(!MAPPING){ const m = await (await fetch('mapping.json')).json(); MAPPING = {}; m.Mapping.forEach(e => MAPPING[e.Key] = e.Value); }
     const r = await api(`/api/save?dir=${encodeURIComponent(s.dir)}&name=${encodeURIComponent(s.name)}`);
     if(!r.ok) throw new Error('Could not read the save file (helper answered ' + r.status + ').');
@@ -2378,7 +2420,7 @@ if(DESK){
   $('#mkshortcut').addEventListener('click', async e => { const bn = e.currentTarget; try { const r = await api('/api/shortcut', {method:'POST'}); bn.textContent = r.ok ? 'Shortcut added to desktop' : 'Could not add shortcut'; } catch(err) { bn.textContent = 'Could not add shortcut'; } });
   schedSync();
   // A first sync, or a refresh when this app version reads more from the save than the stored copy has.
-  if(!S.lastSync || ST.autosync || OVL || !(S.galaxy && S.galaxy.v===4)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===4)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
+  if(!S.lastSync || ST.autosync || OVL || !(S.galaxy && S.galaxy.v===5)){ BOOT.sync = false; bootStep('Reading your save…', 60); setTimeout(() => syncNow(!S.lastSync || !(S.galaxy && S.galaxy.v===5)).finally(() => { BOOT.sync = true; bootCheck(); }), 50); }
 }
 renderSync();
 
@@ -2469,7 +2511,7 @@ async function loadPaths(){
   try { const r = await api('/api/paths'); if(r.status===404){ renderPaths(null, 'Close the app fully and reopen it to turn this on.'); return; } renderPaths(await r.json()); }
   catch(e){ renderPaths(null, 'Could not reach the helper.'); }
 }
-async function setPath(kind, val){
+async function setGamePath(kind, val){
   try {
     const r = await api('/api/paths', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({[kind]: val || null})});
     const j = await r.json();
@@ -2480,10 +2522,10 @@ async function setPath(kind, val){
 }
 $('#d-files').addEventListener('click', async e => {
   const p = e.target.closest('[data-pick]'); if(p){ const k = p.dataset.pick; p.disabled = true; p.textContent = 'Picking…';
-    try { const r = await api('/api/pickfolder?kind='+k, {method:'POST'}); const j = await r.json(); if(j.path) await setPath(k, j.path); } catch(err) {}
+    try { const r = await api('/api/pickfolder?kind='+k, {method:'POST'}); const j = await r.json(); if(j.path) await setGamePath(k, j.path); } catch(err) {}
     p.disabled = false; p.textContent = 'Change…'; return; }
-  const a = e.target.closest('[data-pauto]'); if(a){ setPath(a.dataset.pauto, null); return; }
-  const s = e.target.closest('[data-pset]'); if(s){ const v = $(`[data-pin="${s.dataset.pset}"]`).value.trim(); if(v) setPath(s.dataset.pset, v); }
+  const a = e.target.closest('[data-pauto]'); if(a){ setGamePath(a.dataset.pauto, null); return; }
+  const s = e.target.closest('[data-pset]'); if(s){ const v = $(`[data-pin="${s.dataset.pset}"]`).value.trim(); if(v) setGamePath(s.dataset.pset, v); }
 });
 
 /* ---------- GAME ICON LOADER ---------- */
@@ -2605,11 +2647,58 @@ async function giPreload(){
     if(!idx || !idx.files || !Object.keys(idx.files).length) giBuild(false);
     else if(idx.sig !== sig){ GI.msg = 'Your game was updated, so the icons are being refreshed.'; giBuild(true); }
     else if((idx.iv||0) < ICONSET){ GI.msg = 'Adding new icons from your game files…'; giBuild(false); }
+    else if(G.src === 'game' && S.giGd !== G.sig){ S.giGd = G.sig; save(); GI.msg = 'Adding icons for items new in your game…'; giBuild(false); }
     else if(!idx.pack || idx.repaired || short > 20)await giMakePack(idx.sig, idx.files, idx.iv);
   } catch(e){ vcLog('icons', 'start-up: ' + e.message); }
 }
 if(DESK) giPreload();
 else giRender();
+
+/* ---------- ITEM + RECIPE DATA FROM THE PLAYER'S GAME FILES (desktop) ---------- */
+const GDS = { state: '', msg: '' };
+const gdPaks = list => list.filter(p => /^NMSARC\.(Precache|MetadataEtc)\.pak$/i.test(p.name));
+const gdSigOf = list => gdPaks(list).map(p => p.name + ':' + p.size + ':' + p.mtime).sort().join('|');
+function gdRender(){
+  const tag = $('#gdtag'); if(tag) tag.textContent = G.src === 'game' ? 'Cosmos 7.x · data from your game' : 'Cosmos 7.x · ' + DATAV.replace(/^game files of /, 'game data ');
+  const foot = $('#gdfoot'); if(foot) foot.textContent = G.src === 'game' ? DATAV : `a copy the app comes with (${DATAV})`;
+  const el = $('#gdstat'); if(!el) return; $('#gdbox').hidden = !DESK;
+  const now = G.src === 'game' ? `In use: ${esc(DATAV)} (${fmt(G.items.length + Object.keys(G.xi||{}).length)} items, ${fmt(G.refine.length + G.cook.length + G.craft.length)} recipes).` : `In use: the app's own copy (${esc(DATAV)}).`;
+  el.innerHTML = now + (GDS.msg ? `<br><span style="color:${GDS.state==='error' ? 'var(--bad)' : 'var(--teal)'}">${esc(GDS.msg)}</span>` : '');
+  $('#gdrun').disabled = GDS.state === 'running'; $('#gdreload').hidden = GDS.state !== 'ready';
+  $('#gdoff').hidden = G.src !== 'game' && ST.gdAuto === 0;
+}
+async function gdBuild(force){
+  if(!DESK || OVL || GDS.state === 'running') return;
+  GDS.state = 'running'; GDS.msg = 'Reading item and recipe data from your game files…'; gdRender(); let sig = '';
+  try {
+    const r = await api('/api/paks'); const pk = r.ok ? await r.json() : {};
+    if(!pk.ok || !pk.paks) throw new Error(pk.detail || 'Could not find your No Man\'s Sky game files.');
+    const mine = gdPaks(pk.paks); sig = gdSigOf(pk.paks);
+    if(mine.length < 2) throw new Error('NMSARC.Precache.pak or NMSARC.MetadataEtc.pak is missing from your game folder.');
+    if(!force && G.src === 'game' && G.sig === sig){ GDS.state = ''; GDS.msg = ''; gdRender(); return; }
+    if(!force && S.gdFail === sig + '|' + APPVER){ GDS.state = 'error'; GDS.msg = 'Your game\'s files couldn\'t be read last time, so the app\'s own copy is used. Press Read again to retry.'; gdRender(); return; }
+    const t0 = performance.now(), paks = [];
+    for(const p of mine){ const reader = async (off, len) => { const rr = await api(`/api/pak?name=${encodeURIComponent(p.name)}&off=${off}&len=${len}`); if(!rr.ok) throw new Error('Could not read ' + p.name + ' (' + rr.status + ')'); return new Uint8Array(await rr.arrayBuffer()); };
+      paks.push(await new GameIcons.Pak(p.name, p.size, reader).open()); }
+    const get = async path => { for(const k of paks) if(k.has(path)) return await k.file(path); return null; };
+    const newest = Math.max.apply(null, mine.map(p => p.mtime));
+    const B = await GameData.fromGame(get, 'your game files of ' + new Date(newest).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }));
+    if(B.items.length < 1000 || B.refine.length < 100 || B.craft.length < 500) throw new Error('The data read from the game looked incomplete, so it wasn\'t used.');
+    B.src = 'game'; B.sig = sig; B.fmt = GDFMT; B.at = Date.now();
+    const up = await api('/api/gamedata', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(B) });
+    if(!up.ok) throw new Error('Could not save it (' + up.status + ').');
+    delete S.gdFail; ST.gdAuto = 1; save();
+    GDS.state = 'ready'; GDS.msg = `Read ${fmt(B.items.length + Object.keys(B.xi).length)} items and ${fmt(B.refine.length + B.cook.length + B.craft.length)} recipes in ${Math.max(1, Math.round((performance.now()-t0)/1000))} s. It's used from the next start.`;
+    vcLog('gamedata', `built ${B.items.length}+${Object.keys(B.xi).length} items, ${B.refine.length}/${B.cook.length}/${B.craft.length} recipes`); uCount('gamedata-built');
+  } catch(e){ GDS.state = 'error'; GDS.msg = (e.message || String(e)) + ' The app keeps using the data it has.'; if(sig){ S.gdFail = sig + '|' + APPVER; save(); } vcLog('gamedata', 'stopped: ' + (e.message || e)); }
+  gdRender();
+}
+$('#gdrun').addEventListener('click', () => { delete S.gdFail; gdBuild(true); uCount('gamedata-run'); });
+$('#gdreload').addEventListener('click', () => { location.reload(); });
+$('#gdoff').addEventListener('click', async () => { ST.gdAuto = 0; save(); try { await api('/api/gamedata', { method:'DELETE' }); } catch(e) {}
+  GDS.state = 'ready'; GDS.msg = 'The app\'s own copy is used from the next start. Press Read again to go back to your game\'s data.'; gdRender(); uCount('gamedata-off'); });
+gdRender();
+if(DESK && !OVL && ST.gdAuto !== 0) setTimeout(() => gdBuild(false), 8000);
 
 /* ---------- GITHUB BUG REPORTS ---------- */
 const CFG = { githubRepo: '' };
@@ -2921,7 +3010,7 @@ const idName = id => { const c = String(id||'').replace(/^\^/,'').replace(/#.*$/
 function itemIdFromInput(v){ v = String(v||'').trim(); if(!v) return null; const m = /\(([A-Z0-9_]+)\)\s*$/.exec(v); if(m) return m[1];
   if(/^\^?[A-Z0-9_]+(#\d+)?$/.test(v)) return v.replace(/^\^/,''); const i = byName.get(v.toLowerCase()); if(i!==undefined){ const id = idOf(i); if(id) return id; }
   const x = Object.entries(XI).find(([,a]) => a[0].toLowerCase()===v.toLowerCase()); return x ? x[0] : null; }
-function guessType(id){ const h = IC[id]; if(h && h[0]==='r') return 'Substance'; const i = IX[id]; if(i!==undefined && I[i].c==='Raw') return 'Substance'; if(i!==undefined && /Technology|Upgrade|Constructed tech/.test(I[i].c||'')) return 'Technology'; return 'Product'; }
+function guessType(id){ const h = IC[id]; if(h && h[0]==='r') return 'Substance'; if(G.ty) return G.ty[id] ? 'Technology' : 'Product'; const i = IX[id]; if(i!==undefined && I[i].c==='Raw') return 'Substance'; if(i!==undefined && /Technology|Upgrade|Constructed tech/.test(I[i].c||'')) return 'Technology'; return 'Product'; }
 function guessMax(id, type){ // the stack size the save already uses for this item, if any
   let best = 0; const K = n => KO(n); const walk = o => { if(!o || typeof o!=='object') return; if(Array.isArray(o)){ o.forEach(walk); return; } if(o[K('Id')]===('^'+id) && typeof o[K('MaxAmount')]==='number') best = Math.max(best, o[K('MaxAmount')]); else Object.values(o).forEach(walk); };
   walk(getAt(ED.cur.obj, PSP)); return best || (type==='Substance' ? 9999 : type==='Technology' ? 1 : 10); }
@@ -3444,6 +3533,63 @@ function secRaw(){
     <div class="small edcrumb">${crumbs}</div>${body}</div>`;
 }
 
+/* ---------- section: bases (export a base to a file, import one into an existing base) ---------- */
+const BASEKINDS = { HomePlanetBase: 'Planet base', FreighterBase: 'Freighter' };
+function baseList(){ const ps = getAt(ED.cur.obj, PSP); const L = (ps && ps[KO('PersistentPlayerBases')]) || [];
+  return L.map((b, i) => ({ i, b, type: ((b[KO('BaseType')] || {})[KO('PersistentBaseTypes')]) || '', name: SaveTools.rawToStr(b[KO('Name')] || ''), objs: (b[KO('Objects')] || []).length })).filter(x => BASEKINDS[x.type]); }
+function secBases(){
+  const L = baseList(), im = ED.bimp;
+  const pre = im ? `<div class="card" style="border-color:var(--accent)"><h3 style="margin:0">Import “${esc(im.name || 'base')}” into ${esc(im.target.name || 'this base')}?</h3>
+      <p class="small" style="margin:0">The file has ${fmt(im.objs)} building parts (${esc(BASEKINDS[im.type] || im.type)}${im.exported ? `, exported ${esc(im.exported.slice(0,10))}` : ''}). They replace the ${fmt(im.target.objs)} parts of <b>${esc(im.target.name || 'this base')}</b>, placed around that base's own base computer. Everything else about the base stays: where it is, its owner and its name${im.name ? ' (unless you tick the box)' : ''}.</p>
+      <p class="small muted" style="margin:0">Dug holes and other terrain changes don't come along, and parts can end up floating or buried if the ground is a different shape. Build a base computer where you want the base first, then import into that base.</p>
+      ${im.name ? `<label class="toggle" for="edbname"><input type="checkbox" id="edbname"> Also rename it to “${esc(im.name)}”</label>` : ''}
+      <div class="row"><button type="button" class="btn primary" id="edbgo">Add to the changes</button><button type="button" class="btn ghost" id="edbcancel">Cancel</button></div></div>` : '';
+  return `<div class="card"><h2>Bases</h2><p class="muted small" style="margin:0"><b>Export</b> saves a base's building parts to a file you can keep or share. <b>Import</b> puts a base from a file into one of your bases, replacing what's built there. Like every change here, it waits until you press Write to save, and the save is backed up first.</p>
+    ${pre}
+    ${L.length ? `<table class="tbl"><thead><tr><th>Base</th><th>Kind</th><th>Parts</th><th></th></tr></thead><tbody>${L.map(x => `<tr><td>${esc(x.name || 'Unnamed base')}</td><td>${esc(BASEKINDS[x.type])}</td><td>${fmt(x.objs)}</td>
+      <td class="row" style="gap:6px; justify-content:flex-end"><button type="button" class="btn" data-edbexp="${x.i}">Export</button><button type="button" class="btn ghost" data-edbimp="${x.i}">Import into…</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No bases in this save.</div>'}
+    <input type="file" id="edbfile" accept=".json,application/json" hidden>
+    <div class="small" id="edbmsg">${ED.bmsg ? ED.bmsg : ''}</div></div>`;
+}
+async function baseExport(i){
+  const x = baseList().find(y => y.i === i); if(!x) return;
+  const path = PSP.concat([KO('PersistentPlayerBases'), i]); const sp = edSpan(path);
+  const doc = { app: 'NMS Save Tracker', kind: 'base', v: 1, exported: new Date().toISOString(), appVersion: APPVER, name: x.name, type: x.type, objects: x.objs, objectsKey: KO('Objects'), entry: ED.cur.text.slice(sp.s, sp.e) };
+  const file = (x.name || 'base').replace(/[^A-Za-z0-9 _-]+/g, '').trim().replace(/\s+/g, '-').slice(0, 40) + '-' + new Date().toISOString().slice(0,10) + '.nmsbase.json';
+  const r = await api('/api/export?name=' + encodeURIComponent(file), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(doc) });
+  const j = await r.json().catch(() => ({}));
+  ED.bmsg = r.ok && j.ok ? `<span style="color:var(--good)">Saved ${esc(x.name || 'the base')} to <b>data\\exports\\${esc(j.file)}</b>.</span> <button type="button" class="linkbtn" id="edbopen">Open the folder</button>` : `<span style="color:var(--bad)">Could not save the file${j.error ? ': ' + esc(j.error) : ''}.</span>`;
+  uCount('tools-base-export'); edRender();
+}
+async function baseRead(file, i){
+  const x = baseList().find(y => y.i === i); if(!x) return;
+  try {
+    const doc = JSON.parse(await file.text());
+    if(!doc || doc.kind !== 'base' || typeof doc.entry !== 'string') throw new Error('This isn\'t a base file exported by NMS Save Tracker.');
+    if(doc.objectsKey && doc.objectsKey !== KO('Objects')) throw new Error('This file comes from a different game version, so its layout doesn\'t match this save.');
+    const sp = SaveTools.locate(doc.entry, [KO('Objects')]); if(!sp || doc.entry.charCodeAt(sp.s) !== 91) throw new Error('No building parts found in this file.');
+    const objsText = doc.entry.slice(sp.s, sp.e); const objs = SaveTools.parse(objsText); if(!Array.isArray(objs)) throw new Error('The building parts in this file couldn\'t be read.');
+    if(doc.type && doc.type !== x.type) throw new Error(`This is a ${BASEKINDS[doc.type] || doc.type} and ${x.name || 'that base'} is a ${BASEKINDS[x.type] || x.type}. Import into a base of the same kind.`);
+    ED.bimp = { i, target: x, name: doc.name || '', type: doc.type || x.type, objs: objs.length, exported: doc.exported || '', objsText, objsVal: objs }; ED.bmsg = '';
+  } catch(e){ ED.bimp = null; ED.bmsg = `<span style="color:var(--bad)">${esc(e.message || String(e))}</span>`; }
+  edRender();
+}
+function baseImport(){
+  const im = ED.bimp; if(!im) return; const path = PSP.concat([KO('PersistentPlayerBases'), im.i]);
+  const ren = $('#edbname') && $('#edbname').checked;
+  edTry(() => { edPut(path.concat([KO('Objects')]), im.objsText, `${im.target.name || 'Base'}: import ${fmt(im.objs)} parts from “${im.name || 'a base file'}” (raw entry)`, im.objsVal);
+    if(ren && im.name) edSetVal(path.concat([KO('Name')]), im.name, `${im.target.name || 'Base'}: rename to ${im.name}`); });
+  ED.bimp = null; ED.bmsg = 'Added to the changes. Press Write to save when you\'re ready.'; uCount('tools-base-import'); edRender();
+}
+
+/* ---------- section: companions (rename) ---------- */
+function secPets(){
+  const ps = getAt(ED.cur.obj, PSP); const L = ((ps && ps[KO('Pets')]) || []).map((p, i) => ({ i, p, id: cleanTid(p[KO('CreatureID')] || ''), name: SaveTools.rawToStr(p[KO('CustomName')] || '') })).filter(x => x.id && x.id !== '?');
+  return `<div class="card"><h2>Companions</h2><p class="muted small" style="margin:0">Give any companion a name, up to 31 letters. Unnamed ones are shown by species in game. See all their details in the Collection tab.</p>
+    ${L.length ? `<table class="tbl"><thead><tr><th>#</th><th>Creature</th><th>Name</th><th></th></tr></thead><tbody>${L.map(x => `<tr><td>${x.i+1}</td><td>${esc(petKind(x.id, ((x.p[KO('Biome')]||{})[KO('Biome')]) || ''))}</td>
+      <td><input class="txt" maxlength="31" data-edpetn="${x.i}" value="${esc(x.name)}" placeholder="No name" style="width:200px"></td><td><button type="button" class="btn" data-edpetset="${x.i}">Rename</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No companions in this save.</div>'}</div>`;
+}
+
 /* ---------- render + events ---------- */
 async function edRender(){
   if(current!=='tools') return; edRenderBar(); sync('edsec', ED.sec);
@@ -3455,13 +3601,22 @@ async function edRender(){
   if(ED.busy){ b.innerHTML = '<div class="empty">Working…</div>'; return; }
   if(ED.cur && !getAt(ED.cur.obj, PSP) && !['saves','cmp','raw'].includes(ED.sec)){ b.innerHTML = `<div class="empty">${esc(ED.cur.name)} is the account file (expedition rewards and account-wide unlocks), not a game save, so only <b>Everything (raw)</b> works on it. To edit inventories, tech, settlements and the rest, press Edit on a save file in Saves &amp; backups. ${ED.files.find(f => /^save/.test(f.name)) ? `<button type="button" class="btn primary" data-edload="${esc(ED.files.find(f => /^save/.test(f.name)).name)}">Edit ${esc(ED.files.find(f => /^save/.test(f.name)).name)} instead</button>` : ''}</div>`; return; }
   try {
-    b.innerHTML = ED.sec==='saves' ? secSaves() : ED.sec==='inv' ? secInv() : ED.sec==='tech' ? secTech() : ED.sec==='cur' ? secCur() : ED.sec==='set' ? secSet() : ED.sec==='quest' ? secQuest() : ED.sec==='time' ? secTime() : ED.sec==='cmp' ? secCmp() : secRaw();
+    b.innerHTML = ED.sec==='saves' ? secSaves() : ED.sec==='inv' ? secInv() : ED.sec==='tech' ? secTech() : ED.sec==='cur' ? secCur() : ED.sec==='set' ? secSet() : ED.sec==='quest' ? secQuest() : ED.sec==='time' ? secTime() : ED.sec==='bases' ? secBases() : ED.sec==='pets' ? secPets() : ED.sec==='cmp' ? secCmp() : secRaw();
   } catch(e){ b.innerHTML = `<div class="empty">Something in this part of the save wasn't what the app expected: ${esc(e.message)}. The raw editor still works. Please send a bug report from Settings &amp; help so it can be fixed.</div>`; vcLog('error', `save tools (${ED.sec}, ${ED.cur ? ED.cur.name : 'no file'}): ${e.message} @ ${String(e.stack||'').split('\n').slice(1,3).map(l => l.trim().replace(/\(.*?:(\d+:\d+)\)/,'($1)')).join(' < ')}`); }
 }
+$('#p-tools').addEventListener('change', e => { if(e.target && e.target.id === 'edbfile' && e.target.files && e.target.files[0]) baseRead(e.target.files[0], +e.target.dataset.target); });
 $('#p-tools').addEventListener('click', async e => {
   const t = e.target; const q = sel => t.closest(sel);
   let x;
   if((x = q('[data-edsec]'))){ ED.sec = x.dataset.edsec; ED.tmenu = null; ED.invCell = null; TECHSEL = null; ED.pick = null; uCount('tools-'+ED.sec); if(ED.sec==='saves'){ await edFiles().catch(()=>{}); await edBackups(); } if(ED.sec==='quest' || ED.sec==='cmp'){ await edFiles().catch(()=>{}); await edBackups(); } edRender(); return; }
+  if((x = q('[data-edbexp]'))){ try { await baseExport(+x.dataset.edbexp); } catch(err){ ED.bmsg = `<span style="color:var(--bad)">${esc(err.message)}</span>`; edRender(); } return; }
+  if((x = q('[data-edbimp]'))){ const inp = $('#edbfile'); inp.value = ''; inp.dataset.target = x.dataset.edbimp; inp.click(); return; }
+  if(q('#edbgo')){ baseImport(); return; }
+  if(q('#edbcancel')){ ED.bimp = null; edRender(); return; }
+  if(q('#edbopen')){ try { await api('/api/openexports', {method:'POST'}); } catch(err) {} return; }
+  if((x = q('[data-edpetset]'))){ const i = +x.dataset.edpetset; const v = ($(`[data-edpetn="${i}"]`).value || '').trim();
+    if(new TextEncoder().encode(v).length > 31){ edMsg('That name is too long for the game (31 letters at most).', true); return; }
+    edTry(() => edSetVal(PSP.concat([KO('Pets'), i, KO('CustomName')]), v, v ? `Companion ${i+1}: name it ${v}` : `Companion ${i+1}: remove its name`)); uCount('tools-pet-rename'); edRender(); return; }
   if(q('#edwritemenu')){ edWrite({ menu: true }); uCount('tools-nearlive'); return; }
   if(q('#edredo')){ await edReloadRedo(); uCount('tools-redo'); return; }
   if(q('#ednltest')){ const f = ED.files[0]; if(!f) return; if(ED.edits.size){ edMsg('Write or discard the waiting changes first.', true); return; }
@@ -3728,6 +3883,88 @@ $('#side').addEventListener('dragover', e => { if(gDrag!==null && e.target.close
 $('#side').addEventListener('drop', e => { const g = e.target.closest('[data-goal]'); if(gDrag===null || !g) return; e.preventDefault(); const to = +g.dataset.goal; const [it] = S.goals.splice(gDrag, 1); S.goals.splice(to, 0, it); gDrag = null; save(); renderSide(); });
 if(ST.side) setTimeout(() => sideOpen(true), 0);
 
+/* ---------- COLLECTION: ships, multi-tools, exocraft, frigates, companions (from the save) ---------- */
+const FLEET = __FLEET__;
+const FS = { sec: (S.fsec && ['ships','tools','veh','frig','pets'].includes(S.fsec)) ? S.fsec : 'ships' };
+const HULL = { SHIP_DAMAGE:'Damage', SHIP_SHIELD:'Shield', SHIP_HYPERDRIVE:'Hyperdrive', SHIP_AGILE:'Manoeuvrability', WEAPON_DAMAGE:'Damage', WEAPON_MINING:'Mining', WEAPON_SCAN:'Scanning' };
+const FSTAT = ['Combat','Exploration','Industrial','Trade','Fuel cost','Fuel efficiency','Speed','Extra loot','Repair','Damage reduction','Stealth'];
+const FCLASS = { Combat:['Combat','COMBAT'], Exploration:['Exploration','EXPLORE'], Mining:['Industrial','MINING'], Diplomacy:['Trade','TRADE'], Support:['Support','SUPPORT'], Pirate:['Raider','PIRATE'], DeepSpace:['Organic',''], DeepSpaceCommon:['Organic',''], GhostShip:['Doomed',''], Normandy:['Normandy',''] };
+const ECAT = { Combat:'Combat', Exploration:'Exploration', Mining:'Industrial', Diplomacy:'Trade', Balanced:'Balanced' };
+const EDUR = { VeryShort:'Very short', Short:'Short', Medium:'Medium', Long:'Long', VeryLong:'Very long' };
+const shipTypeOf = (f, t) => { f = String(f||'').toUpperCase(); t = t || [];
+  if(/BIOSHIP/.test(f) || t.some(x => /_ALIEN$/.test(x))) return 'Living ship'; if(/SENTINELSHIP/.test(f)) return 'Sentinel interceptor'; if(/\/BIGGS\//.test(f) || t.some(x => /^CV_/.test(x))) return 'Corvette';
+  if(/DROPSHIP/.test(f)) return 'Hauler'; if(/SCIENTIFIC/.test(f)) return 'Explorer'; if(/SHUTTLE/.test(f)) return 'Shuttle'; if(/SAILSHIP/.test(f)) return 'Solar ship'; if(/S-CLASS|ROYAL/.test(f)) return 'Exotic'; if(/FIGHTER/.test(f)) return 'Fighter'; return 'Starship'; };
+const toolTypeOf = f => { const m = String(f||'').match(/([A-Z]*)MULTITOOL\.SCENE/i); return m && m[1] ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + ' multi-tool' : 'Multi-tool'; };
+const vehTypeOf = (t, i) => t.some(x => /^SUB_/.test(x)) ? 'Nautilon' : t.some(x => /^MECH_/.test(x)) ? 'Minotaur' : t.some(x => /^EXO_(PLOUGH|REFINER)/.test(x)) ? 'Colossus' : (VNAMES[i] || `Exocraft ${i+1}`);
+function petKind(id, bio){ const k = String(id||'').replace(/^\^/,'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); return k + (bio ? ` (${bio})` : ''); }
+const unixAgo = s => s ? ago(s * 1000) : 'never';
+// Installed tech, and technology that has some upgrade modules but room for more (the game allows 3 of a kind per inventory)
+function techSummary(ids){
+  const base = [...new Set(ids.filter(id => !isUpg(id)))];
+  const ups = new Map(); ids.filter(isUpg).forEach(id => { const f = techFam(id); ups.set(f, (ups.get(f) || []).concat(id)); });
+  const label = (f, list) => { const b = base.find(id => techFam(id) === f); return b ? (itemInfo(b).n || b) : String(itemInfo(list[0]).n || list[0]).replace(/\s*[SABCX]-Class Upgrade$/i, '').replace(/\s+Upgrade$/i, ''); };
+  const room = [...ups.entries()].filter(([, l]) => l.length < 3).map(([f, l]) => [label(f, l), l.length]);
+  const full = [...ups.values()].filter(l => l.length >= 3).length;
+  return { base, room, full, upgrades: ids.filter(isUpg).length };
+}
+const techChip = id => `<span class="fchip" title="${esc(itemInfo(id).g || '')}">${itemIconHTML(id,'sm')}${esc(itemInfo(id).n || id)}</span>`;
+function craftCard(o){
+  const ts = techSummary(o.t || []);
+  const stats = (o.st || []).filter(([k]) => HULL[k]).map(([k, v]) => `<span><b>${HULL[k]}</b>${v ? '+' + (Math.round(v * 10) / 10) + '%' : '0%'}</span>`).join('');
+  return `<div class="card fcard"><div class="row" style="justify-content:space-between; align-items:flex-start"><div><h3 style="margin:0">${esc(o.title)}</h3><div class="small muted">${esc(o.sub)}</div></div>
+      <div class="row" style="gap:6px">${o.cls ? `<span class="tag cat">${esc(o.cls)}-class</span>` : ''}${o.now ? `<span class="tag nan">${esc(o.now)}</span>` : ''}</div></div>
+    <div class="kv">${o.slots.map(([l, n]) => `<span><b>${l}</b>${fmt(n)}</span>`).join('')}${stats}</div>
+    ${ts.room.length && !o.noRoom ? `<div class="small"><span class="tag good">Room for more upgrades</span> ${ts.room.map(([n, k]) => `${esc(n)} <span class="muted">${k} of 3</span>`).join(' · ')}</div>` : ''}
+    ${ts.base.length ? `<details><summary class="small">${fmt(ts.base.length)} technologies, ${fmt(ts.upgrades)} upgrade modules${ts.full ? `, ${fmt(ts.full)} fully upgraded` : ''}</summary><div class="fchips">${ts.base.map(techChip).join('')}</div></details>` : '<div class="small muted">No technology installed.</div>'}</div>`;
+}
+function frigName(f){ const c = FCLASS[f.cls] || [f.cls, '']; const gi = ['C','B','A','S'].indexOf(f.grade); const title = c[1] && gi >= 0 && FLEET.titles[c[1]] ? FLEET.titles[c[1]][gi] : '';
+  const special = { Normandy: 'SSV Normandy', GhostShip: 'Doomed frigate', DeepSpace: FLEET.organic || 'Organic frigate', DeepSpaceCommon: FLEET.organic || 'Organic frigate' };
+  return f.n ? SaveTools.rawToStr(f.n) : (special[f.cls] || title || `${c[0]} frigate`); }
+function traitTag(id){ const d = FLEET.traits[id]; if(!d) return `<span class="tag cat">${esc(id)}</span>`; const bad = d[2] <= 2;
+  return `<span class="tag ${bad ? 'bad' : d[2] === 9 ? 'nan' : 'good'}" title="${esc(FSTAT[d[1]] || '')}${bad ? ': makes it worse' : ''}">${esc(d[0])}</span>`; }
+function renderFleet(){
+  const box = $('#fleetbody'); if(!box) return;
+  $$('[data-fsec]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fsec === FS.sec)));
+  const C = GX && GX.col;
+  $('#fleetsnap').textContent = C ? '' : '';
+  if(!C){ box.innerHTML = `<div class="empty">${DESK ? 'Press Sync to read your save.' : 'This needs the desktop app, which reads your save.'}</div>`; return; }
+  let h = '';
+  if(FS.sec === 'ships'){
+    const L = C.ships.slice().sort((a, b) => b.prim - a.prim);
+    h = L.length ? `<div class="fgrid">${L.map(s => craftCard({ title: s.n ? SaveTools.rawToStr(s.n) : shipTypeOf(s.f, s.t), sub: shipTypeOf(s.f, s.t) + (s.n ? '' : ' · unnamed'), cls: s.cls, now: s.prim ? 'Current ship' : '', noRoom: shipTypeOf(s.f, s.t) === 'Corvette',
+      slots: [['Slots', s.gen], ['Tech slots', s.tech]].concat(s.cargo ? [['Cargo', s.cargo]] : [], s.sc ? [['Supercharged', s.sc]] : []), st: s.st, t: s.t })).join('')}</div>` : '<div class="empty">No starships in this save.</div>';
+  } else if(FS.sec === 'tools'){
+    const L = C.tools.slice().sort((a, b) => b.act - a.act);
+    h = L.length ? `<div class="fgrid">${L.map(m => craftCard({ title: m.n ? SaveTools.rawToStr(m.n) : toolTypeOf(m.f), sub: toolTypeOf(m.f), cls: m.cls, now: m.act ? 'In use' : '', slots: [['Slots', m.gen]].concat(m.sc ? [['Supercharged', m.sc]] : []), st: m.st, t: m.t })).join('')}</div>` : '<div class="empty">No multi-tools in this save.</div>';
+  } else if(FS.sec === 'veh'){
+    h = C.veh.length ? `<div class="fgrid">${C.veh.map(v => craftCard({ title: v.n ? SaveTools.rawToStr(v.n) : vehTypeOf(v.t, v.i), sub: vehTypeOf(v.t, v.i), now: v.prim ? 'Last used' : '', slots: [['Slots', v.gen], ['Tech slots', v.tech]], st: [], t: v.t })).join('')}</div>` : '<div class="empty">No exocraft in this save.</div>';
+  } else if(FS.sec === 'frig'){
+    const F = C.frig, E = C.exp || [];
+    const busy = new Set(); E.forEach(e => (e.all||[]).forEach(i => busy.add(i)));
+    const best = [0,1,2,3].map(k => F.filter(f => !busy.has(f.i)).sort((a, b) => (b.st[k]||0) - (a.st[k]||0))[0]);
+    const exp = E.length ? `<div class="card"><h2>Expeditions under way</h2>${E.map(e => { const done = Math.min(e.next, e.ev);
+        return `<div class="srow"><div><div class="nm">${esc(ECAT[e.cat] || e.cat)} expedition${e.n ? ' · ' + esc(SaveTools.rawToStr(e.n)) : ''} <span class="tag cat">${esc(EDUR[e.dur] || e.dur)}</span></div>
+          <div class="small muted">${fmt((e.all||[]).length)} frigates · sent ${unixAgo(e.start)} · ${fmt(done)} of ${fmt(e.ev)} events done (${fmt(e.ok)} went well, ${fmt(e.bad)} badly)${(e.dam||[]).length ? ` · ${fmt(e.dam.length)} damaged` : ''}${(e.des||[]).length ? ` · ${fmt(e.des.length)} lost` : ''}</div>
+          <div class="fbar"><span style="width:${e.ev ? Math.round(done / e.ev * 100) : 0}%"></span></div></div></div>`; }).join('')}
+        <p class="muted small" style="margin:0">The save stores how many events an expedition has and how many have happened, not the time it comes back, so progress is shown by events.</p></div>` : '';
+    const sum = F.length ? `<div class="card"><h2>Your fleet</h2><div class="kv"><span><b>Frigates</b>${fmt(F.length)}${busy.size ? ` (${fmt(busy.size)} away)` : ''}</span>${['Combat','Exploration','Industrial','Trade'].map((l, k) => best[k] ? `<span><b>Best for ${l}</b>${esc(frigName(best[k]))} (${fmt(best[k].st[k]||0)})</span>` : '').join('')}</div>
+        ${F.some(f => f.dmg > 0) ? `<div class="small"><span class="tag bad">Needs repair</span> ${F.filter(f => f.dmg > 0).map(f => esc(frigName(f))).join(', ')}</div>` : ''}</div>` : '';
+    h = exp + sum + (F.length ? `<div class="card"><table class="tbl ftbl"><thead><tr><th>Frigate</th><th>Role</th><th title="Combat">Cbt</th><th title="Exploration">Exp</th><th title="Industrial">Ind</th><th title="Trade">Trd</th><th title="Fuel cost per warp (lower is better)">Fuel</th><th>Expeditions</th><th>Traits</th></tr></thead><tbody>
+      ${F.map(f => { const c = FCLASS[f.cls] || [f.cls]; return `<tr><td><b>${esc(frigName(f))}</b><div class="small muted">${esc(f.race && f.race !== 'None' ? f.race : '')}${busy.has(f.i) ? ' · on an expedition' : ''}${f.dmg > 0 ? ' · <span style="color:var(--bad)">damaged</span>' : ''}</div></td><td>${esc(c[0])} <span class="tag cat">${esc(f.grade)}</span></td>
+        ${[0,1,2,3,4].map(k => `<td>${fmt(f.st[k]||0)}</td>`).join('')}<td>${fmt(f.ex)}<div class="small muted">${fmt(f.ok)} good · ${fmt(f.bad)} bad</div></td><td><div class="fchips">${f.tr.map(traitTag).join('')}</div></td></tr>`; }).join('')}</tbody></table>
+      <p class="muted small" style="margin:0">Trait names come from your game. Green helps, red hurts; hover a trait for what it affects.</p></div>` : '<div class="empty">No frigates yet.</div>');
+  } else if(FS.sec === 'pets'){
+    const P = C.pets;
+    const TR = [['Helpfulness','UI_PET_HELPFUL'],['Aggression','UI_PET_AGGRESSION'],['Independence','UI_PET_INDEPENDENCE']];
+    h = P.length ? `<div class="fgrid">${P.map(p => `<div class="card fcard"><div class="row" style="justify-content:space-between; align-items:flex-start"><div><h3 style="margin:0">${esc(p.n ? SaveTools.rawToStr(p.n) : petKind(p.id))}</h3><div class="small muted">${esc(petKind(p.id))} · ${esc(p.bio || 'unknown biome')}${p.pred ? ' · predator' : ''}</div></div>${p.sum ? '' : '<span class="tag cat">Not summoned yet</span>'}</div>
+        <div class="kv"><span><b>Trust</b>${Math.round(p.trust * 100)}%</span><span><b>Adopted</b>${unixAgo(p.born)}</span><span><b>Last egg</b>${unixAgo(p.egg)}</span>${p.win ? `<span><b>Battle wins</b>${fmt(p.win)}</span>` : ''}</div>
+        ${TR.map(([l], k) => { const v = p.tr[k]; if(typeof v !== 'number') return ''; const pc = Math.round((v + 1) * 50); return `<div class="ptr"><span>${l}</span><div class="fbar"><span style="width:${pc}%"></span></div><b>${pc}%</b></div>`; }).join('')}</div>`).join('')}</div>
+      <p class="muted small">Trait percentages are worked out from the values in the save (−1 to 1 shown as 0–100%). Rename companions in Save tools › Companions.</p>` : '<div class="empty">No companions yet.</div>';
+  }
+  box.innerHTML = h;
+}
+$('#fleetsec').addEventListener('click', e => { const b = e.target.closest('[data-fsec]'); if(!b) return; FS.sec = S.fsec = b.dataset.fsec; save(); renderFleet(); uCount('fleet-' + FS.sec); });
+
 /* ---------- 2.4.0: IN-GAME OVERLAY + SIDE PANEL (app window only) ---------- */
 // The overlay is a second, small always-on-top window showing this page with ?overlay=1.
 // It reads the app's data and auto-syncs on its own, but never writes; its choices live in S.ovl,
@@ -3943,7 +4180,7 @@ document.addEventListener('keydown', e => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'') || (document.activeElement||{}).isContentEditable;
   if(typing || e.ctrlKey || e.metaKey || e.altKey || GS.open || !$('#drawer').hidden) return;
   const tabs = TABS.filter(t => t!=='tools' || edOn());
-  if(/^[1-8]$/.test(e.key) && tabs[+e.key-1]){ showTab(tabs[+e.key-1]); e.preventDefault(); return; }
+  if(/^[1-9]$/.test(e.key) && tabs[+e.key-1]){ showTab(tabs[+e.key-1]); e.preventDefault(); return; }
   if(e.key==='/'){ const f = current==='recipes' ? $('#q') : current==='inventory' ? $('#ivq') : null; if(f){ f.focus(); e.preventDefault(); } return; }
   if(e.key==='g' || e.key==='G'){ sideOpen($('#side').hidden); return; }
   if(e.key==='?'){ openDrawer('help'); const d = $('#helpkeys'); if(d) d.open = true; return; }
@@ -3963,7 +4200,7 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.6.0': ['Updates: the app checks for a newer version when it opens and shows an Update button at the top. Download and install it from Settings & help › Help, or turn the check off there.','Portals › Your places: the portal address of where you are now, your freighter and every base, ready to load or copy.','Type or paste any portal address and the app says whether you have been there, how far it is from you and your nearest base, and shows it on the map.','Portal glyphs now use the game\'s own glyph pictures from your install (switch back to the drawn ones in Settings & help › Display).'], '2.5.0': ['My galaxy keeps every system you have been to: the game only remembers your last 512 visits, so the app now keeps the older ones from earlier syncs.','Exploration card in My galaxy: systems and planets discovered today, this week and all time, and how well you have covered each direction around any base, with an arrow on the map.','Trade goods: tag a system\'s wealth (Wealthy, Prosperous…) as well as its economy, and the app marks the places that sell all five tiers.','This session: after each sync, a card shows what changed since you started playing (discoveries, units, nanites, quicksilver and items).','Galaxy map: colour systems by the economy you tagged, with a gold ring on wealthy ones.'], '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
+const NEWS = { '2.7.0': ['New Collection tab: every starship, multi-tool and exocraft with its class, slots, built-in bonuses and installed technology (and which ones have room for more upgrades), your frigates with their roles, stats and traits, expeditions under way, and your companions with trust and traits.','Item names, values and recipes are now read from your own game files, so they match your game even right after an update (Settings & help › Game files).','Save tools › Bases: export a base to a file, or import one into a base of yours.','Save tools › Companions: name your companions.','Fixed: picking the game or save folder by hand in Settings & help › Game files did nothing.'], '2.6.0': ['Updates: the app checks for a newer version when it opens and shows an Update button at the top. Download and install it from Settings & help › Help, or turn the check off there.','Portals › Your places: the portal address of where you are now, your freighter and every base, ready to load or copy.','Type or paste any portal address and the app says whether you have been there, how far it is from you and your nearest base, and shows it on the map.','Portal glyphs now use the game\'s own glyph pictures from your install (switch back to the drawn ones in Settings & help › Display).'], '2.5.0': ['My galaxy keeps every system you have been to: the game only remembers your last 512 visits, so the app now keeps the older ones from earlier syncs.','Exploration card in My galaxy: systems and planets discovered today, this week and all time, and how well you have covered each direction around any base, with an arrow on the map.','Trade goods: tag a system\'s wealth (Wealthy, Prosperous…) as well as its economy, and the app marks the places that sell all five tiers.','This session: after each sync, a card shows what changed since you started playing (discoveries, units, nanites, quicksilver and items).','Galaxy map: colour systems by the economy you tagged, with a gold ring on wealthy ones.'], '2.4.3': ['First beta for friends: a proper Windows installer, and the Bountria Prime capital is saved in Portals so you can visit.'], '2.4.2': ['Save tools fix: edits could go into a save the game doesn\'t load (for example the auto-save, when your manual save is newer), so they seemed to do nothing. The app now shows which save the game loads, warns before you edit an older one, and every write makes the edited save the one the game loads next.','Sync and the overlay now read the save the game will actually load.'], '2.4.1': ['New hotkeys: F8 opens the overlay and lets you click it (press it again any time to click back into it), F9 closes it, F10 shows the full app as a side panel. Click-through is gone: just click the game to go back to it.','Overlay: click anything under Still needed to see how to get it: refiner and crafting recipes that make it (best first, with how many you can run right now) and where it\'s found.','Goals: Browse… picks items with icons and categories, the search finds every item (Phosphorus and the rest of P–Z were missing), and glyphs, installed tech and other things you wouldn\'t track are left out.','Item icons from your game show again everywhere (a broken icon list is repaired by itself).','The mouse wheel scrolls the tab bar and other sideways rows.'], '2.4.0': ['In-game overlay: a small window that stays on top of the game with your goals, what you still need, pinned recipes and your money. It syncs by itself while you play. Press F8 to open it and use it with the mouse, and F8 or Esc to go back to the game; it stays pinned on screen unless you unpin it.','Side panel: F9 pulls the whole app up over part of the screen, and the same keys (or Esc) put you back in the game. Pick the side and width yourself.','The overlay can be see-through and click-through (F10), and you can move and resize it. Set it up in Settings & help › Overlay, including your own hotkeys.','Closing the window keeps the app in the tray so the hotkeys keep working. Right-click the tray icon to quit.','For the overlay to show over the game, set No Man\'s Sky to Borderless in its video settings.'], '2.3.0': ['Where to find → Trade goods: which economy sells every trade good, and the closest places you know near you, your freighter or any base. Tag a system\'s economy once and the app remembers.','Where to find explains the freighter Stellar Extractor (metal by star colour) and where gases like Nitrogen and Radon come from.','Settlements: add or remove any effect, good or bad, with its in-game name and what it changes.','Settlements: set every built plot to one class in one go, and plots behind the rest are highlighted.','Near-live: if the game saved after you loaded, Reload and redo puts your changes back on top of the newer save.'], '2.2.0': ['Click or right-click any slot in Save tools for its menu: install, swap, move, repair, charge or remove, all in one place.','Technology follows the game\'s rules: each craft only offers what it can install (Minotaur parts on the Minotaur, living-ship organs on living ships, nothing for ships in your exosuit), and full upgrade sets or duplicates are marked.','Exocraft and ships are named by type: Roamer, Nomad, Colossus, Pilgrim, Nautilon, Minotaur, Living ship, Sentinel interceptor, Hauler and so on.','Settlements: name each plot, and set built plots to Class C, B, A or S (experimental).'], '2.1.0': ['The app now has its own window: open NMS Save Tracker.exe. Right-click its taskbar button and choose Pin to taskbar to keep it there.','Works fully offline: the fonts are now part of the app.','Unnamed multi-tools are named by type and class in Save tools, like "Atlas multi-tool (S-class, in use)".','The window and taskbar use the app icon.'], '2.0.0': ['Technology editor in Save tools: repair, charge, install modules, Best layout and Max it out.','Goals sidebar (Goals button or G): pinned recipes and your own auto-tracked goals.','Near-live editing: write at the main menu, then load the save in game.','Compare any two saves or backups in plain words.','Undo last write, automatic backup clean-up and warnings before risky changes.','Find any item across every inventory in the editor, plus split, duplicate and sort.','Settlements: experimental Max out for a plot.','Global search with Ctrl+K, keyboard shortcuts, recently viewed items, item notes and Copy as text for crafting trees.'] };
 /* ---------- updates (desktop: the helper asks GitHub releases) ---------- */
 const UPD = { st:'', r:null, busy:false, inst:'' };
 function verNum(v){ const m = String(v||'').match(/(\d+)\.(\d+)(?:\.(\d+))?/); return m ? [+m[1], +m[2], +(m[3]||0)] : null; }

@@ -5,7 +5,7 @@
 
 src/head.html      <head> contents: title, fonts, all CSS
 src/body.html      page markup + the main script, with placeholders:
-                   __SAVESYNC__ (src/savesync.js), __GAMEICONS__ (src/gameicons.js), __SAVETOOLS__ (src/savetools.js), __GAME__ (data/game.bundle.json), __TECHCAT__ (data/techcat.json: where each technology may be installed), __PERKS__ (data/perks.json: settlement perk table), __TRADE__ (data/trade.json: trade goods by economy),
+                   __SAVESYNC__ (src/savesync.js), __GAMEICONS__ (src/gameicons.js), __SAVETOOLS__ (src/savetools.js), __GAMEDATA__ (src/gamedata.js: reads item/recipe data from the game's files), __GAME__ (data/game.bundle.json), __TECHCAT__ (data/techcat.json: where each technology may be installed), __PERKS__ (data/perks.json: settlement perk table), __TRADE__ (data/trade.json: trade goods by economy), __FLEET__ (data/fleet.json: frigate trait names and titles, from tools/mkfleet.js),
                    __GALAXY__ (data/galaxy-snapshot.json, only shown in the web version)
 """
 import os, sys
@@ -15,12 +15,14 @@ head, body = rd('src/head.html'), rd('src/body.html')
 ss = rd('src/savesync.js'); assert '</script' not in ss
 gi = rd('src/gameicons.js'); assert '</script' not in gi
 st = rd('src/savetools.js'); assert '</script' not in st
+gd = rd('src/gamedata.js'); assert '</script' not in gd
 game = rd('data/game.bundle.json').replace('</', '<\\/')
 gal = rd('data/galaxy-snapshot.json').replace('</', '<\\/')
 tcat = rd('data/techcat.json').replace('</', '<\\/')
 perks = rd('data/perks.json').replace('</', '<\\/')
 trade = rd('data/trade.json').replace('</', '<\\/')
-page = head + body.replace('__SAVESYNC__', ss).replace('__GAMEICONS__', gi).replace('__SAVETOOLS__', st).replace('__GAME__', game).replace('__GALAXY__', gal).replace('__TECHCAT__', tcat).replace('__PERKS__', perks).replace('__TRADE__', trade)
+fleet = rd('data/fleet.json').replace('</', '<\\/')
+page = head + body.replace('__SAVESYNC__', ss).replace('__GAMEICONS__', gi).replace('__SAVETOOLS__', st).replace('__GAMEDATA__', gd).replace('__GAME__', game).replace('__GALAXY__', gal).replace('__TECHCAT__', tcat).replace('__PERKS__', perks).replace('__TRADE__', trade).replace('__FLEET__', fleet)
 out = os.path.join(here, '..', 'web', 'index.html')
 open(out, 'w', encoding='utf-8', newline='\n').write('<!doctype html>\n<html lang="en">\n<head>\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' + page + '\n</html>\n')
 print('wrote', os.path.normpath(out), len(page), 'chars')

@@ -328,7 +328,7 @@ function Handle($ctx) {
     if ($req.Headers['X-VC'] -ne '1') { SendText $ctx 403 '{"error":"forbidden"}'; return }
     $script:lastPing = Get-Date
     switch ($path) {
-      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":8}'; return }
+      '/api/ping'  { SendText $ctx 200 '{"ok":true,"app":"nms-save-tracker","helper":9}'; return }
       '/api/gamerunning' { SendJson $ctx @{ running = (Test-GameRunning) }; return }
       '/api/savefiles' {
         # Every save, manifest and account file in one account folder (for the save tools).
@@ -468,6 +468,19 @@ function Handle($ctx) {
         if (-not (Test-Path -LiteralPath $p)) { SendText $ctx 404 '{"error":"save not found"}'; return }
         Send $ctx 200 (Read-Shared $p) 'application/octet-stream'; return
       }
+      '/api/gamedata' {
+        # Item and recipe data the page read from the game's own files (see src/gamedata.js)
+        $gd = Join-Path $DataDir 'gamedata.json'
+        if ($req.HttpMethod -eq 'POST') {
+          $body = Read-Body $req 40MB
+          if (-not $body.TrimStart().StartsWith('{')) { SendText $ctx 400 '{"error":"not json"}'; return }
+          $tmp = $gd + '.tmp'; [System.IO.File]::WriteAllText($tmp, $body, $Utf8); Move-Item -LiteralPath $tmp -Destination $gd -Force
+          SendText $ctx 200 '{"ok":true}'; return
+        }
+        if ($req.HttpMethod -eq 'DELETE') { if (Test-Path -LiteralPath $gd) { Remove-Item -LiteralPath $gd -Force }; SendText $ctx 200 '{"ok":true}'; return }
+        if (Test-Path -LiteralPath $gd) { Send $ctx 200 ([System.IO.File]::ReadAllBytes($gd)) 'application/json; charset=utf-8' } else { SendText $ctx 200 '{"none":true}' }
+        return
+      }
       '/api/data'  {
         if ($req.HttpMethod -eq 'POST') {
           $body = Read-Body $req 20MB
@@ -535,6 +548,23 @@ function Handle($ctx) {
         $name = 'bug-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.txt'
         [System.IO.File]::WriteAllText((Join-Path $dir $name), ($body -replace "`r?`n", "`r`n"), $Utf8)
         SendText $ctx 200 ('{"ok":true,"file":"' + $name + '"}'); return
+      }
+      '/api/export' {
+        # A file the user asked to export (e.g. a base), saved to data\exports
+        if ($req.HttpMethod -ne 'POST') { SendText $ctx 405 '{"error":"post only"}'; return }
+        $name = [string]$req.QueryString['name']
+        if ($name -notmatch '^[A-Za-z0-9 _.-]{1,80}\.json$' -or $name.Contains('..')) { SendText $ctx 400 '{"error":"bad file name"}'; return }
+        $body = Read-Body $req 64MB
+        $dir = Join-Path $DataDir 'exports'
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+        [System.IO.File]::WriteAllText((Join-Path $dir $name), $body, $Utf8)
+        SendJson $ctx @{ ok = $true; file = $name }; return
+      }
+      '/api/openexports' {
+        $dir = Join-Path $DataDir 'exports'
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+        Start-Process -FilePath 'explorer.exe' -ArgumentList ('"' + $dir + '"')
+        SendText $ctx 200 '{"ok":true}'; return
       }
       '/api/openreports' {
         $dir = Join-Path $DataDir 'reports'

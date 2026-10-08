@@ -1,0 +1,25 @@
+// 2.7.0: Save tools > Bases (export/import) and Companions (rename), against the real helper (PST = test folder)
+const { chromium } = require('playwright'); const fs = require('fs'); const T = process.env.PST;
+(async()=>{const b=await chromium.launch();const errs=[];const p=await b.newPage({viewport:{width:1280,height:900}});
+p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});p.on('dialog',d=>d.accept());
+await p.goto('http://127.0.0.1:47831/'); await p.waitForSelector('#boot',{state:'hidden',timeout:30000}); if(await p.isVisible('#newsok')) await p.click('#newsok');
+await p.click('#menubtn'); await p.click('[data-dsec="files"]'); await p.click('.advbox summary'); await p.check('#edon'); await p.click('#drawerclose');
+await p.click('#t-tools'); await p.waitForSelector('[data-edload]'); await p.click('[data-edload="save.hg"]'); await p.waitForSelector('.edgrid');
+await p.click('[data-edsec="bases"]'); await p.waitForTimeout(400);
+const rows = await p.$$eval('#edbody tbody tr', a=>a.map(x=>x.innerText.replace(/\s+/g,' ')));
+console.log('bases:', rows.length, rows.slice(0,4));
+const exps = await p.$$eval('[data-edbexp]', a=>a.map(x=>x.dataset.edbexp));
+await p.click(`[data-edbexp="${exps[0]}"]`); await p.waitForTimeout(800); console.log('export msg:', await p.textContent('#edbmsg'));
+const dir = T + '/data/exports'; const f = fs.readdirSync(dir).filter(x=>x.endsWith('.nmsbase.json'))[0]; const doc = JSON.parse(fs.readFileSync(dir+'/'+f,'utf8')); console.log('file', f, doc.name, doc.objects, doc.type);
+const target = exps.find(i => i !== exps[0]);
+const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.click(`[data-edbimp="${target}"]`)]); await fc.setFiles(dir+'/'+f); await p.waitForTimeout(500);
+console.log('preview:', (await p.innerText('#edbody').catch(()=>'none')).replace(/\s+/g,' ').slice(0,420));
+await p.check('#edbname').catch(()=>{}); await p.click('#edbgo'); await p.waitForTimeout(300);
+console.log('pending:', await p.$$eval('.edlist li', a=>a.map(x=>x.textContent)));
+fs.writeFileSync('/tmp/claude-0/bad.json','{"kind":"nope"}'); const [fc2] = await Promise.all([p.waitForEvent('filechooser'), p.click(`[data-edbimp="${target}"]`)]); await fc2.setFiles('/tmp/claude-0/bad.json'); await p.waitForTimeout(300); console.log('bad file:', await p.textContent('#edbmsg'));
+await p.click('[data-edsec="pets"]'); await p.waitForTimeout(300); console.log('pet rows', await p.$$eval('#edbody tbody tr', a=>a.length));
+await p.fill('[data-edpetn="1"]', 'Rolly Test'); await p.click('[data-edpetset="1"]'); await p.waitForTimeout(200);
+console.log('pending2:', await p.$$eval('.edlist li', a=>a.map(x=>x.textContent)));
+await p.click('#edwrite'); await p.waitForTimeout(5000); console.log('after write:', (await p.textContent('#edmsg').catch(()=>'')).slice(0,200));
+fs.writeFileSync('/tmp/claude-0/tX-target.txt', JSON.stringify({ target: +target, source: +exps[0] }));
+console.log('errors', errs); await b.close(); })();

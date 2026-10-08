@@ -89,6 +89,34 @@ const SaveSync = (() => {
     return { w, h, vs: v.map(p => (p.Y|0)*w + (p.X|0)) };
   }
   const cls = inv => (((inv || {}).Class || {}).InventoryClass) || '';
+  /* ---------- collection: ships, multi-tools, exocraft, frigates, expeditions, companions ---------- */
+  function collection(ps){
+    const slots = inv => ((inv && inv.ValidSlotIndices) || []).length;
+    const sc = inv => ((inv && inv.SpecialSlots) || []).length;
+    const stats = inv => ((inv && inv.BaseStatValues) || []).map(s => [cleanId(s.BaseStatID), typeof s.Value === 'number' ? s.Value : 0]).filter(s => s[0]);
+    const tech = inv => ((inv && inv.Slots) || []).filter(s => ((s.Type || {}).InventoryType) === 'Technology').map(s => cleanId(s.Id)).filter(x => x && x !== '?');
+    const str = v => (typeof v === 'string' ? v : '');
+    const file = o => str(((o || {}).Resource || {}).Filename);
+    const C = { ships: [], tools: [], veh: [], frig: [], exp: [], pets: [] };
+    (ps.ShipOwnership || []).forEach((sh, i) => { const f = file(sh); if(!sh.Name && !f) return;
+      C.ships.push({ i, n: str(sh.Name), f, cls: cls(sh.Inventory), prim: i === ps.PrimaryShip ? 1 : 0, gen: slots(sh.Inventory), tech: slots(sh.Inventory_TechOnly), cargo: slots(sh.Inventory_Cargo), sc: sc(sh.Inventory_TechOnly) + sc(sh.Inventory), st: stats(sh.Inventory), t: tech(sh.Inventory_TechOnly).concat(tech(sh.Inventory)) }); });
+    (ps.Multitools || []).forEach((m, i) => { const st = m.Store || {}; const f = file(m); if(!f && !slots(st)) return;
+      C.tools.push({ i, n: str(m.Name), f, cls: cls(st), act: i === ps.ActiveMultioolIndex ? 1 : 0, gen: slots(st), sc: sc(st), st: stats(st), t: tech(st) }); });
+    (ps.VehicleOwnership || []).forEach((v, i) => { const t2 = tech(v.Inventory_TechOnly).concat(tech(v.Inventory)); if(!t2.length && !slots(v.Inventory)) return;
+      C.veh.push({ i, n: str(v.Name), prim: i === ps.PrimaryVehicle ? 1 : 0, gen: slots(v.Inventory), tech: slots(v.Inventory_TechOnly), t: t2, st: stats(v.Inventory) }); });
+    (ps.FleetFrigates || []).forEach((f, i) => C.frig.push({ i, n: str(f.CustomName), cls: ((f.FrigateClass || {}).FrigateClass) || '', race: ((f.Race || {}).AlienRace) || '', grade: cls({ Class: f.InventoryClass }),
+      tr: (f.TraitIDs || []).map(cleanId).filter(x => x && x !== '?'), st: (f.Stats || []).slice(0, 11), ex: f.TotalNumberOfExpeditions | 0, ok: f.TotalNumberOfSuccessfulEvents | 0, bad: f.TotalNumberOfFailedEvents | 0,
+      hits: f.NumberOfTimesDamaged | 0, dmg: f.DamageTaken | 0, rep: f.RepairsMade | 0 }));
+    (ps.FleetExpeditions || []).forEach((e, i) => C.exp.push({ i, n: str(e.CustomName), cat: ((e.ExpeditionCategory || {}).ExpeditionCategory) || '', dur: ((e.ExpeditionDuration || {}).ExpeditionDuration) || '',
+      start: +e.StartTime || 0, pause: +e.PauseTime || 0, all: e.AllFrigateIndices || [], act: e.ActiveFrigateIndices || [], dam: e.DamagedFrigateIndices || [], des: e.DestroyedFrigateIndices || [],
+      ev: (e.Events || []).length, next: e.NextEventToTrigger | 0, ok: e.NumberOfSuccessfulEventsThisExpedition | 0, bad: e.NumberOfFailedEventsThisExpedition | 0, spd: typeof e.SpeedMultiplier === 'number' ? e.SpeedMultiplier : 1 }));
+    (ps.Pets || []).forEach((p, i) => { const id = cleanId(p.CreatureID); if(!id || id === '?') return;
+      C.pets.push({ i, n: str(p.CustomName), id, sp: cleanId(p.CustomSpeciesName), bio: ((p.Biome || {}).Biome) || '', type: ((p.CreatureType || {}).CreatureType) || '', pred: p.Predator ? 1 : 0,
+        born: +p.BirthTime || 0, egg: +p.LastEggTime || 0, trust: typeof p.Trust === 'number' ? p.Trust : 0, tr: (p.Traits || []).slice(0, 3), sum: p.HasBeenSummoned ? 1 : 0, scale: typeof p.Scale === 'number' ? p.Scale : 1,
+        win: p.PetBattlerVictories | 0, moves: (p.PetBattlerMoves || []).map(cleanId).filter(x => x && x !== '?') }); });
+    return C;
+  }
+
   function inventories(ps){
     const R = { exo:[], ships:[], corv:[], freighter:[], base:[], exocraft:[] };
     const add = (grp, name, inv, extra) => { const it = readInv(inv); R[grp].push(Object.assign({ n:name, it, slots: ((inv && inv.ValidSlotIndices) || []).length }, shape(inv), extra || {})); };
@@ -175,6 +203,7 @@ const SaveSync = (() => {
     const u = x => (typeof x === 'number' && x < 0) ? x + 4294967296 : x;
     const stats = { units: u(ps.Units), nanites: u(ps.Nanites), quicksilver: u(ps.Specials), summary: ps.SaveSummary || '' };
     let inv = null; try { inv = inventories(ps); } catch(e) { inv = null; }
+    let col = null; try { col = collection(ps); } catch(e) { col = null; }
     // Quest steps for goal tracking: [missionId, step]; plus the quest being tracked.
     const ms = {}; (ps.MissionProgress || []).forEach(m => { const id = cleanId(m.Mission); if(id && id !== '?') ms[id] = Math.max(ms[id] === undefined ? -2 : ms[id], m.Progress|0); });
     stats.mission = cleanId(ps.CurrentMissionID || '');
@@ -182,7 +211,7 @@ const SaveSync = (() => {
     const fr = ps.FreighterUniverseAddress ? fromUA(ps.FreighterUniverseAddress) : null;
     (ps.TradingSupplyData || []).forEach(t => { try { const a = decDisc(t.GalacticAddress); if(a.x === undefined) return; const k = key(a); if(!S.has(k)) return; const e = S.get(k); e.tr = (e.tr||0) + 1; const id = cleanId(t.Product); if(/^(TRA_|ILLEGAL_PROD)/.test(id)) (e.tg = e.tg || []).includes(id) || e.tg.push(id); } catch(err){} });
     stats.disc = { p: discP };
-    return { v:4, sys, cur, fr, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms };
+    return { v:5, sys, cur, fr, path, snap: new Date().toISOString().slice(0,10), stats, inv, ms, col };
   }
 
   function guessUid(ps, disc){

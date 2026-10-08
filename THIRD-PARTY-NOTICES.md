@@ -11,11 +11,11 @@ NMS Save Tracker includes or builds on the following work by others. Each keeps 
 | [Microsoft WebView2 SDK](https://www.nuget.org/packages/Microsoft.Web.WebView2) | App window, `app/lib/*.dll` | Microsoft | BSD 3-Clause |
 | [Chakra Petch](https://fonts.google.com/specimen/Chakra+Petch) | Bundled font | Cadson Demak | SIL Open Font License 1.1 |
 | [IBM Plex Sans / Mono](https://github.com/IBM/plex) | Bundled fonts | IBM | SIL Open Font License 1.1 |
-| [bradhave94/nms](https://github.com/bradhave94/nms) | Item and recipe data (`source/data/game.bundle.json`) | bradhave94 | No license stated; used with credit |
+| [MBINCompiler](https://github.com/monkeyman192/MBINCompiler) libMBIN struct layouts | Reference for reading the game's tables in `source/src/gamedata.js`; no code copied | monkeyman192 and contributors | LGPL-3.0 |
 
 Save manifest (XXTEA) and save compression (LZ4 block) layouts are as documented by the No Man's Sky modding community. The LZ4 packer in `source/src/savetools.js` was written for this app.
 
-No Man's Sky is a trademark of Hello Games. Game data and text are theirs. No game artwork ships with this app: item icons and portal glyph pictures are read from the player's own game install at runtime and stay on their PC.
+Item, recipe and frigate data (`source/data/game.bundle.json`, `source/data/fleet.json`) are read from the game's own files; in the desktop app they're read again from the player's install. No Man's Sky is a trademark of Hello Games. Game data and text are theirs. No game artwork ships with this app: item icons and portal glyph pictures are read from the player's own game install at runtime and stay on their PC.
 
 ---
 
