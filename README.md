@@ -2,7 +2,7 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Beta (2.8.0).** Expect rough edges.
+> **Beta (2.9.0).** Expect rough edges.
 
 > **Note:** Made with the help of AI and tested in my own game. Found a bug? Please [open an issue](../../issues/new?labels=bug) (or use **Settings & help → Report a bug** in the app) with what happened and how to repeat it. Comments about how it was made won't be responded to.
 
@@ -50,6 +50,8 @@ Hidden until you tick **Save tools** in **Settings & help → Game files → Adv
 - **Settlements:** name each plot (the app remembers), set a built plot (or every built plot at once) to Class C, B, A or S with the step patterns the game itself writes (confirmed in game), see which plots are behind, add or remove any effect (good or bad) by its in-game name, finish construction, clear debt, bring the next decision sooner or clear a waiting one, rename, and edit stats, building states, perks, production and timers, or the whole entry as raw JSON.
 - **Quests:** grouped by questline with readable names (tracking, has progress, finished); change a mission's step, reset it, or restore quests from a backup.
 - **Timers:** grouped with plain names (settlements, living ship, freighter and frigates, pets, quest cooldowns and more), with buttons to move them back like the clock trick.
+- **Ships & multi-tools:** change the class (C/B/A/S) and the built-in bonuses (damage, shield, hyperdrive, manoeuvrability; damage, mining, scanning for multi-tools; hyperdrive and fleet for the freighter) of any ship, corvette, multi-tool or the freighter. The game's own ranges for each type and class are shown (read from your game files), with **Best rolls** and **Perfect S-class** buttons. Copies of the bonuses in the tech and cargo inventories are kept in step.
+- **Experimental: looks.** Change the **seed** of a ship, multi-tool or the freighter (paste one, copy one from another of yours of the same type, or roll a random one), or pick **parts** like the game's starship customiser for fighters, haulers, explorers, solar ships and the staff multi-tool (the game's part names; written where the game's customiser keeps them). Corvettes are left out: they're built in the corvette workshop. The app can't preview the look: load the save to see it, and use Undo last write if you don't like it.
 - **Bases:** export any base's building parts to a file (saved in `data\exports`) to keep or share, or import a base file into one of your bases, replacing what's built there. Build a base computer where you want it first; terrain changes don't come along.
 - **Companions:** name any of your companions.
 - **Show only what's active** (on by default) hides empty inventories, quests you haven't started, old timers and idle settlement plots.
