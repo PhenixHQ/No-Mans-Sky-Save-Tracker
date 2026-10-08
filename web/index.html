@@ -267,7 +267,7 @@ body.nav-bottom nav.tabs{order:3; border-top:1px solid var(--line); border-botto
 .fchip{display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:2px 6px 2px 2px; border:1px solid var(--line); border-radius:999px; background:var(--surface)}
 .fbar{height:6px; border-radius:3px; background:var(--surface-2); overflow:hidden; flex:1}
 .fbar span{display:block; height:100%; background:var(--teal)}
-.ptr{display:grid; grid-template-columns:100px 1fr 40px; gap:8px; align-items:center; font-size:13px}
+.ptr{display:grid; grid-template-columns:96px 1fr 40px 104px; gap:8px; align-items:center; font-size:13px}
 .ptr b{text-align:right; font:600 12px var(--mono)}
 .ftbl td{vertical-align:top}
 .crparts{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px}
@@ -5678,13 +5678,17 @@ function renderCook(){
         ${cookRecipesFor(pick).length > 1 ? `<div class="lbl">Other ways to cook it</div>${cookRecipesFor(pick).filter(x => x !== r).map(x => row(x)).join('')}` : ''}</div>` : (CK.q ? '<div class="empty">No cooked food by that name. Pick one from the list.</div>' : '')}`;
   } else if(CK.sec === 'ing'){
     const q = CK.ingq.trim().toLowerCase();
-    const ings = COOKRAW.filter(i => I[i] && (I[i].c === 'Food' || HARV[idOf(i)] || /^(PLANT_|BAIT_)/.test(idOf(i) || ''))).filter(i => !q || I[i].n.toLowerCase().includes(q))
-      .sort((a, b) => ((HAVE.get(b) || 0) > 0) - ((HAVE.get(a) || 0) > 0) || I[a].n.localeCompare(I[b].n));
+    const isIng = i => I[i].c === 'Food' || I[i].c === 'Fish' || HARV[idOf(i)] || /^(PLANT_|BAIT_)/.test(idOf(i) || '');
+    const srt = (a, b) => ((HAVE.get(b) || 0) > 0) - ((HAVE.get(a) || 0) > 0) || I[a].n.localeCompare(I[b].n);
+    const all = COOKRAW.filter(i => I[i] && (!q || I[i].n.toLowerCase().includes(q)));
+    const ings = all.filter(isIng).sort(srt), mats = all.filter(i => !isIng(i) && !/^Any /.test(I[i].n)).sort(srt);
     h = `<div class="card"><h2>Ingredients</h2><p class="small muted" style="margin:0">The raw ingredients cooking starts from, where each comes from (creature produce from your game files) and how many recipes use it. Ones you have come first.</p>
       <input class="txt" id="ckingq" placeholder="Filter, e.g. milk" value="${esc(CK.ingq)}" autocomplete="off" style="max-width:320px"></div>
       <div class="fgrid">${ings.map(i => { const uses = COOK.filter(r => r.ins.some(([x]) => x === i)).length;
         return `<div class="card fcard"><div class="row" style="justify-content:space-between"><div class="row">${itemIconHTML(idOf(i),'sm')}<b><button type="button" class="linkbtn" data-item="${esc(I[i].n)}">${esc(I[i].n)}</button></b></div><span class="small">${HAVE.get(i) ? `have <b>${fmt(HAVE.get(i))}</b>` : '<span class="muted">none</span>'}</span></div>
-          <div class="small">${ingSource(i) || esc(I[i].d || I[i].g || '')}</div><div class="small muted">Used in ${fmt(uses)} cooking recipe${uses === 1 ? '' : 's'}${fxOf(i) ? ' · eaten raw: ' + esc(FXL[fxOf(i)] || '') : ''}</div></div>`; }).join('')}</div>`;
+          <div class="small">${ingSource(i) || esc(I[i].d || I[i].g || '')}</div><div class="small muted">Used in ${fmt(uses)} cooking recipe${uses === 1 ? '' : 's'}${fxOf(i) ? ' · eaten raw: ' + esc(FXL[fxOf(i)] || '') : ''}</div></div>`; }).join('')}</div>
+      ${mats.length ? `<div class="card"><h3 style="margin:0">Materials that go in too</h3><p class="small muted" style="margin:0">Not food, but the Nutrient Processor takes these as well (minerals, refined products and plants you grow). Click one for its recipes and where to find it.</p>
+        <div class="row" style="flex-wrap:wrap">${mats.map(i => { const uses = COOK.filter(r => r.ins.some(([x]) => x === i)).length; return `<button type="button" class="chip" data-item="${esc(I[i].n)}" title="Used in ${uses} cooking recipe${uses === 1 ? '' : 's'}">${itemIconHTML(idOf(i),'sm')}${esc(I[i].n)}${HAVE.get(i) ? ` <span class="muted">have ${fmt(HAVE.get(i))}</span>` : ''} <span class="tag cat">${uses}</span></button>`; }).join('')}</div></div>` : ''}`;
   } else if(CK.sec === 'kit'){
     const D = GX.inv || {}; const store = (D.base || []).filter(c => /Cooking ingredients/i.test(c.n));
     const baits = [COOKDATA.bait.basic].concat(COOKDATA.bait.carnivore, COOKDATA.bait.herbivore);
@@ -5791,11 +5795,14 @@ function renderFleet(){
       <p class="muted small" style="margin:0">Trait names come from your game. Green helps, red hurts; hover a trait for what it affects.</p></div>` : '<div class="empty">No frigates yet.</div>');
   } else if(FS.sec === 'pets'){
     const P = C.pets;
-    const TR = [['Helpfulness','UI_PET_HELPFUL'],['Aggression','UI_PET_AGGRESSION'],['Independence','UI_PET_INDEPENDENCE']];
+    // Each trait is one value from −1 to 1. The game names the side it leans to and shows how far, e.g. −0.87 aggression = "Gentleness 87% (Sweet Tempered)".
+    const TR = [[['Helpfulness', ['Compliant','Cooperative','Diligent','Dutiful']], ['Playfulness', ['Cheeky','Mischievous','Frolicsome','Whimsical']]],
+      [['Aggression', ['Passionate','Territorial','Fierce','Ferocious']], ['Gentleness', ['Tolerant','Patient','Placid','Sweet Tempered']]],
+      [['Independence', ['Aloof','Free Spirited','Autonomous','Adventurous']], ['Devotion', ['Attached','Attentive','Protective','Loyal']]]];
     h = P.length ? `<div class="fgrid">${P.map(p => `<div class="card fcard"><div class="row" style="justify-content:space-between; align-items:flex-start"><div><h3 style="margin:0">${esc(p.n ? SaveTools.rawToStr(p.n) : petKind(p.id))}</h3><div class="small muted">${esc(petKind(p.id))} · ${esc(p.bio || 'unknown biome')}${p.pred ? ' · predator' : ''}</div></div>${p.sum ? '' : '<span class="tag cat">Not summoned yet</span>'}</div>
         <div class="kv"><span><b>Trust</b>${Math.round(p.trust * 100)}%</span><span><b>Adopted</b>${unixAgo(p.born)}</span><span><b>Last egg</b>${unixAgo(p.egg)}</span>${p.win ? `<span><b>Battle wins</b>${fmt(p.win)}</span>` : ''}</div>
-        ${TR.map(([l], k) => { const v = p.tr[k]; if(typeof v !== 'number') return ''; const pc = Math.round((v + 1) * 50); return `<div class="ptr"><span>${l}</span><div class="fbar"><span style="width:${pc}%"></span></div><b>${pc}%</b></div>`; }).join('')}</div>`).join('')}</div>
-      <p class="muted small">Trait percentages are worked out from the values in the save (−1 to 1 shown as 0–100%). Rename companions in Save tools › Companions.</p>` : '<div class="empty">No companions yet.</div>';
+        ${TR.map((t, k) => { const v = p.tr[k]; if(typeof v !== 'number') return ''; const [l, cls] = t[v < 0 ? 1 : 0], pc = Math.round(Math.abs(v) * 100), c = cls[Math.min(3, Math.floor(pc / 25))]; return `<div class="ptr"><span>${l}</span><div class="fbar"><span style="width:${pc}%"></span></div><b>${pc}%</b><span class="small muted">${c}</span></div>`; }).join('')}</div>`).join('')}</div>
+      <p class="muted small">Traits as the game shows them: each one leans one way or the other (Helpfulness or Playfulness, Aggression or Gentleness, Independence or Devotion). Rename companions in Save tools › Companions.</p>` : '<div class="empty">No companions yet.</div>';
   }
   box.innerHTML = h;
   renderAlerts(C);
