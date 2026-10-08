@@ -1,0 +1,23 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1280,height:900}});
+const errs=[];p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error'&&!/TUNNEL/.test(m.text()))errs.push(m.text())});
+await p.goto('http://127.0.0.1:47831/');await p.waitForTimeout(2200);
+await p.click('#t-recipes'); await p.fill('#q','Ferrite Dust'); await p.waitForTimeout(300); await (await p.$('#itemcard')).screenshot({path:'../shots/b3_card.png'});
+console.log('own:', await p.textContent('.ownbtn'));
+await p.click('.ownbtn'); await p.waitForTimeout(400); console.log('tab', await p.$eval('#t-inventory', e=>e.getAttribute('aria-selected')), 'q', await p.inputValue('#ivq')); await p.screenshot({path:'../shots/b3_own.png'});
+await p.click('#t-recipes'); await p.fill('#q','Ferrite Dust'); await p.waitForTimeout(200); await p.click('[data-find]'); await p.waitForTimeout(400); console.log('find ->', await p.$eval('#t-resources', e=>e.getAttribute('aria-selected')), await p.inputValue('#rq'));
+await p.click('#t-recipes'); await p.fill('#q','Dirty Bronze'); await p.waitForTimeout(200); await p.dblclick('.itemcard .kv'); await p.waitForTimeout(300); console.log('dirty bronze mode', await p.$eval('[data-mode="out"]', e=>e.getAttribute('aria-pressed')), await p.textContent('#rcount2'));
+await p.fill('#q',''); await p.click('#t-inventory'); await p.fill('#ivq',''); await p.dispatchEvent('#ivq','input');
+await p.click('[data-ivt="exo"]'); await p.waitForTimeout(300); await p.screenshot({path:'../shots/b3_grid_exo.png'});
+await p.click('[data-ivt="ships"]'); await p.waitForTimeout(300); await p.screenshot({path:'../shots/b3_grid_ships.png'});
+await p.click('[data-ivt="all"]'); await p.waitForTimeout(300); await p.screenshot({path:'../shots/b3_grid_all.png'});
+await p.click('#t-portals'); for(const k of ['1','3','e','9','f','e','f','f','7','f','f','c']) await p.keyboard.press(k); await p.waitForTimeout(200); await p.screenshot({path:'../shots/b3_portal.png'});
+await p.evaluate(()=>document.querySelector('#gsaved').scrollIntoView()); await p.waitForTimeout(200); await p.screenshot({path:'../shots/b3_saved.png'});
+await p.click('#t-galaxy'); await p.waitForTimeout(500);
+const box = await (await p.$('#map')).boundingBox();
+// hover over the current system
+const pos = await p.evaluate(()=>{ return null; });
+await p.click('#zme'); await p.waitForTimeout(300); await p.mouse.move(box.x+box.width/2, box.y+box.height/2); await p.waitForTimeout(200); await p.mouse.move(box.x+box.width/2+1, box.y+box.height/2+1); await p.waitForTimeout(200);
+console.log('tip hidden?', await p.$eval('#maptip', e=>e.hidden)); await (await p.$('.mapwrap')).screenshot({path:'../shots/b3_tip.png'});
+await p.click('#menubtn'); await p.click('[data-dsec="disp"]'); await p.click('#dg-hex'); await p.click('[data-dbig="short"]'); await p.waitForTimeout(200); await (await p.$('#drawer')).screenshot({path:'../shots/b3_disp.png'});
+console.log('errors',errs);await b.close();})();
