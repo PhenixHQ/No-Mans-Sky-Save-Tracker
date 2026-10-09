@@ -125,12 +125,16 @@ var GameData = (function(){
     rows.forEach(function(r){ if(!r.req || !r.req.length || r.req.some(function(x){ return !seen.has(x[0]); })) return;
       craft.push([idx(r.id), 1, r.req.map(function(x){ return [idx(x[0]), x[1]]; }), r.c]); });
     // items used in recipes get an index; everything else goes in xi by id
-    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {}, fx = {};
+    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {}, fx = {}, hint = {};
+    // things no recipe makes keep their description too (it often says where they come from), plus the game's own "how to get it" hint
+    var made = new Set(); refine.concat(cook).forEach(function(e){ made.add(e[1][0]); }); craft.forEach(function(e){ made.add(e[0]); });
     // raw cooking ingredients (used by cooking, made by none of it) keep their description: it says where they come from
     var cookOut = new Set(cook.map(function(e){ return e[1][0]; })), cookRaw = new Set(); cook.forEach(function(e){ e[0].forEach(function(x){ if(!cookOut.has(x[0])) cookRaw.add(x[0]); }); });
     rows.forEach(function(r){
-      if(used.has(r.id)){ ix[r.id] = items.length; var it = { n: r.n, g: r.g, v: r.v, c: r.c }; if(r.d && (r.c === 'Raw' || cookRaw.has(r.id))) it.d = r.d; items.push(it); }
-      else xi[r.id] = [r.n, r.g, r.v, r.c];
+      var keepD = r.d && (r.c === 'Raw' || cookRaw.has(r.id) || (!made.has(r.id) && /^(Raw|Component|Curiosity|Trade good|Fish|Food)$/.test(r.c)));
+      if(used.has(r.id)){ ix[r.id] = items.length; var it = { n: r.n, g: r.g, v: r.v, c: r.c }; if(keepD) it.d = r.d; items.push(it); }
+      else { xi[r.id] = [r.n, r.g, r.v, r.c]; if(keepD) xi[r.id].push(r.d); }
+      var h = tr('UI_PIN_' + r.id + '_OBJ_TIP'); if(h) hint[r.id] = h;
       if(r.fx && r.c === 'Food') fx[r.id] = r.fx; // GcStatsTypes value of the food's bonus
       if(r.t === 'T') ty[r.id] = 1; // installed as Technology (everything else: Substance if kind 'r', else Product)
       var e = [r.k, r.col]; if(r.sym && r.sym.length <= 5) e.push(r.sym); ic[r.id] = e;
@@ -141,7 +145,7 @@ var GameData = (function(){
     return { items: items, refine: refine.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       cook: cook.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       craft: craft.map(function(e){ return [I(e[0]), e[1], fix(e[2]), e[3]]; }),
-      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, fx: fx, src: 'game' };
+      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, fx: fx, hint: hint, src: 'game' };
   }
 
   var FILES = {
