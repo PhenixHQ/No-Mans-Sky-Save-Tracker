@@ -15,7 +15,7 @@ const dir = process.argv[2]; if(!dir){ console.error('usage: node mkgamedata.js 
   }
   const get = async p => { for(const k of paks) if(k.has(p)) return await k.file(p); return null; };
   const label = process.argv[3] || ('game files of ' + new Date().toISOString().slice(0, 10));
-  const B = await GameData.fromGame(get, label);
+  const B = await GameData.fromGame(get, label, require(path.join(__dirname, '..', 'data', 'statnames.json')));
   B.src = 'bundled';
   const out = path.join(__dirname, '..', 'data', 'game.bundle.json');
   fs.writeFileSync(out, JSON.stringify(B));

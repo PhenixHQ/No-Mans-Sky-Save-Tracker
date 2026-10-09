@@ -125,6 +125,7 @@ const SaveSync = (() => {
     if(ps.FreighterInventory){ const rooms = {}; (ps.PersistentPlayerBases || []).forEach(b => { if(((b.BaseType || {}).PersistentBaseTypes) !== 'FreighterBase') return; (b.Objects || []).forEach(o => { const id = cleanId(o.ObjectID); if(/^FRE_ROOM_/.test(id)) rooms[id] = (rooms[id] || 0) + 1; }); });
       C.fr = { n: str(ps.PlayerFreighterName), cls: cls(ps.FreighterInventory), gen: slots(ps.FreighterInventory), tech: slots(ps.FreighterInventory_TechOnly), cargo: slots(ps.FreighterInventory_Cargo), sc: sc(ps.FreighterInventory_TechOnly) + sc(ps.FreighterInventory),
         st: stats(ps.FreighterInventory), t: tech(ps.FreighterInventory_TechOnly).concat(tech(ps.FreighterInventory)), rooms, f: file(ps.CurrentFreighter) }; }
+    C.suit = { t: tech(ps.Inventory_TechOnly).concat(tech(ps.Inventory)) };
     return C;
   }
 

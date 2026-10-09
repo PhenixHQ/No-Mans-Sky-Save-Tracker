@@ -2,7 +2,7 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Beta (2.12.0).** Expect rough edges.
+> **Beta (2.13.0).** Expect rough edges.
 
 > **Note:** Made with the help of AI and tested in my own game. Found a bug? Please [open an issue](../../issues/new?labels=bug) (or use **Settings & help → Report a bug** in the app) with what happened and how to repeat it. Comments about how it was made won't be responded to.
 
@@ -24,6 +24,8 @@ Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Boun
 - **Cooking:** a whole tab for the Nutrient Processor: dishes you can cook now (and ones you're one ingredient short of), food grouped by the bonus it gives when eaten (from the game files), a plan for any dish down to raw ingredients, where every ingredient comes from (which creatures give which produce when fed, which wild plants grow where), and your kitchen (cooking storage, creature bait). Sort dishes by highest value, most profit, most money from what you have, or most you can make.
 - **Where it comes from:** every item card shows the game's own hint for getting it and what each object on a planet gives (crystals, Metal 'Fingers', cave rocks, Dissonance Resonators, crates…), read from your game files, with the odds. Where to find has a list of every thing to break and collect.
 - **Bountria Prime:** the Bountria Federation capital is built in for everyone: glyphs, planets, a map marker and how to get there.
+- **Your language:** item names, descriptions and hints can come from any of the game's 16 languages.
+- **Upgrade planner and module rolls:** see each craft's upgrade modules by class and what's missing, and every stat a module can roll, with a reroll in Save tools.
 - **Back and forward:** buttons at the top (or Alt+Left / Alt+Right, or the mouse's side buttons) step back through the pages you looked at, like a browser.
 - **Collection:** every starship, multi-tool and exocraft with class, slots, supercharged slots, built-in bonuses and installed technology (and which ones have room for more upgrades); your frigates with role, class, expedition stats, fuel cost and traits, the best frigate for each kind of expedition, and expeditions under way; your companions with trust, traits, age and last egg; your freighter and its rooms; the settlements you run (population, effects, production, debt, decisions); ship and multi-tool seeds; and a **Needs your attention** card (also in the overlay) for settlement decisions, full production, damaged frigates, finished expeditions and discoveries you haven't uploaded.
 - **Game data from your install:** item names, values and every refiner, crafting and cooking recipe are read from your own No Man's Sky files (like the icons), so they match your game, even right after a game update. The app also ships with a copy read from the game's files, used until then.
