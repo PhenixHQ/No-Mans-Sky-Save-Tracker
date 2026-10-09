@@ -4821,7 +4821,10 @@ function invKind(m){ const n = m.path.map(k => typeof k==='number' ? '' : KN(k))
   return /TechOnly|Multitools|WeaponInventory/.test(n) ? 'tech' : 'cargo'; }
 function invPickList(m){ const k = invKind(m); if(k==='tech'){ const l = pickItems().filter(x => isTechId(x.id) && techCat(x.id) && !techWhyNot(m.path, x.id)); l.techOnly = true; return l; }
   if(k==='cargo') return pickItems().filter(x => !isTechId(x.id)); return null; }
-function isTechId(id){ if(/^PACK~/.test(String(id)) || packDecode(id)) return false; id = String(id).replace(/^\^/,'').replace(/#.*$/,''); if(/^U_/.test(id)) return false; /* U_… = a packed module (an item you carry, any inventory) */ return guessType(id)==='Technology' || /^(UP_|CV_)/.test(id) || itemCat(id)==='tech'; }
+function isTechId(id){ if(/^PACK~/.test(String(id)) || packDecode(id)) return false; id = String(id).replace(/^\^/,'').replace(/#.*$/,''); if(/^U_/.test(id)) return false; /* U_… = a packed module (an item you carry, any inventory) */
+  // Expansion tokens (Salvaged Frigate Module, Cargo Bulkhead, Storage Augmentation…) and Memory Fragments are items, though the app files them under tech
+  if(/_TOKEN$|^ROGUE_/.test(id)) return false;
+  return guessType(id)==='Technology' || /^(UP_|CV_)/.test(id) || (!G.ty && itemCat(id)==='tech'); }
 function invFits(m, id){ const k = invKind(m), t = isTechId(id) ? 'Technology' : 'Item';
   if(k==='tech' && t!=='Technology') return 'This inventory only holds technology. Add modules in the Technology section instead.';
   if(t==='Technology' && k!=='cargo'){ const w = techWhyNot(m.path, id); if(w) return w; }

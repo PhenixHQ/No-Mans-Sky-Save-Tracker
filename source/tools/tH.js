@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
 const p=await b.newPage({viewport:{width:1280,height:900},colorScheme:'dark'});
 p.on('pageerror',e=>errs.push('PE '+e.message));p.on('console',m=>{if(m.type()==='error' && !/TUNNEL/.test(m.text()))errs.push(m.text())});
 p.on('dialog', d => { console.log('dialog:', d.message().split('\n')[0]); d.accept(); });
-await p.goto('http://127.0.0.1:47831/'); await p.waitForSelector('#boot',{state:'hidden',timeout:20000});
+await p.goto('http://127.0.0.1:47831/'); await p.waitForSelector('#boot',{state:'hidden',timeout:20000}); if(await p.isVisible('#newsok')) await p.click('#newsok');
 console.log('tools tab hidden before:', await p.isHidden('#t-tools'));
 await p.click('#menubtn'); await p.click('[data-dsec="files"]'); await p.click('.advbox summary'); await p.check('#edon'); await p.click('#drawerclose');
 await p.click('#t-tools'); await p.waitForSelector('[data-edload]'); await p.screenshot({path:'/tmp/claude-0/tH-saves.png', fullPage:true});
