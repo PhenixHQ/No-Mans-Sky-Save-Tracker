@@ -1612,7 +1612,10 @@ $('#starq').addEventListener('input', () => { renderStar(); });
 
 /* ---------- RESOURCES ---------- */
 const RS = { kind:'raw', q:'' };
-const RAW = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Raw').sort((a,b)=>a.it.n.localeCompare(b.it.n));
+// "Reward Item" substances aren't things you can hold: the game uses them in rewards to change faction standing,
+// settlement stats, units/quicksilver and so on (AUTOPHAGE, Feature, Debt, EXPLORERS…). Kept out of lists and pickers.
+function isToken(id){ const f = itemInfo(id); return f.g === 'Reward Item'; }
+const RAW = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Raw' && x.it.g!=='Reward Item').sort((a,b)=>a.it.n.localeCompare(b.it.n));
 const FISH = I.map((it,i)=>({it,i})).filter(x => x.it.c==='Fish').sort((a,b)=>a.it.n.localeCompare(b.it.n));
 /* ---------- trade goods: which economy sells them, and your known places nearby ---------- */
 const TRADE = __TRADE__; const ECON = new Map(TRADE.econ.map(e => [e.k, e]));
@@ -3265,7 +3268,7 @@ function invAction(fn){ edTry(() => { fn(INVM); }); edRender(); }
 /* ---------- item picker (creative-menu style) ---------- */
 let PICKITEMS = null;
 function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), out = [];
-  const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
+  const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk || isToken(id)) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
   Object.keys(IX).forEach(add); Object.keys(XI).forEach(add);
   // every installable technology can also be carried packaged (cargo slots only)
   Object.keys(G.ty || {}).forEach(t => { if(!/^[A-Z0-9_]+$/.test(t) || /^(UP_|U_)/.test(t)) return; const f = itemInfo(t); if(!f.n || f.unk) return; out.push({ id: 'PACK~' + t, n: 'Packaged ' + f.n, c: itemCat(t), l: ('packaged ' + f.n + ' ' + t).toLowerCase() }); });
