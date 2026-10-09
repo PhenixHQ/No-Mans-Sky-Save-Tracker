@@ -102,7 +102,7 @@ var GameData = (function(){
       else if(p.type === 3 && /SHIP/.test(sub)){ c = 'Starship'; k = 's'; }
       else if(p.type === 4){ if(/FIREWORK_PACK/.test(sub)){ c = 'Other'; k = 'o'; } else { c = 'Base part'; k = 'b'; } }
       else { c = PCAT[p.type] || 'Other'; k = PKIND[p.type] || 'o'; }
-      add(p.id, { n: tr(p.nameL) || tr(p.name), g: tr(p.sub), v: p.value, c: c, d: tr(p.desc), k: k, col: p.colour, ip: p.icon, req: p.req, t: 'P', fx: p.food || 0 });
+      add(p.id, { n: tr(p.nameL) || tr(p.name), g: tr(p.sub), v: p.value, c: c, d: tr(p.desc), k: k, col: p.colour, ip: p.icon, req: p.req, t: 'P', fx: p.food || 0, tb: table === 'bp' ? 'b' : table === 'cu' ? 'c' : '' });
     }
     T.products.forEach(function(p){ prod(p, 'p'); });
     (T.baseparts || []).forEach(function(p){ prod(p, 'bp'); });
@@ -125,7 +125,7 @@ var GameData = (function(){
     rows.forEach(function(r){ if(!r.req || !r.req.length || r.req.some(function(x){ return !seen.has(x[0]); })) return;
       craft.push([idx(r.id), 1, r.req.map(function(x){ return [idx(x[0]), x[1]]; }), r.c]); });
     // items used in recipes get an index; everything else goes in xi by id
-    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {}, fx = {}, hint = {};
+    var items = [], ix = {}, xi = {}, ic = {}, ip = {}, ty = {}, fx = {}, hint = {}, tb = {};
     // things no recipe makes keep their description too (it often says where they come from), plus the game's own "how to get it" hint
     var made = new Set(); refine.concat(cook).forEach(function(e){ made.add(e[1][0]); }); craft.forEach(function(e){ made.add(e[0]); });
     // raw cooking ingredients (used by cooking, made by none of it) keep their description: it says where they come from
@@ -136,6 +136,7 @@ var GameData = (function(){
       else { xi[r.id] = [r.n, r.g, r.v, r.c]; if(keepD) xi[r.id].push(r.d); }
       var h = tr('UI_PIN_' + r.id + '_OBJ_TIP'); if(h) hint[r.id] = h;
       if(r.fx && r.c === 'Food') fx[r.id] = r.fx; // GcStatsTypes value of the food's bonus
+      if(r.tb) tb[r.id] = r.tb; // 'b' = a base building part, 'c' = a customiser part: built or applied, not carried
       if(r.t === 'T') ty[r.id] = 1; // installed as Technology (everything else: Substance if kind 'r', else Product)
       var e = [r.k, r.col]; if(r.sym && r.sym.length <= 5) e.push(r.sym); ic[r.id] = e;
       if(r.ip){ var pth = r.ip.toLowerCase(); ip[r.id] = /^textures\/ui\/frontend\/icons\//.test(pth) ? pth.slice(27) : '/' + pth; }
@@ -145,7 +146,7 @@ var GameData = (function(){
     return { items: items, refine: refine.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       cook: cook.map(function(e){ return [fix(e[0]), [I(e[1][0]), e[1][1]], e[2]]; }),
       craft: craft.map(function(e){ return [I(e[0]), e[1], fix(e[2]), e[3]]; }),
-      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, fx: fx, hint: hint, src: 'game' };
+      version: version || 'game', ix: ix, xi: xi, ic: ic, ip: ip, ty: ty, fx: fx, hint: hint, tb: tb, src: 'game' };
   }
 
   var FILES = {
