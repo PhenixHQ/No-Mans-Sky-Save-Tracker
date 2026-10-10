@@ -19,7 +19,7 @@ await p.fill('[data-edcur="wGS"]','4000000000'); await p.click('[data-edcurset="
 // settlements
 await p.click('[data-edsec="set"]'); await p.waitForSelector('#edset'); console.log('settlement:', await p.$eval('#edset', s=>s.selectedOptions[0].textContent));
 await p.screenshot({path:'/tmp/claude-0/tH-set.png', fullPage:true});
-await p.click('[data-edsq="finish"]'); await p.fill('#edsname','Foundria'); await p.click('#edsnameset');
+if(await p.isEnabled('[data-edsq="finish"]')) await p.click('[data-edsq="finish"]'); await p.fill('#edsname','Foundria'); await p.click('#edsnameset'); await p.fill('#edspop','25'); await p.click('#edspopset'); await p.waitForTimeout(150); console.log('pop value:', await p.inputValue('#edspop'));
 // quests
 await p.click('[data-edsec="quest"]'); await p.waitForTimeout(300); console.log('quest groups:', await p.$$eval('.qgrp > summary', a=>a.map(x=>x.textContent.replace(/\s+/g,' ').trim()).slice(0,30))); await p.screenshot({path:'/tmp/claude-0/tH-quest.png', fullPage:true});
 // timers + raw

@@ -5172,6 +5172,8 @@ function secSet(){
       <button type="button" class="btn ghost" data-edsq="nodecision">Clear the waiting decision</button></div>
       <p class="muted small" style="margin:0">Finishing construction moves each building's start time back 7 days, the same as the clock trick. Debt is the Debt stat below.</p></div>
    <div class="card"><h3>Name</h3><div class="row"><input class="txt" id="edsname" value="${esc(SaveTools.rawToStr(s[SKEY.name]||''))}" maxlength="60" style="flex:1 1 240px"><button type="button" class="btn" id="edsnameset">Rename</button></div></div>
+   <div class="card"><h3>Population</h3><div class="row"><label class="lbl" for="edspop">Settlers living here now</label><input class="txt" type="number" min="0" max="65535" id="edspop" value="${+(s[KO('Population')] ?? s['x3<'])||0}" style="width:110px"><button type="button" class="btn" id="edspopset">Set population</button></div>
+     <p class="muted small" style="margin:0">The current head count (the save's Population). The game may trim it back to the settlement's max population when it next updates, so raise max population first if you want more than the buildings allow.</p></div>
    <div class="card"><h3>Stats</h3><div class="edgrid2">${stats.map((v,i) => `<label class="lbl" for="edss-${i}">${SSTAT[i]||'Stat '+(i+1)}</label><input class="txt" type="number" id="edss-${i}" data-edss="${i}" value="${v}">`).join('')}</div>
      <div class="row"><button type="button" class="btn" id="edssset">Save stats</button><span class="muted small">Stat names follow the game's order; if one looks swapped, the raw editor below shows the exact numbers.</span></div></div>
    ${(() => { const ks = bs.filter(v => bldBuilt(v)).map(bldStep).filter(Boolean); topStep = ks.length ? Math.max(...ks) : 0; const behindN = ks.filter(k => k < topStep).length;
@@ -5746,6 +5748,7 @@ $('#p-tools').addEventListener('click', async e => {
       if(a==='nodecision'){ edSetVal(P.concat([SKEY.judge, '?SU']), 'None', `${sName}: clear waiting decision`); }
     }); edRender(); return; }
   if(q('#edsnameset')){ const v = $('#edsname').value.trim(); if(!v) return; edTry(() => edSetVal(P.concat([SKEY.name]), v, `${sName}: rename to ${v}`)); edRender(); return; }
+  if(q('#edspopset')){ const v = Math.max(0, Math.min(65535, Math.round(+$('#edspop').value||0))); edTry(() => edSetVal(P.concat([KO('Population')]), v, `${sName}: population ${v}`)); edRender(); return; }
   if(q('#edssset')){ const st = $$('[data-edss]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.stats, st, `${sName}: stats`)); edRender(); return; }
   if(q('#edsbset')){ const bs = $$('[data-edsb]').map(i => Math.round(+i.value||0)); edTry(() => setArrEdit(SKEY.bstate, bs, `${sName}: building states`)); edRender(); return; }
   if((x = q('[data-edsall]'))){ const k = x.dataset.edsall==='sel' ? +$('#edsallk').value : +x.dataset.edsall; const bs = sObj[SKEY.bstate].slice(); let n = 0; bs.forEach((v,i) => { if(bldBuilt(v) && bldStep(v)!==k){ bs[i] = bldStepVal(v, k); n++; } }); if(!n){ edMsg('Every built plot is already at that stage.'); return; }
