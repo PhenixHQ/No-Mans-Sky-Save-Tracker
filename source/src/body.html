@@ -3286,11 +3286,19 @@ function carryable(id, f){ if(G.nc) return !G.nc[id]; f = f || itemInfo(id);
   if(/Customisation Option/i.test(f.g || '') || / Decal$/.test(f.n)) return false;
   return true; }
 const isCorvettePart = id => { const it = itemInfo(id); return it.i !== null ? I[it.i].c === 'Corvette' : !!(XI[id] && XI[id][3] === 'Corvette'); };
+// Where each chart can lead, from the chart's reward in rewardtable.mbin (one weighted pick; game 7.x), with the game's own site names.
+const CHARTLEADS = {
+  STARCHART_A: 'secure site: Manufacturing Facility 50%, Resource Depot 25%, Operations Centre 25%',
+  STARCHART_B: 'distress: Abandoned Building 52%, Crashed Ship 19%, Crashed Ship with pilot 10%, Crashed Freighter 10%, Observatory 8%',
+  STARCHART_C: 'inhabited: Minor Settlement 26%, Shelter 14%, Transmission Tower 14%, Observatory 14%, Dig Site 14%, Trading Post 9%, Library 9%',
+  STARCHART_D: 'ancient relic: Ancient Plaque, Monolith or Ancient Ruin (a third each)',
+  A1S6_STARMAP: 'story quest, ancient relic: the quest decides the spot', TUT_STARMAP: 'story quest, distress signal: the quest decides the spot', CHART_TREASURE: 'buried treasure dig site', CHART_SETTLE: 'a settlement', CHART_BUI_SETTL: 'an Autophage settlement' };
 function pickItems(){ if(PICKITEMS) return PICKITEMS; const seen = new Set(), out = [];
   const add = id => { if(seen.has(id) || !/^[A-Z0-9_]+$/.test(id)) return; seen.add(id); const f = itemInfo(id); if(!f.n || f.unk || isToken(id) || !carryable(id, f)) return; out.push({ id, n: f.n, c: itemCat(id), l: f.n.toLowerCase() + ' ' + id.toLowerCase() }); };
   Object.keys(IX).forEach(add); Object.keys(XI).forEach(add);
   // every installable technology can also be carried packaged (cargo slots only)
   Object.keys(G.ty || {}).forEach(t => { if(!/^[A-Z0-9_]+$/.test(t) || /^(UP_|UA_|AP_|U_)/.test(t)) return; const f = itemInfo(t); if(!f.n || f.unk || / Upgrade$/.test(f.n)) return; out.push({ id: 'PACK~' + t, n: 'Packaged ' + f.n, c: itemCat(t), l: ('packaged ' + f.n + ' ' + t).toLowerCase() }); });
+  out.forEach(x => { const w = CHARTLEADS[x.id]; if(w && /^STARCHART_|_STARMAP$/.test(x.id)){ x.n = `Planetary Chart (${w.split(':')[0]})`; x.l += ' ' + w.toLowerCase(); x.why = w; } else if(w) x.l += ' ' + w.toLowerCase(); });
   // same name, different item (Hyperdrive Module C/B/A/S…): add what the game calls it underneath, or the id
   const cnt = new Map(); out.forEach(x => cnt.set(x.n, (cnt.get(x.n) || 0) + 1));
   out.forEach(x => { if(cnt.get(x.n) > 1){ const g = itemInfo(/^PACK~/.test(x.id) ? x.id.slice(5) : x.id).g || ''; const cls = (/\b([SABCX])-Class\b/.exec(g) || [])[0]; x.n += cls ? ` (${cls})` : g && !/%/.test(g) ? ` (${g})` : ` (${x.id})`; } });
@@ -3329,7 +3337,7 @@ function pickerBody(only, ann){
   return `<input class="txt" id="edpq" placeholder="Search by name or ID" value="${esc(ED.pq||'')}" autocomplete="off">
     ${only ? `<p class="small muted" style="margin:0">${only.techOnly ? 'Only technology the game lets this craft install is listed.' : 'Only items that fit this inventory are listed.'}</p>` : ''}
     <div class="fchips"${chips ? '' : ' hidden'}>${cats.map(([k,l]) => `<button type="button" class="fchip" data-edpc="${k}" aria-pressed="${!q && k===cat}">${l} <span class="muted">${cnt[k]}</span></button>`).join('')}</div>
-    <div class="edpgrid">${show.map(x => { const a = ann ? ann(x) || {} : {}; return `<button type="button" class="edpi${a.off ? ' off' : ''}" data-edpi="${esc(x.id)}" ${a.off ? 'aria-disabled="true"' : ''} title="${esc(x.n)} (${esc(x.id)})${a.why ? ' · ' + esc(a.why) : ''}">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span>${a.badge ? `<span class="edpb${a.off ? ' bad' : ''}">${esc(a.badge)}</span>` : ''}</button>`; }).join('') || '<div class="muted">Nothing found.</div>'}</div>
+    <div class="edpgrid">${show.map(x => { const a = ann ? ann(x) || {} : {}; return `<button type="button" class="edpi${a.off ? ' off' : ''}" data-edpi="${esc(x.id)}" ${a.off ? 'aria-disabled="true"' : ''} title="${esc(x.n)} (${esc(x.id)})${CHARTLEADS[x.id] ? ' · leads to ' + esc(CHARTLEADS[x.id]) : ''}${a.why ? ' · ' + esc(a.why) : ''}">${itemIconHTML(x.id,'md')}<span>${esc(x.n)}</span>${a.badge ? `<span class="edpb${a.off ? ' bad' : ''}">${esc(a.badge)}</span>` : ''}</button>`; }).join('') || '<div class="muted">Nothing found.</div>'}</div>
     ${list.length > show.length ? `<p class="small muted">Showing ${show.length} of ${list.length}. Search to narrow it down.</p>` : ''}`;
 }
 function pickerHTML(only, ann){ return slotModal('Choose an item', '', pickerBody(only, ann)); }
