@@ -1,0 +1,23 @@
+// 2.14.0: corvette build import (with class + size) and export
+const { chromium } = require('playwright'); const fs = require('fs');
+const ST = require('../src/savetools.js');
+const SAVE = process.env.SAVEFILE; const BUILD = process.env.BUILD;
+(async()=>{const b=await chromium.launch();const errs=[];const p=await b.newPage({viewport:{width:1300,height:950}});
+p.on('pageerror',e=>errs.push('PE '+e.message));p.on('dialog',d=>d.accept());
+await p.goto('http://127.0.0.1:47831/'); await p.waitForSelector('#boot',{state:'hidden',timeout:30000}); if(await p.isVisible('#newsok')) await p.click('#newsok'); if(await p.isVisible('#welskip')) await p.click('#welskip');
+await p.click('#menubtn'); await p.click('[data-dsec="files"]'); await p.click('.advbox summary'); await p.check('#edon'); await p.click('#drawerclose');
+await p.click('#t-tools'); await p.waitForSelector('[data-edload]'); await p.click('[data-edload="save.hg"]'); await p.waitForSelector('.edgrid');
+await p.click('[data-edsec="bases"]'); await p.waitForSelector('[data-edcvimp]');
+const rows = await p.$$eval('[data-edcvimp]', a => a.map(x => x.closest('tr').innerText.replace(/\s+/g,' ')));
+console.log('corvettes:', rows);
+const first = await p.$eval('[data-edcvimp]', x => x.dataset.edcvimp);
+await p.setInputFiles('#edcvfile', BUILD); await p.$eval('#edcvfile', (el, t) => { el.dataset.target = t; el.dispatchEvent(new Event('change', {bubbles:true})); }, first);
+await p.waitForSelector('#edcvgo'); console.log('notes:', await p.$$eval('#edcvgo', a => a[0].closest('.card').innerText.replace(/\s+/g,' ').slice(0,700)));
+await p.selectOption('#edcvcls', 'S'); await p.fill('#edcvsize', '80'); await p.click('#edcvgo'); await p.waitForTimeout(200);
+console.log('pending:', await p.$$eval('.edlist li', a=>a.map(x=>x.textContent)));
+await p.click('#edwrite'); await p.waitForFunction(()=>/Written and checked|failed|error/i.test((document.querySelector('#edmsg')||{}).textContent||''), null, {timeout:15000});
+console.log('result:', await p.textContent('#edmsg'));
+await p.click('[data-edsec="bases"]'); await p.waitForSelector('[data-edcvexp]'); await p.click(`[data-edcvexp="${first}"]`); await p.waitForTimeout(800); console.log('export:', await p.textContent('#edcvmsg'));
+const d = ST.parse(ST.bytesToText(ST.unpack(fs.readFileSync(SAVE)).raw)); const ps = d.vLc['6f=']; const base = ps['F?0'][+first]; const objs = base['@ZJ'];
+const last = objs[objs.length-1]; console.log('written parts', objs.length, 'last', last['r<7'], JSON.stringify(last.wMC), 'class', ps['@Cs'][base.CVX][';l5']['B@N']['1o6'], 'setclass left', objs.filter(o=>/SET_CLASS/.test(o['r<7'])).length);
+console.log('errors', errs); await b.close();})();
