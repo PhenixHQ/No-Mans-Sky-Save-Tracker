@@ -4632,10 +4632,11 @@ document.addEventListener('mousedown', e => { if(e.button === 3 || e.button === 
 navSoon();
 
 /* ---------- GITHUB BUG REPORTS ---------- */
-const CFG = { githubRepo: '' };
+const CFG = { githubRepo: 'PhenixHQ/No-Mans-Sky-Save-Tracker' }; // default; web/config.json can override it (an empty value there no longer hides bug reports or breaks updates)
 function ghReady(){ return /^[\w.-]+\/[\w.-]+$/.test(CFG.githubRepo||''); }
 function renderGhButton(){ $('#bug-gh').hidden = !ghReady(); if(ghReady()){ $('#bug-gh').title = 'Opens a new issue on github.com/' + CFG.githubRepo; } }
-if(DESK) fetch('config.json', {cache:'no-store'}).then(r => r.ok ? r.json() : {}).then(c => { Object.assign(CFG, c||{}); renderGhButton(); }).catch(() => {});
+if(DESK) fetch('config.json', {cache:'no-store'}).then(r => r.ok ? r.json() : {}).then(c => { if(c && /^[\w.-]+\/[\w.-]+$/.test(c.githubRepo||'')) CFG.githubRepo = c.githubRepo; renderGhButton(); }).catch(() => {});
+renderGhButton();
 async function copyText(t){ try { await navigator.clipboard.writeText(t); return true; } catch(e){ return false; } }
 $('#bug-gh').addEventListener('click', async () => {
   if(!bugReady() || !ghReady()) return;
@@ -6788,7 +6789,7 @@ function verNewer(a, b){ const x = verNum(a), y = verNum(b); if(!x || !y) return
 async function checkUpdate(manual){
   if(!DESK || HELPER < 8 || UPD.busy) return; UPD.busy = true; UPD.st = 'Checking…'; renderUpd();
   try { const r = await api('/api/update/check'); const j = await r.json();
-    if(!j.ok){ UPD.st = !manual ? '' : /404/.test(j.error||'') ? 'No releases found. The project page may not be public yet.' : `Couldn't reach GitHub. Check your internet connection. (${j.error||'no answer'})`; vcLog('update', 'check failed: ' + (j.error||'')); }
+    if(!j.ok){ UPD.st = !manual ? '' : /404/.test(j.error||'') ? 'No releases found. The project page may not be public yet.' : /no repo set/.test(j.error||'') ? 'This copy of the app doesn\'t know where to look for updates. Get the newest installer from github.com/PhenixHQ/No-Mans-Sky-Save-Tracker/releases once; after that, updates work from here.' : `Couldn't reach GitHub. Check your internet connection. (${j.error||'no answer'})`; vcLog('update', 'check failed: ' + (j.error||'')); }
     else if(j.none){ UPD.st = 'No releases have been published yet.'; }
     else { UPD.r = j; UPD.st = verNewer(j.tag, APPVER) ? '' : `You're up to date (${APPVER}).`; vcLog('update', 'latest ' + j.tag); }
   } catch(e){ UPD.st = manual ? 'Couldn\'t check for updates.' : ''; }

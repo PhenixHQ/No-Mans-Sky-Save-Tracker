@@ -282,7 +282,8 @@ function Read-Body($req, [int]$max) {
 # Only this asks the internet anything, and only when the app checks for updates (it can be turned off).
 function Get-Repo {
   try { $c = Get-Content -Raw -LiteralPath (Join-Path $WebDir 'config.json') | ConvertFrom-Json; if ($c.githubRepo -match '^[\w.-]+/[\w.-]+$') { return $c.githubRepo } } catch {}
-  return $null
+  # Older installs shipped an empty or missing config.json; fall back to the app's own public repo so updates still work.
+  return 'PhenixHQ/No-Mans-Sky-Save-Tracker'
 }
 function Get-LatestRelease {
   $repo = Get-Repo; if (-not $repo) { throw 'no repo set' }
