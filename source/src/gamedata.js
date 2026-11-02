@@ -192,8 +192,12 @@ var GameData = (function(){
     for(var i = 0; i < LF.length; i++){ var b = await get(LF[i]); if(b) lang(b, LF[i], T.lang); }
     if(lg !== 'english'){ T.langEn = new Map(); for(var k = 0; k < LANG.length; k++){ var b2 = await get(LANG[k]); if(b2) lang(b2, LANG[k], T.langEn); } } // for rules that go by the English text
     if(T.lang.size < 1000) throw new Error('the English text tables were not found');
-    return build(T, version);
+    var B = build(T, version); B.upd = updName(T.langEn || T.lang); return B;
   }
+  // The name of the newest game update, from its own "what's new" text (UPDATE_<n>_INTRO: "No Man's Sky <TAG>Forsaken<> ...").
+  function updName(L){ var best = -1, name = '';
+    L.forEach(function(v, k){ var m = /^UPDATE_(\d+)_INTRO$/.exec(k); if(!m || +m[1] <= best) return; var n = /No Man.s Sky <[A-Z]+>([^<]{2,30})<>/.exec(v); if(n){ best = +m[1]; name = n[1].trim(); } });
+    return name ? name.toLowerCase().replace(/\b[a-z]/g, function(c){ return c.toUpperCase(); }) : ''; }
   async function need(get, p){ var b = await get(p); if(!b) throw new Error(p.split('/').pop() + ' not found'); return b; }
   return { fromGame: fromGame, FILES: FILES, LANG: LANG, LANGS: LANGS, _t: { procs: procs, products: products, substances: substances, techs: techs, recipes: recipes, lang: lang, build: build } };
 })();

@@ -86,7 +86,7 @@
     <div class="toprow">
       <div class="brand">
         <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><circle cx="16" cy="16" r="7.5" fill="var(--accent)"/><circle cx="13.5" cy="13.5" r="2.4" fill="#fff" opacity=".35"/><ellipse cx="16" cy="16" rx="13.5" ry="4.6" fill="none" stroke="var(--teal)" stroke-width="2" transform="rotate(-22 16 16)"/></svg></span>
-        <div class="bt"><h1>NMS Save Tracker</h1><div class="tagline">Your No Man's Sky save at a glance <span class="dotsep">·</span> <span class="eyebrow" id="gdtag">Cosmos 7.x</span></div></div>
+        <div class="bt"><h1>NMS Save Tracker</h1><div class="tagline" title="Your No Man's Sky save at a glance"><span class="eyebrow" id="gdtag">No Man's Sky</span></div></div>
       </div>
       <div class="row" style="gap:8px; flex-wrap:nowrap">
       <button type="button" class="menubtn syncpill" id="syncpill" hidden title="Sync from your No Man's Sky save">
@@ -833,7 +833,7 @@ window.addEventListener('unhandledrejection', function(e){ VC_LOG.err++; var r =
 (function(){
 "use strict";
 const STATNAMES = __STATNAMES__; // GcStatsTypes names in order (from MBINCompiler libMBIN); the game's text uses them as keys
-const GDFMT = 6; // bump when the app needs something new in the item data read from the game
+const GDFMT = 7; // bump when the app needs something new in the item data read from the game
 const G = (function(){
   const emb = JSON.parse(document.getElementById('gamedata').textContent);
   // Desktop: item data read earlier from the player's own game files, if there is a copy
@@ -2907,7 +2907,9 @@ const GDS = { state: '', msg: '' };
 const gdPaks = list => list.filter(p => /^NMSARC\.(Precache|MetadataEtc)\.pak$/i.test(p.name));
 const gdSigOf = list => gdPaks(list).map(p => p.name + ':' + p.size + ':' + p.mtime).sort().join('|');
 function gdRender(){
-  const tag = $('#gdtag'); if(tag) tag.textContent = G.src === 'game' ? 'Cosmos 7.x · data from your game' : 'Cosmos 7.x · ' + DATAV.replace(/^game files of /, 'game data ');
+  // Header tag: the game update the item data came from (read from the game's own text), kept short so it never gets cut off; details on hover.
+  const tag = $('#gdtag'); if(tag){ tag.textContent = 'No Man\'s Sky' + (G.upd ? ' ' + G.upd : '');
+    tag.title = G.src === 'game' ? `Item and recipe data read from your own game files (${DATAV})` : `Item and recipe data: a copy the app comes with (${DATAV}). It switches to your own game files after the first read.`; }
   const foot = $('#gdfoot'); if(foot) foot.textContent = G.src === 'game' ? DATAV : `a copy the app comes with (${DATAV})`;
   const el = $('#gdstat'); if(!el) return; $('#gdbox').hidden = !DESK;
   const now = G.src === 'game' ? `In use: ${esc(DATAV)} (${fmt(G.items.length + Object.keys(G.xi||{}).length)} items, ${fmt(G.refine.length + G.cook.length + G.craft.length)} recipes).` : `In use: the app's own copy (${esc(DATAV)}).`;
