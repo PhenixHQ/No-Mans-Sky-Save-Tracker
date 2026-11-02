@@ -3,7 +3,7 @@ const http=require('http'),fs=require('fs'),path=require('path');
 //   NMS_SAVEDIR = a folder with save*.hg + mf_save*.hg (or NMS_SAVE = one save.hg; its folder is used)
 //   NMS_GAME    = a folder with GAMEDATA/PCBANKS/*.pak (for the game icon loader). Icons go to tools/mock-icons.
 //   NMS_RUNNING = 1 pretends the game is running (save writes are refused).
-const WEB=path.join(__dirname,'..','..','web'); let data='{}';
+const WEB=path.join(__dirname,'..','..','web'); let data=process.env.NMS_DATA ? fs.readFileSync(process.env.NMS_DATA,'utf8') : '{}';
 const SAVE=process.env.NMS_SAVE||'save.hg';
 const SDIR=process.env.NMS_SAVEDIR||path.dirname(path.resolve(SAVE));
 const GAME=process.env.NMS_GAME||''; const ICONS=path.join(__dirname,'mock-icons');
@@ -53,6 +53,7 @@ http.createServer((q,r)=>{const u=new URL(q.url,'http://x'); const qs=k=>u.searc
       r.writeHead(400); return r.end('{}'); }
     const list=fs.existsSync(BK)?fs.readdirSync(BK).map(d=>{try{return JSON.parse(fs.readFileSync(path.join(BK,d,'info.json')));}catch(e){return null;}}).filter(Boolean):[]; r.end(JSON.stringify(list)); return; }
   if(u.pathname==='/api/backupfile'){ const f=path.join(BK,path.basename(qs('id')||''),path.basename(qs('name')||'')); if(!fs.existsSync(f)){r.writeHead(404);return r.end();} r.end(fs.readFileSync(f)); return; }
+  if(u.pathname==='/api/gamedata'){ const f=path.join(__dirname,'mock-gamedata.json'); if(q.method==='POST'){body(q,b=>{fs.writeFileSync(f,b);r.end('{"ok":true}')});return;} if(q.method==='DELETE'){ if(fs.existsSync(f)) fs.unlinkSync(f); r.end('{"ok":true}'); return; } if(!fs.existsSync(f)){r.writeHead(404);return r.end();} r.end(fs.readFileSync(f)); return; }
   if(u.pathname==='/api/data'){ if(q.method==='POST'){body(q,b=>{data=b.toString();r.end('{"ok":true}')});return;} r.end(data);return;}
   r.writeHead(404);return r.end();}
  let f=u.pathname.startsWith('/icons/')?path.join(ICONS,path.basename(u.pathname)):path.join(WEB,u.pathname==='/'?'index.html':u.pathname); if(!fs.existsSync(f)){r.writeHead(404);return r.end();}

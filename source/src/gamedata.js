@@ -9,9 +9,9 @@ var GameData = (function(){
   var td = new TextDecoder('utf-8');
   // name hash + GUID (low/high 32 bits) of each table layout this reader knows
   var KNOWN = {
-    product:   { nh: 0x06EDC332, g: [0x8DD48E77, 0x54BB18AE], stride: 0x300 },
+    product:   { nh: 0x06EDC332, g: [0xB22CFD4B, 0xD648571C], old: [[0x8DD48E77, 0x54BB18AE]], stride: 0x300 },
     recipe:    { nh: 0x0EDC78ED, g: [0xEBABEC26, 0xE9CA2FAD], stride: 0x90 },
-    substance: { nh: 0x7A9FBCC1, g: [0x2F227744, 0x131B8465], stride: 0x1A0 },
+    substance: { nh: 0x7A9FBCC1, g: [0xE2BF796D, 0x7E06AA18], old: [[0x2F227744, 0x131B8465]], stride: 0x1A0 },
     tech:      { nh: 0x14FDBFDE, g: [0x2FEEE859, 0x9373B1DC], stride: 0x2E0 },
     proc:      { nh: 0xBEA4D836, g: [0x997212ED, 0x63A7DEF7], stride: 0x290 },
     lang:      { nh: 0xF8DBEB64, g: [0xE17A7B69, 0xDE95E805], stride: 0x130 }
@@ -30,7 +30,7 @@ var GameData = (function(){
   function check(m, kind, label){
     var k = KNOWN[kind];
     if(m.b.length < 0x30 || m.nameHash() !== k.nh) throw new Error(label + ': not the expected table');
-    { var g = m.guid(); if(g[0] !== k.g[0] || g[1] !== k.g[1]) throw new Error(label + ': its layout changed in a game update'); }
+    { var g = m.guid(), ok = [k.g].concat(k.old || []).some(function(x){ return g[0] === x[0] && g[1] === x[1]; }); if(!ok) throw new Error(label + ': its layout changed in a game update'); }
   }
 
   /* ---------- tables ---------- */

@@ -10,3 +10,4 @@ source/tools/mock-backups/
 shots/
 source/tools/node_modules
 release/
+source/tools/mock-gamedata.json

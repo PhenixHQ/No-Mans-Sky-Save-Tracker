@@ -1,0 +1,63 @@
+{
+ "src": "game files",
+ "trader": {
+  "takes": [
+   "SPOOK_PACKAGE1",
+   "SPOOK_PACKAGE2",
+   "SPOOK_PACKAGE3",
+   "SPOOK_PACKAGE4",
+   "SPOOK_PACKAGE5",
+   "SPOOK_PACKAGE6"
+  ],
+  "stock": [
+   "B_DECO_W",
+   "B_DECO_V_0",
+   "B_STR_AC_N",
+   "B_STR_AC_NE",
+   "B_STR_AO_N",
+   "B_STR_AD_N",
+   "B_STR_AD_NE",
+   "B_STR_AE_NE",
+   "B_STR_AJ_NETB",
+   "B_STR_AF_NE",
+   "B_STR_AK_NETB",
+   "B_STR_AP_N",
+   "B_TRU_J",
+   "B_GEN_4",
+   "B_GEN_6",
+   "B_TUR_G",
+   "B_CON_16",
+   "B_WNG_T",
+   "B_WNG_U",
+   "B_WNG_V",
+   "B_WNG_S",
+   "B_WNG_W",
+   "B_WNG_X",
+   "B_COK_C1",
+   "B_COK_C4",
+   "B_COK_C7",
+   "B_COK_E",
+   "B_HAB_D",
+   "B_HAB1_D"
+  ],
+  "min": 5,
+  "max": 15
+ },
+ "text": {
+  "trader": "Forsaken traders offer their unusual wares at deep-space outposts. They demand an offering of mementos in exchange for a unique collection of corvette modules. Gather mementos from hulk wreckage, infested outposts and derelict freighters in deep space, or at dig sites on planetary surfaces.",
+  "summon": "A collector of unique pieces has arrived in this system. Visit a deep-space outpost, and request the presence of a forsaken trader from the summoning terminal at the landing pad.",
+  "gather": "Forsaken traders will exchange unique corvette parts for haunting mementos. Explore hulk wreckage, infested outposts and derelict freighters in deep space, or excavate around dig sites on planetary surfaces to gather mementos. Deep-space mementos require a Gravitino Coil and Corvette-class starship to salvage. Planetary mementos require a Terrain Manipulator to excavate. Warning: Haunting mementos may have an adverse impact on boundary strength. Prolonged exposure will result in breaches in reality, and the appearance of spectral beings...",
+  "offer": "Recover the contents of the haunting memento at a deep-space outpost. Handle the memento with the Gravitino Coil. Launch into the salvage processor to breach its seal. Forsaken traders will exchange unique corvette parts for haunting mementos.",
+  "courier": "Use the Gravitino Coil to collect the package and load it onto your Corvette-class starship. Travel to the marked building on the destination planet in the destination system. Unload the package and deliver it to the marked delivery terminal.",
+  "courierStation": "Use the Gravitino Coil to collect the package and load it onto your Corvette-class starship. Travel to the destination space station in the destination system. Unload the package and deliver it to the marked delivery terminal.",
+  "larva": "An exclusive organic Multi-Tool. This biomechanical, hand-mounted Multi-Tool has been fashioned from an larval exoskeleton. Its chitins click softly during operation. Take this Multi-Tool to add it to your collection, or Exchange it with your current Multi-Tool. Swap between active Multi-Tools from the Utilities section of the Quick Menu.",
+  "elixir": "A slight membrane has begun to form over this viscous purple liquid. Beneath its glassy surface it swirls slowly, forming syrupy currents of its own accord. The elixir will maintain your local boundary integrity and prevent the intrusion of the horrors beyond. Consume the elixir or inject it directly into the Anomaly Suppressor from the Quick Menu.",
+  "suppressor": "As the boundaries of reality begin to weaken, the risk of catastrophic breach anomalies increases. This device monitors and maintains the local boundary strength, guarding against reality continuity errors. Supply the device with glass to maintain functionality."
+ },
+ "names": {
+  "trader": "Forsaken Trader",
+  "larva": "Larva Cannon",
+  "quest": "The Forsaken",
+  "courierBoard": "Corvette haulage contract"
+ }
+}

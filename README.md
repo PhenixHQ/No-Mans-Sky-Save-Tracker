@@ -2,7 +2,7 @@
 
 An unofficial, fan-made companion app for **No Man's Sky** on PC. It reads your save file to show your explored galaxy, inventories and progress, alongside recipe tools, a crafting planner, portal glyphs and a quest board.
 
-> **Beta (2.14.0).** Expect rough edges.
+> **Beta (2.15.0).** Expect rough edges.
 
 > **Note:** Made with the help of AI and tested in my own game. Found a bug? Please [open an issue](../../issues/new?labels=bug) (or use **Settings & help → Report a bug** in the app) with what happened and how to repeat it. Comments about how it was made won't be responded to.
 
@@ -23,6 +23,7 @@ Visit the Bountria Federation capital: **Portals** tab > saved addresses > *Boun
 - **My galaxy:** a map of every system you've explored (kept across syncs, past the game's 512-visit memory), colourable by type, discoverer or the economy you tagged, with an **Exploration** card (discoveries today/this week/all time, and coverage by direction around any base with an arrow on the map), with top-down, angled, side and front views, adjustable height stretch, a galaxy switcher, hover details, a system view, and how many species you've scanned on each planet.
 - **Cooking:** a whole tab for the Nutrient Processor: dishes you can cook now (and ones you're one ingredient short of), food grouped by the bonus it gives when eaten (from the game files), a plan for any dish down to raw ingredients, where every ingredient comes from (which creatures give which produce when fed, which wild plants grow where), and your kitchen (cooking storage, creature bait). Sort dishes by highest value, most profit, most money from what you have, or most you can make.
 - **Where it comes from:** every item card shows the game's own hint for getting it and what each object on a planet gives (crystals, Metal 'Fingers', cave rocks, Dissonance Resonators, crates…), read from your game files, with the odds. Where to find has a list of every thing to break and collect.
+- **Forsaken (game 7.10–7.13):** Where to find › **Forsaken Trader** explains haunting mementos (where to find them, breaking the seal, calling the trader), counts the mementos you have, lists every corvette part the trader sells (read from your game files) and which you own, and covers the Larva Cannon and corvette courier jobs. Item cards for mementos and Forsaken parts say where they come from, and **Needs your attention** reminds you when you have mementos to trade.
 - **Bountria Prime:** the Bountria Federation capital is built in for everyone: glyphs, planets, a map marker and how to get there.
 - **Your language:** item names, descriptions and hints can come from any of the game's 16 languages. The app's own buttons, tabs and settings can be shown in 12 languages too (translated by AI; report any bad wording).
 - **Upgrade planner and module rolls:** see each craft's upgrade modules by class and what's missing, and every stat a module can roll, with a reroll in Save tools.

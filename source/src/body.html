@@ -60,6 +60,13 @@
     "Settings & help, Sync lets you check for new saves every 5 seconds or every minute.",
     "If a planet's resources say 'Activated', you've found an extreme weather world.",
     "Exosuit stacks are smaller than ship and storage stacks, so park the big piles in your ship.",
+    "Forsaken Traders at deep-space outposts swap haunting mementos for spooky corvette parts.",
+    "Mementos hide in hulk wreckage, infested outposts, derelict freighters and planet dig sites.",
+    "Break a memento's seal in the outpost's salvage processor before you offer it.",
+    "Carrying mementos thins reality. Keep some Elixir of Glass handy.",
+    "Corvette haulage contracts: grab the package with the Gravitino Coil and fly it over.",
+    "See a star in the sky? Point at it and warp. No Galaxy Map needed since Forsaken.",
+    "The Larva Cannon clicks softly when it fires. That's normal. Probably.",
     "This app is fan-made and unofficial. Hello Games made the actual universe.",
     "Loading the universe… mostly the bits you've already found."
   ];
@@ -315,6 +322,7 @@
           <button type="button" data-rsrc="fish" aria-pressed="false">Fish</button>
           <button type="button" data-rsrc="trade" aria-pressed="false">Trade goods</button>
           <button type="button" data-rsrc="finds" aria-pressed="false">Things to break &amp; collect</button>
+          <button type="button" data-rsrc="forsaken" aria-pressed="false">Forsaken Trader</button>
         </div>
         <label class="search" for="rq">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -846,7 +854,7 @@ const byName = new Map(); I.forEach((it,i) => { const k = it.n.toLowerCase(); if
 
 /* ---------- storage (per browser) ---------- */
 const KEY = 'voidigaunt-companion:v1';
-const APPVER = '2.14.0';
+const APPVER = '2.15.0';
 // 2.4.0: the app window (NMS Save Tracker.exe) talks to the page through WebView2 messages.
 // ?overlay=1 is the small always-on-top overlay: a read-only view that never writes the app's data.
 const OVL = /[?&]overlay=1\b/.test(location.search);
@@ -1193,9 +1201,66 @@ function whereLines(id){
     const other = o.it.filter(x => x[0] !== id && (o.one || x[3] >= 50)).map(x => itemInfo(x[0]).n).filter(Boolean);
     const odds = p < 100 ? ` <span class="tag nan">${o.one ? p + '% of the time' : p + '% chance'}</span>` : '';
     out.push(`<div><span class="tag cat" title="Read from your game files">game files</span> <b>${esc(o.n)}</b>${amt ? ` gives ${amt}` : ''}${odds}${where || bio ? ` · ${esc([where, bio].filter(Boolean).join(', '))}` : ''}${other.length ? ` <span class="muted">(${o.one ? 'otherwise' : 'also'} ${esc(other.slice(0, 3).join(', '))}${other.length > 3 ? '…' : ''})</span>` : ''}</div>`); });
+  fkLines(id).forEach(l => out.push(l));
   if(LORE[id]) out.push(`<div><span class="tag pl" title="What players report; not in the game files">from players</span> ${esc(LORE[id])}</div>`);
   return out;
 }
+/* ---------- 2.15.0: Forsaken (game 7.10–7.13): Forsaken Trader, haunting mementos, corvette courier missions ---------- */
+// What the trader takes and sells and the game's own text about it come from your game files (tools/mkforsaken.js → data/forsaken.json).
+const FORSAKEN = __FORSAKEN__;
+const FK_STOCK = new Set(FORSAKEN.trader.stock), FK_TAKES = new Set(FORSAKEN.trader.takes);
+const FKTXT = { SPOOK_JUICE: FORSAKEN.text.elixir, SPOOK_PACK: FORSAKEN.text.suppressor };
+function ownedId(id){ let n = 0; const D = GX && GX.inv; if(!D) return 0; Object.values(D).forEach(l => (l||[]).forEach(c => c.it.forEach(([x, a]) => { if(x === id) n += a; }))); return n; }
+function fkLines(id){
+  const out = [], tag = '<span class="tag ok" title="Text from your game">game</span>', gf = '<span class="tag cat" title="Read from your game files">game files</span>';
+  if(FK_STOCK.has(id)) out.push(`<div>${gf} Sold by the <b>${esc(FORSAKEN.names.trader)}</b> at deep-space outposts, for haunting mementos. It shows ${FORSAKEN.trader.min}–${FORSAKEN.trader.max} of its ${FORSAKEN.trader.stock.length} parts at a time. <button type="button" class="linkbtn" data-gofk="1">Forsaken Trader guide</button></div>`);
+  if(FK_TAKES.has(id)) out.push(`<div>${tag} ${esc(FORSAKEN.text.gather)}</div>`, `<div>${tag} ${esc(FORSAKEN.text.offer)} <button type="button" class="linkbtn" data-gofk="1">Forsaken Trader guide</button></div>`);
+  if(FKTXT[id]) out.push(`<div>${tag} ${esc(FKTXT[id])}</div>`);
+  return out;
+}
+function goForsaken(){ RS.kind = 'forsaken'; sync('rsrc', RS.kind); showTab('resources'); renderRes(); uCount('forsaken-open'); }
+document.addEventListener('click', e => { if(e.target.closest('[data-gofk]')){ e.preventDefault(); goForsaken(); } });
+// Patch-note changes that need no data (from Hello Games' Forsaken notes, 7.10–7.13).
+const FKNOTES = [
+  ['Seamless warping', 'Point at a star you can see in the sky and warp straight to it, without opening the Galaxy Map.'],
+  ['Multi-tool mode wheel', 'Pick multi-tool modes from a new mode wheel.'],
+  ['Minimal HUD', 'A new Minimal HUD setting cuts down what is on screen.'],
+  ['Corvette landing pads', 'Planetary trading outposts now have a landing pad big enough for a corvette.'],
+  ['Oxygen Harvester anywhere', 'The Oxygen Harvester can now be built anywhere.'],
+  ['Space Holo-Arena', 'A new creature-battle challenger waits at a Holo-Arena in space.'],
+  ['Courier jobs to stations (7.13)', 'Corvette haulage contracts can now send the package to a space station as well as to a planet.']
+];
+function renderForsaken(){
+  const F = FORSAKEN, q = RS.q.trim().toLowerCase(), nm = id => itemInfo(id).n || id;
+  const mem = F.trader.takes.map(id => [id, ownedId(id)]), memN = mem.reduce((t, [, n]) => t + n, 0), synced = !!(GX && GX.inv);
+  const stock = F.trader.stock.filter(id => !q || (nm(id) + ' ' + itemInfo(id).g).toLowerCase().includes(q));
+  const byCat = new Map(); stock.forEach(id => { const g = itemInfo(id).g || 'Corvette part'; if(!byCat.has(g)) byCat.set(g, []); byCat.get(g).push(id); });
+  $('#rcount').textContent = `${stock.length} of ${F.trader.stock.length} parts`;
+  const tag = '<span class="tag ok" title="Text from your game">game</span>';
+  $('#reslist').innerHTML = `<div class="card fkcard"><h3 style="margin:0">${esc(F.names.trader)}: how it works</h3>
+      <p class="small" style="margin:.3em 0 .6em">${tag} ${esc(F.text.trader)}</p>
+      <ol class="fksteps">
+        <li><b>Gather a haunting memento.</b> ${esc(F.text.gather.replace(/^Forsaken traders will exchange unique corvette parts for haunting mementos\.\s*/, '').replace(/\s*Warning:.*$/, ''))}</li>
+        <li><b>Break its seal.</b> ${esc(F.text.offer.replace(/\s*Forsaken traders will exchange.*$/, ''))}</li>
+        <li><b>Call the trader.</b> ${esc(F.text.summon.replace(/^A collector of unique pieces has arrived in this system\.\s*/, ''))}</li>
+        <li><b>Make your offering.</b> The trader takes the ${F.trader.takes.length} kinds of memento below and sells unique corvette parts. Each visit shows ${F.trader.min}–${F.trader.max} of the ${F.trader.stock.length} parts, so check back for the rest.</li>
+      </ol>
+      <p class="small fkwarn" style="margin:.4em 0 0">${tag} ${esc((/Warning:.*$/.exec(F.text.gather) || [''])[0])} Use an <button type="button" class="chip" data-item="${esc(nm('SPOOK_JUICE'))}">${itemIconHTML('SPOOK_JUICE','sm')}${esc(nm('SPOOK_JUICE'))}</button> or keep an <b>${esc(nm('SPOOK_PACK'))}</b> topped up to hold the breach back.</p></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Your mementos</h3><span class="muted small">${synced ? (memN ? `${fmt(memN)} ready to offer` : 'none in your inventories') : 'sync to count them'}</span></div>
+      <div class="tgoods">${mem.map(([id, n]) => `<div class="tgood">${itemIconHTML(id,'sm')}<span><b>${esc(nm(id))}</b><br><span class="muted small">${synced ? (n ? 'you have ' + fmt(n) : 'none yet') : esc(itemInfo(id).g)}</span></span></div>`).join('')}</div>
+      <p class="muted small" style="margin:.5em 0 0">Counted from your inventories after the seal is broken. Sealed mementos still floating in your corvette's hold aren't items yet.</p></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">What the trader sells</h3><span class="muted small">from your game files</span></div>
+      ${stock.length ? [...byCat.entries()].map(([g, ids]) => `<div class="fkcat"><div class="lbl">${esc(g)}</div><div class="tgoods">${ids.map(id => { const n = synced ? ownedId(id) : 0;
+        return `<div class="tgood">${itemIconHTML(id,'sm')}<span><b>${esc(nm(id))}</b>${n ? `<br><span class="tag good">you have ${fmt(n)}</span>` : ''}</span></div>`; }).join('')}</div></div>`).join('') : '<div class="empty">No parts match your search.</div>'}
+      <p class="muted small" style="margin:.5em 0 0">Once you own a part, use it in a corvette build, or import a build that uses it in Save tools › Bases › Corvette builds.</p></div>
+    <div class="card"><h3 style="margin:0">${esc(F.names.larva)}</h3><p class="small" style="margin:.3em 0 0">${tag} ${esc(F.text.larva.replace(/\s*Take this Multi-Tool.*$/, ''))} The ${esc(F.names.trader)} offers it too: look for <b>Make offer for Multi-Tool</b>. Once you have it, it shows in Collection › Multi-tools as the ${esc(F.names.larva)}.</p></div>
+    <div class="card"><h3 style="margin:0">Corvette courier jobs</h3><p class="small" style="margin:.3em 0">Look for a <b>${esc(F.names.courierBoard)}</b> at deep-space outposts.</p>
+      <p class="small" style="margin:0">${tag} ${esc(F.text.courier)}</p><p class="small" style="margin:.3em 0 0">${tag} ${esc(F.text.courierStation)}</p>
+      <p class="muted small" style="margin:.4em 0 0">Lost the package? The outpost's Delivery Management terminal hands out a replacement, or abandon the job from the Mission Log. Running jobs show in Save tools › Quests under Forsaken.</p></div>
+    <div class="card"><h3 style="margin:0">Also new in Forsaken</h3><div class="kv">${FKNOTES.map(([t, d]) => `<span><b>${esc(t)}</b>${esc(d)}</span>`).join('')}</div>
+      <p class="muted small" style="margin:.4em 0 0">From Hello Games' patch notes for 7.10–7.13.</p></div>`;
+}
+
 function whereHTML(id, title){ const l = whereLines(id); return l.length ? `<div class="wherebox"><div class="lbl">${esc(title || 'Where it comes from')}</div>${l.join('')}</div>` : ''; }
 
 /* ---------- item card helpers ---------- */
@@ -1701,6 +1766,7 @@ function renderRes(){
   navSoon();
   if(RS.kind==='trade') return renderTrade();
   if(RS.kind==='finds') return renderFinds();
+  if(RS.kind==='forsaken') return renderForsaken();
   const q = RS.q.trim().toLowerCase();
   const src = RS.kind==='raw' ? RAW : FISH;
   const rows = src.filter(({it}) => !q || it.n.toLowerCase().includes(q) || (it.d||'').toLowerCase().includes(q) || (it.g||'').toLowerCase().includes(q) || (it.fb||[]).join(' ').toLowerCase().includes(q));
@@ -3210,7 +3276,7 @@ function mtLabel(e, i, act){
   const nm = e[KO('Name')]; const st = e[KO('Store')] || {};
   const cls = (st[KO('Class')] || {})[KO('InventoryClass')];
   const file = String((e[KO('Resource')] || {})[KO('Filename')] || '');
-  const m = file.match(/([A-Z]*)MULTITOOL\.SCENE/i); const kind = m && m[1] ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + ' multi-tool' : 'Multi-tool';
+  const m = file.match(/([A-Z]*)MULTITOOL\.SCENE/i); const kind = toolTypeOf(file);
   const extra = [cls ? cls + '-class' : '', act ? 'in use' : ''].filter(Boolean).join(', ');
   const base = typeof nm==='string' && nm ? SaveTools.rawToStr(nm) : (m ? kind : `Multi-tool ${i+1}`);
   return base + (extra ? ` (${extra})` : '');
@@ -3423,6 +3489,7 @@ function questWarn(id){
 
 /* ---------- friendly quest names ---------- */
 const QG = [
+  [/^(SPOOKSHOP_|SO_POSTIE)/,'Forsaken (Forsaken Trader, courier jobs)'],
   [/^(ACT\d|A\dS\d+|A\d_|A2S|A3_|STORY_|EPILOGUE|ART_SIM|APOLLO|TUT_TRANSITION)/,'The Artemis Path (main story)'],
   [/^(ATLAS|AP\d|AP_|ATLAS_LOOP|AUTO_REVEAL)/,'The Atlas Path'],
   [/^(BIO_SHIP|BIOSHIP|BIO(COMP|STEM|GROW|EGG)|EGG\d|BIO_HATCH|BIO_FRIG|BIO_REPEAT)/,'Starbirth (Living Ship)'],
@@ -3447,8 +3514,11 @@ const QG = [
 ];
 const QWORDS = { ACT:'Part', STEP:'step', NEXUS:'Anomaly', TUT:'tutorial', HINT:'hint', WIKI:'guide', LORE:'lore', DM:'', D:'', COMM:'community', SETTLE:'settlement', BIO:'bio', OVERSEER:'Overseer task', WEAPGUY:'Armourer task', SCIENTIST:'Scientist task', FARMER:'Farmer task', EXOTUT:'Exocraft Technician task', BASE:'base', UPGRADE:'upgrade', ROBOMISS:'Part', PURPM:'Part', SENTINELS:'Part', ATLAS:'Atlas station', BIO_SHIP:'Starbirth part', ABAND:'derelict', FREI:'freighter', POI:'', KILL:'kill', BOUNTY:'bounty', DELIVER:'delivery', MP:'multiplayer', SO:'salvage', BIGGS:'corvette', PB:'pet battle', EGG:'egg', S:'S', SENT:'sentinel', SENT1:'sentinel', WP:'patrol', DID:'did', AP:'Atlas path' };
 const QHELPER = /(RECOVER|RECOVERY|SAFETY|SAFE$|_FIX|FIX_|DUMMY|CLEANUP|CATCHUP|_DIAG|_RESET|NOT_RESET|_CHECK|^DEV_)/;
+// Names for quests the id alone can't explain (Forsaken, 7.10–7.13; from the mission tables in the game files)
+const QNAMES = { SPOOKSHOP_TUT: 'The Forsaken: meet a Forsaken Trader', SPOOKSHOP_TUT_W: 'The Forsaken: follow-up', SO_POSTIE_PL_SR: 'Corvette courier job (to a planet)', SO_POSTIE_ST_SR: 'Corvette courier job (to a space station)' };
 function questName(raw){
   const id = String(raw).replace(/^\^/,'').replace(/^\?/,'');
+  if(QNAMES[id]) return QNAMES[id];
   let n = id.replace(/^BIO_SHIP(\d+)$/,'Starbirth part $1').replace(/^ACT(\d)_STEP(\d+)$/,'Part $1, step $2').replace(/^(ROBOMISS|PURPM|SENTINELS)_?(\d+\w?)$/,'Part $2').replace(/^ATLAS(\d+)$/,'Atlas station $1').replace(/^NEXUS(\d+)$/,'Anomaly chapter $1').replace(/^BASE_UPGRADE(\d+)$/,'Base upgrade $1')
     .replace(/^(OVERSEER|WEAPGUY|SCIENTIST|FARMER|EXOTUT)(\d+)$/, (m, w, d) => `${QWORDS[w]} ${d}`);
   if(n===id) n = id.split('_').map(w => w in QWORDS ? QWORDS[w] : w.charAt(0) + w.slice(1).toLowerCase()).filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
@@ -4704,7 +4774,8 @@ const EDUR = { VeryShort:'Very short', Short:'Short', Medium:'Medium', Long:'Lon
 const shipTypeOf = (f, t) => { f = String(f||'').toUpperCase(); t = t || [];
   if(/BIOSHIP/.test(f) || t.some(x => /_ALIEN$/.test(x))) return 'Living ship'; if(/SENTINELSHIP/.test(f)) return 'Sentinel interceptor'; if(/\/BIGGS\//.test(f) || t.some(x => /^CV_/.test(x))) return 'Corvette';
   if(/DROPSHIP/.test(f)) return 'Hauler'; if(/SCIENTIFIC/.test(f)) return 'Explorer'; if(/SHUTTLE/.test(f)) return 'Shuttle'; if(/SAILSHIP/.test(f)) return 'Solar ship'; if(/S-CLASS|ROYAL/.test(f)) return 'Exotic'; if(/FIGHTER/.test(f)) return 'Fighter'; return 'Starship'; };
-const toolTypeOf = f => { const m = String(f||'').match(/([A-Z]*)MULTITOOL\.SCENE/i); return m && m[1] ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + ' multi-tool' : 'Multi-tool'; };
+// Model names that aren't the in-game name (GRUBCANNON = the Larva Cannon, Forsaken 7.10)
+function toolTypeOf(f){ const TOOLKIND = { GRUBCANNON: 'Larva Cannon' }; const m = String(f||'').match(/([A-Z]*)MULTITOOL\.SCENE/i); return m && m[1] ? (TOOLKIND[m[1].toUpperCase()] || m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + ' multi-tool') : 'Multi-tool'; }
 const vehTypeOf = (t, i) => t.some(x => /^SUB_/.test(x)) ? 'Nautilon' : t.some(x => /^MECH_/.test(x)) ? 'Minotaur' : t.some(x => /^EXO_(PLOUGH|REFINER)/.test(x)) ? 'Colossus' : (VNAMES[i] || `Exocraft ${i+1}`);
 function petKind(id, bio){ const k = String(id||'').replace(/^\^/,'').toLowerCase().replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); return k + (bio ? ` (${bio})` : ''); }
 const unixAgo = s => s ? ago(s * 1000) : 'never';
@@ -4819,6 +4890,7 @@ function alertList(C){
     if((s.st[5] || 0) > 0) out.push(['set', `${n} has a debt of ${fmt(s.st[5])}. The game pays it off by itself over time.`]); });
   const dmg = (C.frig || []).filter(f => f.dmg > 0); if(dmg.length) out.push(['frig', `${dmg.length === 1 ? frigName(dmg[0]) + ' is' : fmt(dmg.length) + ' frigates are'} damaged and need repairs before the next expedition.`]);
   const back = (C.exp || []).filter(e => e.ev && e.next >= e.ev); if(back.length) out.push(['frig', `${back.length === 1 ? 'An expedition has' : fmt(back.length) + ' expeditions have'} finished. Debrief at the freighter's fleet command room.`]);
+  const mem = FORSAKEN.trader.takes.reduce((t, id) => t + ownedId(id), 0); if(mem) out.push(['', `You have ${fmt(mem)} haunting memento${mem === 1 ? '' : 's'}. Offer ${mem === 1 ? 'it' : 'them'} to a Forsaken Trader at a deep-space outpost for unique corvette parts (Where to find › Forsaken Trader).`]);
   const pend = GX.stats && GX.stats.disc && GX.stats.disc.pend; if(pend) out.push(['', `${fmt(pend)} discover${pend === 1 ? 'y hasn\'t' : 'ies haven\'t'} been uploaded yet. Upload them from the Discovery page in game for the units.`]);
   return out;
 }
@@ -5014,6 +5086,8 @@ if(HOST){
   hostSend({t:'hello'});
 }
 window.__ovlReady = true;
+// Read-only peek for the automated tests (tools/tFK.js and later).
+window.__vc = { itemInfo, whereLines, questName, questGroup, toolTypeOf, alertList, goForsaken, ownedId, get GX(){ return GX; }, get G(){ return G; }, get tab(){ return current + '/' + RS.kind; }, get DATAV(){ return DATAV; }, get GDS(){ return GDS; } };
 if(OVL) document.addEventListener('keydown', e => { if(e.key==='Escape') hostSend({t:'game'}); });
 if(OVL){ renderOvl(); setInterval(() => { const s = $('#ovsync'); if(s) s.textContent = ovlSyncText(); }, 15000); }
 
@@ -5077,7 +5151,12 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- WHAT'S NEW ---------- */
-const NEWS = { '2.14.0': ['The app in your language: Settings & help › Look › App language (12 languages, translated by AI; follows your game text language unless you pick one).',
+const NEWS = { '2.15.0': ['Ready for No Man\'s Sky Forsaken (7.10–7.13): the app reads the updated game files again, so the new items and corvette parts have their real names, and the save reader knows the new save fields.',
+    'Where to find › Forsaken Trader: how to get and break open haunting mementos, how many you have, every part the trader sells (and which you own), the Larva Cannon and corvette courier jobs.',
+    'Item cards for mementos and Forsaken corvette parts say where they come from. Needs your attention reminds you when you have mementos to trade.',
+    'Courier jobs and the Forsaken Trader intro show by name in Save tools › Quests. The Larva Cannon shows by name in Collection.',
+    'New loading-screen tips for Forsaken.'],
+  '2.14.0': ['The app in your language: Settings & help › Look › App language (12 languages, translated by AI; follows your game text language unless you pick one).',
     'Save tools › Companions: edit traits, size, trust, reroll looks, copy species and looks from another companion or egg, and set pet-battle classes, moves, treats and wins. Eggs too.',
     'Save tools › Bases › Corvette builds: put a shared corvette build (parts list, base export or .nmsship) on any corvette, with class and size options, or export one to share.',
     'Save tools › Settlements › Next decision: choose what the waiting decision will be, e.g. a new building.',

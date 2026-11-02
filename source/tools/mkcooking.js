@@ -2,7 +2,7 @@
 // cooking ingredient when you feed them (GcCreatureGlobals.HarvestingProducts) and the feeding baits
 // (BasicFeedingProduct, Carnivore/HerbivoreFeedingProducts, RobotFeedingProduct).
 // Usage: node source/tools/mkcooking.js "<...>/No Man's Sky/GAMEDATA/PCBANKS"
-// Layout from MBINCompiler libMBIN GcCreatureGlobals (GUID 0xBEDBC301F6F3C6CF): HarvestingProducts list at 0x18B0
+// Layout from MBINCompiler libMBIN GcCreatureGlobals (GUID 0x2D2FC82DC48C6883 since Forsaken 7.10; 0xBEDBC301F6F3C6CF before, same offsets): HarvestingProducts list at 0x18B0
 // (GcCreatureHarvestSubstanceList 0xA8: CreatureType 0x00, Item 0x10, MinBlobs 0x20), BasicFeedingProduct 0x17F0,
 // CarnivoreFeedingProducts 0x1800 / HerbivoreFeedingProducts 0x18C0 (GcCreatureFoodList 0x30: FoodProduct 0x10), RobotFeedingProduct 0x1950.
 global.window = global;
@@ -13,7 +13,7 @@ const dir = process.argv[2]; if(!dir){ console.error('usage: node mkcooking.js <
   const n = 'NMSARC.globals.pak'; const fd = fs.openSync(path.join(dir, n), 'r'); const size = fs.fstatSync(fd).size;
   const pk = new GameIcons.Pak(n, size, async (o, l) => { const b = Buffer.alloc(l); fs.readSync(fd, b, 0, l, o); return new Uint8Array(b.buffer, b.byteOffset, l); }); await pk.open();
   const b = Buffer.from(await pk.file('gccreatureglobals.mbin')); const dv = new DataView(b.buffer, b.byteOffset, b.length);
-  if(dv.getUint32(0x10, true) !== 0xF6F3C6CF || dv.getUint32(0x14, true) !== 0xBEDBC301) throw new Error('creature globals layout changed');
+  if(!((dv.getUint32(0x10, true) === 0xF6F3C6CF && dv.getUint32(0x14, true) === 0xBEDBC301) || (dv.getUint32(0x10, true) === 0xC48C6883 && dv.getUint32(0x14, true) === 0x2D2FC82D))) throw new Error('creature globals layout changed');
   const s = (o, n) => { let e = o; while(e < o + n && b[e]) e++; return b.slice(o, e).toString('utf8'); };
   const list = o => ({ at: o + Number(dv.getBigUint64(o, true)), n: dv.getUint32(o + 8, true) }); const B = 0x20;
   const harvest = {}; let L = list(B + 0x18B0);
